@@ -1,14 +1,9 @@
 @import "tailwindcss";
 
-@theme {
-  --color-brand: #1e3a5f;
-  --color-brand-light: #2d5a9e;
-}
-
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, sans-serif;
-  background: #f8fafc;
+  font-family: 'Nunito', system-ui, sans-serif;
+  background: #fdf6ec;
 }
 
 #root {
