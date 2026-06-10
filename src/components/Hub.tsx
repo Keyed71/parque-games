@@ -102,7 +102,7 @@ export default function Hub() {
           letterSpacing: '0.04em',
         }}
       >
-        Parque Language School
+        Cambridge School — Parque das Nações
       </footer>
     </div>
   )
