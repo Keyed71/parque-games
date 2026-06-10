@@ -4,7 +4,7 @@ export interface GameDefinition {
   id: string
   title: string
   description: string
-  icon: string           // emoji or path to image
+  icon: string           // emoji (e.g. '🎯') or public image path (e.g. '/herd_mentality.png')
   dataUrl?: string       // Google Sheets published CSV URL (if game uses sheet data)
   component: ComponentType<GameProps>
 }
