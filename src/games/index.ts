@@ -14,7 +14,7 @@ const games: GameDefinition[] = [
     id: 'jeopardy',
     title: 'Jeopardy',
     description: 'Pick a category, pick a value, answer the question!',
-    icon: '🎯',
+    icon: '/jeopardy.png',
     dataUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRMZ-VR-OyW5gsYtSvVE3hNYjZlJFhe7QP0ue0V4IxSbgQKMOvPCYIkSLSn1y4d04gYmagwbcroJJKw/pub?gid=2045134284&single=true&output=csv',
     component: Jeopardy,
   },
