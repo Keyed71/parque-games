@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FCE Use of English — Jeopardy</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Nunito', 'Segoe UI', Arial, sans-serif; background: #eef2ff; color: #1e293b; height: 100vh; overflow: hidden; }
+
+        /* —— SETUP —— */
+        #setup-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; padding: 20px; background: linear-gradient(135deg, #ede9fe 0%, #dbeafe 100%); }
+        .setup-title { font-size: 3rem; font-weight: 900; color: #1e3a8a; margin-bottom: 6px; text-align: center; }
+        .setup-subtitle { font-size: 1rem; color: #6366f1; margin-bottom: 36px; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 700; }
+        .setup-card { background: white; border: 2px solid #c7d2fe; border-radius: 18px; padding: 36px; width: 100%; max-width: 480px; box-shadow: 0 4px 24px rgba(99,102,241,0.12); }
+        .setup-label { font-size: 0.82rem; color: #6366f1; text-transform: uppercase; letter-spacing: 0.1em; display: block; margin-bottom: 12px; font-weight: 700; }
+        .team-count-buttons { display: flex; gap: 8px; margin-bottom: 28px; }
+        .team-count-btn { width: 48px; height: 48px; border-radius: 10px; border: 2px solid #c7d2fe; background: #eef2ff; color: #6366f1; font-size: 1.2rem; font-weight: 800; cursor: pointer; transition: all 0.15s; }
+        .team-count-btn:hover { border-color: #6366f1; background: #e0e7ff; }
+        .team-count-btn.active { border-color: #6366f1; background: #6366f1; color: white; }
+        #team-names { display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
+        .team-name-row { display: flex; align-items: center; gap: 10px; }
+        .team-color-dot { width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0; }
+        .team-name-input { flex: 1; padding: 9px 13px; border-radius: 8px; border: 2px solid #c7d2fe; background: #f8faff; color: #1e293b; font-size: 0.95rem; font-family: inherit; transition: border-color 0.15s; }
+        .team-name-input:focus { outline: none; border-color: #6366f1; }
+        .start-btn { width: 100%; padding: 15px; background: linear-gradient(135deg, #f59e0b, #fbbf24); color: white; border: none; border-radius: 12px; font-size: 1.15rem; font-weight: 800; font-family: inherit; cursor: pointer; transition: all 0.15s; box-shadow: 0 4px 12px rgba(245,158,11,0.3); }
+        .start-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(245,158,11,0.45); }
+
+        /* —— SPINNER —— */
+        #spinner-screen { display: none; flex-direction: column; align-items: center; justify-content: center; height: 100vh; padding: 20px; background: linear-gradient(135deg, #ede9fe 0%, #dbeafe 100%); }
+        .spinner-title { font-size: 1.2rem; color: #6366f1; text-transform: uppercase; letter-spacing: 0.2em; margin-bottom: 36px; font-weight: 700; }
+        #spinner-card { width: 230px; height: 230px; border-radius: 24px; display: flex; align-items: center; justify-content: center; font-size: 1.9rem; font-weight: 800; color: white; text-shadow: 0 2px 8px rgba(0,0,0,0.25); margin-bottom: 28px; box-shadow: 0 8px 40px rgba(0,0,0,0.2); text-align: center; padding: 12px; line-height: 1.3; }
+        #spinner-result { display: none; font-size: 2rem; font-weight: 900; color: #1e3a8a; text-align: center; margin-bottom: 28px; animation: fadeUp 0.5s ease; }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+        #play-btn { display: none; padding: 15px 54px; background: linear-gradient(135deg, #f59e0b, #fbbf24); color: white; border: none; border-radius: 14px; font-size: 1.2rem; font-weight: 800; font-family: inherit; cursor: pointer; transition: all 0.15s; animation: fadeUp 0.5s ease 0.15s both; box-shadow: 0 4px 20px rgba(245,158,11,0.4); }
+        #play-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 28px rgba(245,158,11,0.55); }
+
+        /* —— GAME —— */
+        #game-screen { display: none; flex-direction: column; height: 100vh; padding: 10px; gap: 8px; background: #eef2ff; }
+        .game-title { text-align: center; font-size: 1.1rem; font-weight: 900; color: #1e3a8a; letter-spacing: 0.06em; flex-shrink: 0; text-transform: uppercase; }
+        #score-bar { display: flex; gap: 8px; justify-content: center; flex-shrink: 0; flex-wrap: wrap; }
+        .score-card { background: white; border: 2px solid #c7d2fe; border-radius: 10px; padding: 6px 16px; text-align: center; min-width: 100px; transition: all 0.3s; box-shadow: 0 2px 8px rgba(99,102,241,0.08); }
+        .score-card.active-turn { border-color: #f59e0b; box-shadow: 0 0 16px rgba(245,158,11,0.4); transform: scale(1.06); }
+        .score-team-name { font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px; }
+        .score-value { font-size: 1.5rem; font-weight: 900; color: #1e3a8a; }
+        .turn-arrow { font-size: 0.6rem; color: #f59e0b; margin-top: 2px; letter-spacing: 0.05em; font-weight: 700; }
+
+        /* —— BOARD —— */
+        #board { flex: 1; display: grid; gap: 5px; min-height: 0; }
+        .category-header { background: #1e3a8a; border: 2px solid #1e40af; border-radius: 8px; padding: 8px 4px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; }
+        .category-id { font-size: 1.5rem; font-weight: 900; color: #fbbf24; line-height: 1; }
+        .category-name { font-size: 0.65rem; color: #bfdbfe; text-transform: uppercase; letter-spacing: 0.04em; line-height: 1.3; font-weight: 700; }
+        .q-cell { background: #2563eb; border: 2px solid #1d4ed8; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1.4rem; font-weight: 900; color: white; transition: all 0.15s; user-select: none; box-shadow: 0 2px 8px rgba(37,99,235,0.25); }
+        .q-cell:hover:not(.used) { background: #1d4ed8; border-color: #fbbf24; transform: scale(1.04); box-shadow: 0 4px 20px rgba(37,99,235,0.45); }
+        .q-cell.used { cursor: default; box-shadow: none; }
+
+        /* —— MODAL —— */
+        #modal-overlay { display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.75); z-index: 100; align-items: center; justify-content: center; padding: 20px; }
+        #modal-overlay.open { display: flex; }
+        .modal { background: white; border-radius: 20px; width: 100%; max-width: 700px; max-height: 92vh; overflow-y: auto; padding: 0; animation: popIn 0.18s ease-out; box-shadow: 0 24px 64px rgba(15,23,42,0.3); }
+        @keyframes popIn { from { transform: scale(0.92); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .modal-top-bar { background: linear-gradient(135deg, #1e3a8a, #2563eb); padding: 20px 24px; border-radius: 20px 20px 0 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+        .modal-cat-label { font-size: 0.72rem; color: #93c5fd; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px; font-weight: 700; }
+        .modal-val-label { font-size: 2.6rem; font-weight: 900; color: #fbbf24; line-height: 1; }
+        .modal-team-badge { padding: 7px 16px; border-radius: 20px; font-size: 0.82rem; font-weight: 800; color: white; text-align: center; text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap; border: 2px solid rgba(255,255,255,0.3); }
+        .modal-close { background: rgba(255,255,255,0.15); border: none; color: white; font-size: 1.3rem; cursor: pointer; padding: 8px 12px; line-height: 1; flex-shrink: 0; border-radius: 8px; transition: background 0.15s; }
+        .modal-close:hover { background: rgba(255,255,255,0.3); }
+        .modal-body { padding: 24px; }
+        .modal-question { font-size: 1.5rem; line-height: 1.7; color: #0f172a; background: #f8faff; border-radius: 12px; padding: 22px 26px; margin-bottom: 18px; white-space: pre-line; font-weight: 600; border: 2px solid #e0e7ff; }
+        .mc-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+        .mc-option { background: #eef2ff; border: 2px solid #c7d2fe; border-radius: 10px; padding: 12px 16px; font-size: 1.1rem; color: #1e3a8a; font-weight: 700; }
+        .show-answer-btn { display: block; width: 100%; padding: 13px; background: transparent; border: 2px solid #c7d2fe; border-radius: 10px; color: #6366f1; font-size: 1rem; font-family: inherit; cursor: pointer; margin-bottom: 14px; transition: all 0.15s; font-weight: 700; }
+        .show-answer-btn:hover { border-color: #6366f1; background: #eef2ff; }
+        #modal-answer { display: none; background: #f0fdf4; border: 2px solid #86efac; border-radius: 12px; padding: 20px 24px; margin-bottom: 16px; }
+        #modal-answer.visible { display: block; }
+        .answer-label { font-size: 0.72rem; color: #16a34a; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; font-weight: 800; }
+        .answer-text { font-size: 1.3rem; color: #14532d; white-space: pre-line; line-height: 1.65; font-weight: 700; }
+
+        /* —— VERDICT —— */
+        #verdict-section { display: none; margin-top: 8px; }
+        .verdict-label { font-size: 0.78rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px; font-weight: 700; }
+        #verdict-buttons { display: flex; gap: 12px; margin-bottom: 12px; }
+        .verdict-btn { flex: 1; padding: 15px 10px; border: none; border-radius: 12px; font-size: 1.15rem; font-weight: 800; font-family: inherit; cursor: pointer; transition: all 0.15s; color: white; }
+        .correct-btn { background: #16a34a; }
+        .correct-btn:hover { background: #15803d; transform: translateY(-2px); box-shadow: 0 4px 16px rgba(22,163,74,0.45); }
+        .wrong-btn { background: #dc2626; }
+        .wrong-btn:hover { background: #b91c1c; transform: translateY(-2px); box-shadow: 0 4px 16px rgba(220,38,38,0.45); }
+        .skip-btn { display: block; width: 100%; padding: 9px; background: transparent; border: 2px solid #e2e8f0; border-radius: 8px; color: #94a3b8; font-size: 0.85rem; font-family: inherit; cursor: pointer; transition: all 0.15s; }
+        .skip-btn:hover { border-color: #fca5a5; color: #dc2626; }
+    </style>
+</head>
+<body>
+
+<!-- —— SETUP —— -->
+<div id="setup-screen">
+    <div class="setup-title">FCE Jeopardy</div>
+    <div class="setup-subtitle">Use of English Challenge</div>
+    <div class="setup-card">
+        <label class="setup-label">Number of teams</label>
+        <div class="team-count-buttons">
+            <button class="team-count-btn" onclick="setTeamCount(2)">2</button>
+            <button class="team-count-btn" onclick="setTeamCount(3)">3</button>
+            <button class="team-count-btn" onclick="setTeamCount(4)">4</button>
+            <button class="team-count-btn" onclick="setTeamCount(5)">5</button>
+            <button class="team-count-btn" onclick="setTeamCount(6)">6</button>
+        </div>
+        <label class="setup-label">Team names</label>
+        <div id="team-names"></div>
+        <button class="start-btn" onclick="setupComplete()">🎲 Spin to See Who Goes First!</button>
+    </div>
+</div>
+
+<!-- —— SPINNER —— -->
+<div id="spinner-screen">
+    <div class="spinner-title">Who goes first?</div>
+    <div id="spinner-card"></div>
+    <div id="spinner-result"></div>
+    <button id="play-btn" onclick="beginGame()">🎮 Let's Play!</button>
+</div>
+
+<!-- —— GAME —— -->
+<div id="game-screen">
+    <div class="game-title">FCE Use of English — Jeopardy</div>
+    <div id="score-bar"></div>
+    <div id="board"></div>
+</div>
+
+<!-- —— MODAL —— -->
+<div id="modal-overlay">
+    <div class="modal">
+        <div class="modal-top-bar">
+            <div>
+                <div class="modal-cat-label" id="modal-cat-label"></div>
+                <div class="modal-val-label" id="modal-val-label"></div>
+            </div>
+            <div class="modal-team-badge" id="modal-team-badge"></div>
+            <button class="modal-close" onclick="closeModal()" title="Close without retiring question">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="modal-question" id="modal-question"></div>
+            <div id="modal-mc-options" class="mc-options" style="display:none"></div>
+            <button class="show-answer-btn" id="show-answer-btn" onclick="showAnswer()" style="margin-top:16px">▶ Reveal Answer</button>
+            <div id="modal-answer">
+                <div class="answer-label">Model Answer</div>
+                <div class="answer-text" id="modal-answer-text"></div>
+            </div>
+            <div id="verdict-section">
+                <div class="verdict-label">Was the answer correct?</div>
+                <div id="verdict-buttons">
+                    <button class="verdict-btn correct-btn" onclick="verdict(true)">✓ Correct</button>
+                    <button class="verdict-btn wrong-btn" onclick="verdict(false)">✗ Wrong</button>
+                </div>
+                <button class="skip-btn" onclick="skipQuestion()">Skip — retire question without scoring</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const TEAM_COLORS = ['#e74c3c','#3498db','#27ae60','#f39c12','#9b59b6','#16a085'];
+
+const gameData = [
+  {
+    id:'A', name:'Multiple Choice',
+    questions:[
+      {
+        value:100,
+        prompt:'I\'m really looking ______ to the summer holidays.',
+        options:['A)  forward','B)  ahead','C)  up','D)  out'],
+        answer:'A — forward\n\n"Look forward to" is a fixed phrasal verb meaning to anticipate something with pleasure.'
+      },
+      {
+        value:200,
+        prompt:'You\'ll have to ______ a decision before Friday.',
+        options:['A)  make','B)  do','C)  take','D)  have'],
+        answer:'A — make\n\n"Make a decision" is a fixed collocation. (do, take and have don\'t collocate with decision in this way.)'
+      },
+      {
+        value:300,
+        prompt:'The meeting was ______ off until next week because the manager was ill.',
+        options:['A)  put','B)  taken','C)  called','D)  set'],
+        answer:'A — put\n\n"Put off" = postpone. Note: "call off" = cancel — a common distractor.'
+      },
+      {
+        value:400,
+        prompt:'She has a real ______ for languages; she speaks five fluently.',
+        options:['A)  talent','B)  knowledge','C)  experience','D)  practice'],
+        answer:'A — talent\n\n"Talent for" is the only option that takes the preposition "for" in this structure.'
+      },
+      {
+        value:500,
+        prompt:'______ the heavy rain, the outdoor festival went ahead as planned.',
+        options:['A)  Despite','B)  Although','C)  However','D)  Unless'],
+        answer:'A — Despite\n\n"Despite" is followed by a noun phrase. Although needs a clause. However is a connector, not a preposition. Unless changes the meaning entirely.'
+      },
+    ]
+  },
+  {
+    id:'B', name:'Open Cloze',
+    questions:[
+      { value:100, prompt:'One word only:\n\nI\'m not very good ______ remembering people\'s names.', answer:'at\n\n"Good at" — fixed preposition with good.' },
+      { value:200, prompt:'One word only:\n\nWe\'ve been friends ______ we were at primary school.', answer:'since\n\n"Since" introduces a point in time with a perfect tense.' },
+      { value:300, prompt:'One word only:\n\nThat\'s the woman ______ husband won the lottery.', answer:'whose\n\n"Whose" = possessive relative pronoun (the woman\'s husband).' },
+      { value:400, prompt:'One word only:\n\n______ of my two brothers has ever travelled abroad.', answer:'Neither\n\n"Neither of" refers to two people and takes a singular verb — hence "has", not "have".' },
+      { value:500, prompt:'One word only:\n\nNo sooner ______ the meeting begun than the fire alarm went off.', answer:'had\n\n"No sooner had + subject + past participle" — subject-auxiliary inversion after negative adverbials.' },
+    ]
+  },
+  {
+    id:'C', name:'Word Formation',
+    questions:[
+      { value:100, prompt:'He answered all the questions with great ______.\n\n(CONFIDENT)', answer:'confidence\n\nAdjective → noun: confident → confidence.' },
+      { value:200, prompt:'It was one of the most ______ products of the year.\n\n(SUCCESS)', answer:'successful\n\nNoun → adjective: success → successful.' },
+      { value:300, prompt:'She looked at me ______ when I arrived late.\n\n(ANGRY)', answer:'angrily\n\nAdjective → adverb: angry → angrily (y → ily).' },
+      { value:400, prompt:'The old map was almost ______ after years in the damp attic.\n\n(READ)', answer:'unreadable\n\nPrefix + suffix: read → readable → unreadable.' },
+      { value:500, prompt:'His constant ______ frustrated the whole team.\n\n(DECIDE)', answer:'indecision\n\nPrefix + internal change + suffix: decide → indecision.' },
+    ]
+  },
+  {
+    id:'D', name:'Key Word Transform',
+    questions:[
+      {
+        value:100,
+        prompt:'Complete the second sentence using the key word.\nUse 2–5 words. Do not change the key word.\n\nThe coffee was too hot to drink.\nENOUGH\n\nThe coffee ____________ to drink.',
+        answer:'was not cool enough\n\n(4 words — "wasn\'t" counts as two words if contracted)'
+      },
+      {
+        value:200,
+        prompt:'Complete the second sentence using the key word.\nUse 2–5 words. Do not change the key word.\n\nIt was such a boring film that we left early.\nSO\n\nThe film ____________ that we left early.',
+        answer:'was so boring\n\n(3 words)'
+      },
+      {
+        value:300,
+        prompt:'Complete the second sentence using the key word.\nUse 2–5 words. Do not change the key word.\n\n"Don\'t touch the wet paint," she told the children.\nNOT\n\nShe told the children ____________ the wet paint.',
+        answer:'not to touch\n\n(3 words — reported imperative with negative infinitive)'
+      },
+      {
+        value:400,
+        prompt:'Complete the second sentence using the key word.\nUse 2–5 words. Do not change the key word.\n\nI\'m sorry I didn\'t book the tickets earlier.\nWISH\n\nI ____________ the tickets earlier.',
+        answer:'wish I had booked\n\n(4 words — third conditional wish structure)'
+      },
+      {
+        value:500,
+        prompt:'Complete the second sentence using the key word.\nUse 2–5 words. Do not change the key word.\n\nPeople say that the company is losing money.\nSAID\n\nThe company ____________ money.',
+        answer:'is said to be losing\n\n(5 words — passive reporting structure)'
+      },
+    ]
+  },
+  {
+    id:'E', name:'Passive & Causative',
+    questions:[
+      {
+        value:100,
+        prompt:'Rewrite using the present continuous passive:\n\nThey are demolishing the old theatre in town.',
+        answer:'The old theatre in town is being demolished.'
+      },
+      {
+        value:200,
+        prompt:'Rewrite using the present simple passive:\n\nSomeone cleans the office every evening.',
+        answer:'The office is cleaned every evening.'
+      },
+      {
+        value:300,
+        prompt:'Rewrite using the present perfect passive:\n\nThey have cancelled all the flights because of the storm.',
+        answer:'All the flights have been cancelled because of the storm.'
+      },
+      {
+        value:400,
+        prompt:'Rewrite as a causative sentence (a service you arrange):\n\nA mechanic is repairing my car at the moment.',
+        answer:'I am having my car repaired at the moment.\n\n(Causative "have something done" — students often use the plain passive and miss the structure.)'
+      },
+      {
+        value:500,
+        prompt:'Rewrite as a causative sentence (something bad that happened to them):\n\nThieves broke into their house while they were away.',
+        answer:'They had their house broken into while they were away.\n\n(Causative of misfortune — bad events also use have/get something done.)'
+      },
+    ]
+  },
+  {
+    id:'F', name:'Spelling',
+    questions:[
+      { value:100, prompt:'🔊 The teacher will read the word aloud.\n\nListen carefully and spell it correctly!', answer:'receive\n\nCommon error: recieve ✗\nRule: i before e, except after c.' },
+      { value:200, prompt:'🔊 The teacher will read the word aloud.\n\nListen carefully and spell it correctly!', answer:'beginning\n\nCommon error: begining ✗\nRule: consonant-vowel-consonant + stress on final syllable → double the consonant.' },
+      { value:300, prompt:'🔊 The teacher will read the word aloud.\n\nListen carefully and spell it correctly!', answer:'separate\n\nCommon error: seperate ✗\nRemember: sep-A-R-A-te — the vowel in the middle is -a-, not -e-.' },
+      { value:400, prompt:'🔊 The teacher will read the word aloud.\n\nListen carefully and spell it correctly!', answer:'necessary\n\nCommon error: neccessary / necesary ✗\nRule: 1 × C, 2 × S — necessary.' },
+      { value:500, prompt:'🔊 The teacher will read the word aloud.\n\nListen carefully and spell it correctly!', answer:'accommodation\n\nCommon error: accomodation / acommodation ✗\nRule: double C + double M — accommodation.' },
+    ]
+  },
+];
+
+// —— SOUND ——
+let audioCtx = null;
+function getAudio() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    return audioCtx;
+}
+function playTone(freq, type, duration, volume, delay = 0) {
+    try {
+        const ctx = getAudio(); const osc = ctx.createOscillator(); const gain = ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.type = type; osc.frequency.value = freq;
+        const t = ctx.currentTime + delay;
+        gain.gain.setValueAtTime(volume, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + duration);
+        osc.start(t); osc.stop(t + duration + 0.01);
+    } catch(e) {}
+}
+function playCorrect() {
+    [[523,'sine',0.45,0.28,0],[659,'sine',0.45,0.28,0.13],[784,'sine',0.45,0.28,0.26],[1047,'sine',0.65,0.35,0.39]]
+        .forEach(([f,type,dur,vol,d]) => playTone(f,type,dur,vol,d));
+}
+function playWrong() {
+    for (let i = 0; i < 3; i++) {
+        try {
+            const ctx = getAudio(); const osc = ctx.createOscillator(); const gain = ctx.createGain();
+            osc.connect(gain); gain.connect(ctx.destination); osc.type = 'sawtooth';
+            const t = ctx.currentTime + i * 0.19;
+            osc.frequency.setValueAtTime(260, t); osc.frequency.exponentialRampToValueAtTime(75, t + 0.16);
+            gain.gain.setValueAtTime(0.22, t); gain.gain.exponentialRampToValueAtTime(0.001, t + 0.16);
+            osc.start(t); osc.stop(t + 0.17);
+        } catch(e) {}
+    }
+}
+function playSpinTick() { playTone(650, 'square', 0.04, 0.09); }
+function playSpinLand() {
+    [[440,'sine',0.25,0.25,0],[550,'sine',0.25,0.25,0.07],[880,'sine',0.5,0.35,0.14]]
+        .forEach(([f,type,dur,vol,d]) => playTone(f,type,dur,vol,d));
+}
+let tickTimer = null;
+function startTick() {
+    stopTick();
+    playTone(1000, 'square', 0.03, 0.07);
+    tickTimer = setInterval(() => playTone(1000, 'square', 0.03, 0.07), 1000);
+}
+function stopTick() { if (tickTimer) { clearInterval(tickTimer); tickTimer = null; } }
+
+// —— STATE ——
+let teams = [], numTeams = 2, used = {}, currentQ = null, currentTeam = 0;
+
+// —— SETUP ——
+function setTeamCount(n) {
+    numTeams = n;
+    document.querySelectorAll('.team-count-btn').forEach((b,i) => b.classList.toggle('active', i === n-2));
+    renderTeamInputs();
+}
+function renderTeamInputs() {
+    const c = document.getElementById('team-names'); c.innerHTML = '';
+    for (let i = 0; i < numTeams; i++) {
+        const row = document.createElement('div'); row.className = 'team-name-row';
+        const dot = document.createElement('div'); dot.className = 'team-color-dot'; dot.style.background = TEAM_COLORS[i];
+        const inp = document.createElement('input'); inp.className = 'team-name-input'; inp.type = 'text';
+        inp.placeholder = `Team ${i+1}`; inp.id = `ti-${i}`;
+        row.append(dot, inp); c.appendChild(row);
+    }
+}
+function setupComplete() {
+    teams = Array.from({length: numTeams}, (_,i) => ({
+        name: document.getElementById(`ti-${i}`).value.trim() || `Team ${i+1}`,
+        color: TEAM_COLORS[i], score: 0,
+    }));
+    document.getElementById('setup-screen').style.display = 'none';
+    document.getElementById('spinner-screen').style.display = 'flex';
+    runSpinner();
+}
+
+// —— SPINNER ——
+function runSpinner() {
+    const winner = Math.floor(Math.random() * teams.length);
+    const card = document.getElementById('spinner-card');
+    const result = document.getElementById('spinner-result');
+    const playBtn = document.getElementById('play-btn');
+    result.style.display = 'none'; playBtn.style.display = 'none';
+    const totalFrames = 24 + teams.length * 4;
+    const seq = [];
+    for (let i = 0; i < totalFrames - 1; i++) seq.push(i % teams.length);
+    seq.push(winner);
+    let frame = 0;
+    function step() {
+        const ti = seq[frame];
+        card.textContent = teams[ti].name; card.style.background = teams[ti].color;
+        playSpinTick(); frame++;
+        if (frame < totalFrames) {
+            setTimeout(step, 55 + Math.pow(frame / totalFrames, 2.8) * 750);
+        } else {
+            currentTeam = winner; playSpinLand();
+            result.textContent = `🎉 ${teams[winner].name} goes first!`;
+            result.style.display = 'block'; playBtn.style.display = 'block';
+        }
+    }
+    step();
+}
+function beginGame() {
+    document.getElementById('spinner-screen').style.display = 'none';
+    document.getElementById('game-screen').style.display = 'flex';
+    renderScoreBar(); renderBoard(); updateTurnIndicator();
+}
+
+// —— SCORES & TURNS ——
+function renderScoreBar() {
+    const bar = document.getElementById('score-bar'); bar.innerHTML = '';
+    teams.forEach((t,i) => bar.insertAdjacentHTML('beforeend', `
+        <div class="score-card" id="sc-${i}">
+            <div class="score-team-name" style="color:${t.color}">${t.name}</div>
+            <div class="score-value" id="sv-${i}">0</div>
+            <div class="turn-arrow" id="ta-${i}" style="visibility:hidden">▲ YOUR TURN</div>
+        </div>`));
+}
+function updateScores() { teams.forEach((t,i) => document.getElementById(`sv-${i}`).textContent = t.score); }
+function updateTurnIndicator() {
+    teams.forEach((_,i) => {
+        document.getElementById(`sc-${i}`).classList.toggle('active-turn', i === currentTeam);
+        document.getElementById(`ta-${i}`).style.visibility = i === currentTeam ? 'visible' : 'hidden';
+    });
+}
+function advanceTurn() { currentTeam = (currentTeam + 1) % teams.length; updateTurnIndicator(); }
+
+// —— BOARD ——
+function renderBoard() {
+    const board = document.getElementById('board'); board.innerHTML = '';
+    board.style.gridTemplateColumns = `repeat(${gameData.length}, 1fr)`;
+    board.style.gridTemplateRows = `auto repeat(5, 1fr)`;
+    gameData.forEach(cat => board.insertAdjacentHTML('beforeend', `
+        <div class="category-header">
+            <div class="category-id">${cat.id}</div>
+            <div class="category-name">${cat.name}</div>
+        </div>`));
+    for (let qi = 0; qi < 5; qi++) {
+        gameData.forEach((cat,ci) => {
+            const q = cat.questions[qi], key = `${ci}-${qi}`, isUsed = !!used[key];
+            const cell = document.createElement('div');
+            cell.className = `q-cell${isUsed ? ' used' : ''}`; cell.id = `cell-${key}`;
+            if (!isUsed) { cell.textContent = `$${q.value}`; cell.onclick = () => openQ(ci, qi); }
+            board.appendChild(cell);
+        });
+    }
+}
+
+// —— MODAL ——
+function openQ(ci, qi) {
+    if (used[`${ci}-${qi}`]) return;
+    const cat = gameData[ci], q = cat.questions[qi];
+    currentQ = { ci, qi, value: q.value };
+    const t = teams[currentTeam];
+
+    document.getElementById('modal-cat-label').textContent   = `Category ${cat.id} — ${cat.name}`;
+    document.getElementById('modal-val-label').textContent   = `$${q.value}`;
+    document.getElementById('modal-question').textContent    = q.prompt;
+    document.getElementById('modal-answer-text').textContent = q.answer;
+    document.getElementById('modal-answer').classList.remove('visible');
+    document.getElementById('show-answer-btn').style.display = 'block';
+    document.getElementById('verdict-section').style.display = 'none';
+
+    const mcBox = document.getElementById('modal-mc-options');
+    if (q.options && q.options.length) {
+        mcBox.innerHTML = '';
+        q.options.forEach(opt => {
+            const div = document.createElement('div');
+            div.className = 'mc-option';
+            div.textContent = opt;
+            mcBox.appendChild(div);
+        });
+        mcBox.style.display = 'grid';
+    } else {
+        mcBox.style.display = 'none';
+        mcBox.innerHTML = '';
+    }
+
+    const badge = document.getElementById('modal-team-badge');
+    badge.textContent = `${t.name}'s turn`; badge.style.background = t.color;
+    startTick();
+    document.getElementById('modal-overlay').classList.add('open');
+}
+function showAnswer() {
+    stopTick();
+    document.getElementById('modal-answer').classList.add('visible');
+    document.getElementById('show-answer-btn').style.display = 'none';
+    document.getElementById('verdict-section').style.display = 'block';
+}
+function verdict(isCorrect) {
+    if (isCorrect) {
+        teams[currentTeam].score += currentQ.value;
+        updateScores(); playCorrect(); markUsed('correct', currentTeam);
+    } else {
+        playWrong(); markUsed('wrong', currentTeam);
+    }
+    advanceTurn(); closeModal();
+}
+function skipQuestion() { markUsed('skip', null); closeModal(); }
+function markUsed(result, teamIndex) {
+    if (!currentQ) return;
+    const key = `${currentQ.ci}-${currentQ.qi}`; used[key] = true;
+    const cell = document.getElementById(`cell-${key}`);
+    if (!cell) return;
+    cell.classList.add('used'); cell.onclick = null;
+    if (result === 'correct') {
+        const col = teams[teamIndex].color;
+        cell.style.cssText += `background:${col};border-color:${col};font-size:2rem;`;
+        cell.textContent = '⭐';
+    } else if (result === 'wrong') {
+        cell.style.cssText += `background:#f1f5f9;border-color:#cbd5e1;font-size:2rem;`;
+        cell.textContent = '💨';
+    } else {
+        cell.style.background = '#f8faff'; cell.style.borderColor = '#e0e7ff'; cell.textContent = '';
+    }
+}
+function closeModal() {
+    stopTick(); document.getElementById('modal-overlay').classList.remove('open'); currentQ = null;
+}
+document.getElementById('modal-overlay').addEventListener('click', e => {
+    if (e.target === document.getElementById('modal-overlay')) closeModal();
+});
+
+// —— INIT ——
+setTeamCount(2);
+</script>
+</body>
+</html>
