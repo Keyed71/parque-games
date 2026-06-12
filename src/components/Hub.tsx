@@ -85,7 +85,11 @@ export default function Hub() {
                 <GameCard
                   key={game.id}
                   game={game}
-                  onClick={() => navigate(`/${game.id}`)}
+                  onClick={() =>
+                    game.externalUrl
+                      ? window.open(game.externalUrl, '_blank', 'noopener,noreferrer')
+                      : navigate(`/${game.id}`)
+                  }
                 />
               ))}
             </div>
