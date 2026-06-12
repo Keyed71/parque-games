@@ -756,11 +756,12 @@ function toggleReveal() {
 }
 
 function resolveGuess(correct) {
+  const team = modalTeam;
   closeModal();
   if (correct) {
-    gs.scores[modalTeam]   += 100;
-    gs.roundPts[modalTeam] += 100;
-    endRound(modalTeam);
+    gs.scores[team]   += 100;
+    gs.roundPts[team] += 100;
+    endRound(team);
   } else {
     gs.turn = 1 - gs.turn;
     render();
