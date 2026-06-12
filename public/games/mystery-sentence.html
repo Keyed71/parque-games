@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mystery Sentence</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body { font-family: 'Nunito', sans-serif; }
+
+    .hidden { display: none !important; }
+
+    /* ── LOADING ──────────────────────────────────────── */
+    #loading-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: #fdf6ec;
+      color: #7a2e1a;
+      gap: 0.75rem;
+    }
+    #loading-screen .icon { font-size: 3rem; }
+    #loading-screen .text { font-size: 1.3rem; font-weight: 700; }
+
+    /* ── SETUP SCREEN ─────────────────────────────────── */
+    #setup-screen { min-height: 100vh; background: #fdf6ec; }
+
+    .setup-header {
+      background: linear-gradient(150deg, #7a2e1a, #c4592a, #d4845a);
+      color: white;
+      padding: 1.25rem 2rem;
+    }
+    .setup-header h1 { font-size: 1.9rem; font-weight: 900; }
+    .setup-header p  { font-size: 0.95rem; opacity: 0.85; margin-top: 0.1rem; }
+
+    .session-scores {
+      background: #fff5ed;
+      border-bottom: 2px solid #e8d0b0;
+      padding: 0.6rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #7a2e1a;
+    }
+    .session-scores span { opacity: 0.6; }
+
+    .setup-body { padding: 1.5rem 2rem; max-width: 940px; margin: 0 auto; }
+
+    .setup-row { display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end; margin-bottom: 1.25rem; }
+
+    .field-group { display: flex; flex-direction: column; gap: 0.3rem; }
+    .field-group label {
+      font-size: 0.78rem; font-weight: 900; color: #7a2e1a;
+      text-transform: uppercase; letter-spacing: 0.06em;
+    }
+    .field-group select,
+    .field-group input[type="text"] {
+      padding: 0.5rem 0.75rem;
+      border: 2px solid #e8d0b0;
+      border-radius: 10px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 0.95rem;
+      background: white;
+      color: #1e293b;
+    }
+    .field-group select:focus,
+    .field-group input[type="text"]:focus { outline: none; border-color: #c4592a; }
+
+    .team-row { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
+    .team-card {
+      background: white;
+      border: 2px solid #e8d0b0;
+      border-radius: 14px;
+      padding: 0.75rem 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .team-card label { font-weight: 900; color: #7a2e1a; white-space: nowrap; font-size: 0.9rem; }
+    .team-card input {
+      width: 140px;
+      padding: 0.35rem 0.6rem;
+      border: 2px solid #e8d0b0;
+      border-radius: 8px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 700;
+    }
+    .team-card.a { border-color: #93c5fd; }
+    .team-card.b { border-color: #f9a8d4; }
+
+    .sentences-section h2 {
+      font-size: 1rem; font-weight: 900; color: #7a2e1a; margin-bottom: 0.75rem;
+    }
+    .sentences-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+      gap: 0.6rem;
+      max-height: 380px;
+      overflow-y: auto;
+      padding: 2px;
+    }
+    .sentence-card {
+      background: white;
+      border: 2px solid #e8d0b0;
+      border-radius: 12px;
+      padding: 0.75rem 1rem;
+      cursor: pointer;
+      transition: border-color 0.12s, transform 0.12s, box-shadow 0.12s;
+    }
+    .sentence-card:hover {
+      border-color: #c4592a;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(196,89,42,0.15);
+    }
+    .sentence-card.selected { border-color: #c4592a; background: #fff5ed; }
+    .sentence-card .sent-text { font-weight: 700; color: #1e293b; font-size: 0.9rem; margin-bottom: 0.35rem; }
+    .sent-meta { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+    .badge {
+      font-size: 0.7rem; font-weight: 900; padding: 0.15rem 0.5rem; border-radius: 20px;
+    }
+    .badge.level { background: #fee2d5; color: #7a2e1a; }
+    .badge.cat   { background: #e0f2fe; color: #0369a1; }
+
+    .btn-random {
+      padding: 0.5rem 1rem;
+      background: white;
+      border: 2px solid #e8d0b0;
+      border-radius: 10px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #7a2e1a;
+      cursor: pointer;
+      transition: all 0.12s;
+    }
+    .btn-random:hover { border-color: #c4592a; background: #fff5ed; }
+
+    .btn-start {
+      display: inline-block;
+      margin-top: 1.25rem;
+      padding: 0.8rem 2.25rem;
+      background: linear-gradient(135deg, #c4592a, #d4845a);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 900;
+      cursor: pointer;
+      transition: transform 0.12s, box-shadow 0.12s;
+    }
+    .btn-start:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(196,89,42,0.35); }
+    .btn-start:disabled { opacity: 0.35; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    .empty-state { color: #94a3b8; padding: 1rem; font-style: italic; font-size: 0.9rem; }
+
+    /* ── GAME SCREEN ──────────────────────────────────── */
+    #game-screen {
+      min-height: 100vh;
+      background: #f1f5f9;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .game-topbar {
+      background: #1e293b;
+      color: white;
+      padding: 0.6rem 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .back-btn {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.25);
+      color: rgba(255,255,255,0.75);
+      border-radius: 7px;
+      padding: 0.25rem 0.65rem;
+      cursor: pointer;
+      font-family: 'Nunito', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+    .back-btn:hover { border-color: white; color: white; }
+    .game-topbar-title { font-size: 1rem; font-weight: 900; }
+    .game-topbar-meta { font-size: 0.78rem; color: rgba(255,255,255,0.5); }
+
+    /* Scoreboard */
+    .scoreboard {
+      background: #1e293b;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      padding: 0.4rem 1.5rem 0.8rem;
+      gap: 0.75rem;
+      color: white;
+    }
+    .team-panel { text-align: center; }
+    .team-panel .t-name {
+      font-size: 0.75rem; font-weight: 900; text-transform: uppercase;
+      letter-spacing: 0.07em; opacity: 0.55;
+    }
+    .team-panel .t-score { font-size: 3rem; font-weight: 900; line-height: 1; }
+    .team-panel.active .t-name  { opacity: 1; color: #fbbf24; }
+    .team-panel.active .t-score { color: #fbbf24; }
+
+    .lives-panel { text-align: center; }
+    .lives-panel .l-label {
+      font-size: 0.7rem; opacity: 0.5; text-transform: uppercase;
+      letter-spacing: 0.06em; margin-bottom: 0.1rem;
+    }
+    .lives-panel .l-count { font-size: 2.5rem; font-weight: 900; line-height: 1; }
+    .lives-panel .l-hearts { font-size: 0.75rem; letter-spacing: 1px; }
+
+    .turn-banner {
+      background: #fbbf24;
+      color: #1e293b;
+      text-align: center;
+      padding: 0.45rem 1rem;
+      font-size: 1rem;
+      font-weight: 900;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    /* Sentence display */
+    .sentence-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem 2rem;
+    }
+
+    .sentence-display {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.5rem 0.75rem;
+      max-width: 92vw;
+      margin-bottom: 1.25rem;
+    }
+    .word-group { display: flex; align-items: flex-end; gap: 3px; }
+
+    .letter-tile {
+      width: clamp(1.4rem, 2.8vw, 2.1rem);
+      height: clamp(2rem, 3.8vw, 2.9rem);
+      border-bottom: 3px solid #334155;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      padding-bottom: 0.1rem;
+      font-size: clamp(1.1rem, 2.2vw, 1.7rem);
+      font-weight: 900;
+      color: #1e293b;
+      text-transform: uppercase;
+    }
+    .letter-tile.revealed { color: #1d4ed8; border-color: #1d4ed8; }
+
+    .punct-tile {
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      padding-bottom: 0.1rem;
+      font-size: clamp(1.1rem, 2.2vw, 1.7rem);
+      font-weight: 900;
+      color: #334155;
+    }
+
+    .guessed-row {
+      font-size: 0.85rem; color: #64748b; font-weight: 600; text-align: center;
+    }
+    .guessed-row .letters { font-weight: 900; color: #334155; letter-spacing: 2px; }
+
+    /* Keyboard */
+    .keyboard-wrap { padding: 0.5rem 1rem 0; }
+    .keyboard-grid {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 5px;
+      max-width: 660px;
+      margin: 0 auto 0.6rem;
+    }
+    .key-btn {
+      width: clamp(2rem, 3.8vw, 2.5rem);
+      height: clamp(2rem, 3.8vw, 2.5rem);
+      border: 2px solid #cbd5e1;
+      border-radius: 7px;
+      background: white;
+      font-family: 'Nunito', sans-serif;
+      font-size: clamp(0.75rem, 1.5vw, 1rem);
+      font-weight: 900;
+      cursor: pointer;
+      transition: background 0.1s, border-color 0.1s, transform 0.1s;
+      color: #1e293b;
+    }
+    .key-btn:hover:not(:disabled) {
+      background: #1d4ed8; color: white; border-color: #1d4ed8; transform: translateY(-1px);
+    }
+    .key-btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
+    .key-btn.hit  { background: #dcfce7; border-color: #16a34a; color: #166534; }
+    .key-btn.miss { background: #fee2e2; border-color: #dc2626; color: #991b1b; }
+
+    /* Action buttons */
+    .action-row {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: center;
+      padding: 0.6rem 1rem 1.25rem;
+      flex-wrap: wrap;
+    }
+    .btn-guess {
+      padding: 0.65rem 1.4rem;
+      border: 2px solid;
+      border-radius: 11px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 900;
+      cursor: pointer;
+      transition: transform 0.12s, box-shadow 0.12s;
+    }
+    .btn-guess.ta { background: #dbeafe; color: #1e40af; border-color: #93c5fd; }
+    .btn-guess.tb { background: #fce7f3; color: #9d174d; border-color: #f9a8d4; }
+    .btn-guess.ta.active { background: #1d4ed8; color: white; border-color: #1d4ed8; }
+    .btn-guess.tb.active { background: #db2777; color: white; border-color: #db2777; }
+    .btn-guess:hover { transform: translateY(-2px); box-shadow: 0 4px 14px rgba(0,0,0,0.15); }
+
+    /* ── MODAL ────────────────────────────────────────── */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.6);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 100;
+    }
+    .modal-box {
+      background: white;
+      border-radius: 20px;
+      padding: 2rem 2.25rem;
+      max-width: 460px;
+      width: 90%;
+      text-align: center;
+    }
+    .modal-icon  { font-size: 2.5rem; margin-bottom: 0.4rem; }
+    .modal-title { font-size: 1.4rem; font-weight: 900; margin-bottom: 0.2rem; }
+    .modal-sub   { color: #64748b; font-size: 0.9rem; margin-bottom: 1.25rem; }
+
+    .answer-reveal {
+      margin-bottom: 1.25rem;
+      position: relative;
+    }
+    .answer-text {
+      font-size: 1.15rem; font-weight: 700; color: #1e293b;
+      background: #f8fafc; border-radius: 10px;
+      padding: 0.9rem 1rem;
+      transition: filter 0.25s;
+    }
+    .answer-text.blurred { filter: blur(7px); user-select: none; }
+    .reveal-btn {
+      display: inline-block; margin-top: 0.5rem;
+      background: transparent; border: none;
+      font-family: 'Nunito', sans-serif;
+      font-size: 0.85rem; font-weight: 700;
+      color: #64748b; cursor: pointer; text-decoration: underline;
+    }
+
+    .modal-actions { display: flex; gap: 0.6rem; justify-content: center; flex-wrap: wrap; }
+    .m-btn {
+      padding: 0.65rem 1.4rem;
+      border: none; border-radius: 10px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 0.95rem; font-weight: 900;
+      cursor: pointer; transition: opacity 0.1s;
+    }
+    .m-btn:hover { opacity: 0.87; }
+    .m-btn.correct  { background: #16a34a; color: white; }
+    .m-btn.wrong    { background: #dc2626; color: white; }
+    .m-btn.cancel   { background: #e2e8f0; color: #334155; }
+
+    /* ── ROUND END OVERLAY ────────────────────────────── */
+    #round-end {
+      position: fixed; inset: 0;
+      background: rgba(15,23,42,0.82);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 200;
+    }
+    .round-end-box {
+      background: white; border-radius: 24px;
+      padding: 2.25rem 2.75rem;
+      max-width: 500px; width: 92%;
+      text-align: center;
+    }
+    .re-emoji  { font-size: 3.5rem; margin-bottom: 0.3rem; }
+    .re-title  { font-size: 2rem; font-weight: 900; margin-bottom: 0.15rem; }
+    .re-sub    { color: #64748b; font-size: 0.95rem; margin-bottom: 0.75rem; }
+    .re-sentence {
+      font-size: 1.1rem; font-weight: 700; color: #1d4ed8;
+      background: #eff6ff; border-radius: 10px;
+      padding: 0.75rem 1rem; margin-bottom: 1rem;
+    }
+    .re-scores { display: flex; gap: 2.5rem; justify-content: center; margin-bottom: 1.5rem; }
+    .re-score-item .name {
+      font-size: 0.78rem; font-weight: 900; text-transform: uppercase;
+      letter-spacing: 0.06em; color: #64748b;
+    }
+    .re-score-item .num { font-size: 2.5rem; font-weight: 900; }
+    .re-score-item.a .num { color: #1d4ed8; }
+    .re-score-item.b .num { color: #db2777; }
+    .re-actions { display: flex; gap: 0.6rem; justify-content: center; flex-wrap: wrap; }
+    .re-btn {
+      padding: 0.7rem 1.75rem; border: none; border-radius: 11px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 0.95rem; font-weight: 900; cursor: pointer;
+    }
+    .re-btn.primary { background: linear-gradient(135deg, #c4592a, #d4845a); color: white; }
+    .re-btn.secondary { background: #e2e8f0; color: #334155; }
+  </style>
+</head>
+<body>
+
+<!-- Loading -->
+<div id="loading-screen">
+  <div class="icon">🔤</div>
+  <div class="text">Loading sentences…</div>
+</div>
+
+<!-- Setup -->
+<div id="setup-screen" class="hidden">
+  <div class="setup-header">
+    <h1>Mystery Sentence</h1>
+    <p>Guess letters to reveal the hidden sentence before your lives run out</p>
+  </div>
+
+  <!-- Session scores bar (shown after first round) -->
+  <div id="session-bar" class="session-scores hidden">
+    <span>Session scores:</span>
+    <strong id="bar-a">Team A — 0</strong>
+    <strong id="bar-b">Team B — 0</strong>
+  </div>
+
+  <div class="setup-body">
+    <!-- Filters + Random -->
+    <div class="setup-row">
+      <div class="field-group">
+        <label>Level</label>
+        <select id="filter-level">
+          <option value="">All levels</option>
+          <option>A1</option><option>A2</option><option>B1</option>
+          <option>B2</option><option>C1</option><option>C2</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label>Category</label>
+        <select id="filter-cat">
+          <option value="">All categories</option>
+        </select>
+      </div>
+      <div class="field-group" style="align-self:flex-end">
+        <button class="btn-random" onclick="pickRandom()">🎲 Random</button>
+      </div>
+    </div>
+
+    <!-- Team names -->
+    <div class="team-row">
+      <div class="team-card a">
+        <label>Team A:</label>
+        <input type="text" id="name-a" value="Team A" maxlength="20">
+      </div>
+      <div class="team-card b">
+        <label>Team B:</label>
+        <input type="text" id="name-b" value="Team B" maxlength="20">
+      </div>
+    </div>
+
+    <!-- Sentence list -->
+    <div class="sentences-section">
+      <h2>Choose a sentence</h2>
+      <div class="sentences-grid" id="sent-grid"></div>
+    </div>
+
+    <button class="btn-start" id="start-btn" onclick="startGame()" disabled>▶ Start Game</button>
+  </div>
+</div>
+
+<!-- Game -->
+<div id="game-screen" class="hidden">
+  <div class="game-topbar">
+    <button class="back-btn" onclick="goSetup()">← Back</button>
+    <div class="game-topbar-title">Mystery Sentence</div>
+    <div class="game-topbar-meta" id="g-meta"></div>
+  </div>
+
+  <div class="scoreboard">
+    <div class="team-panel" id="panel-a">
+      <div class="t-name"  id="g-name-a">Team A</div>
+      <div class="t-score" id="g-score-a">0</div>
+    </div>
+    <div class="lives-panel">
+      <div class="l-label">Lives</div>
+      <div class="l-count"  id="l-count">10</div>
+      <div class="l-hearts" id="l-hearts"></div>
+    </div>
+    <div class="team-panel" id="panel-b">
+      <div class="t-name"  id="g-name-b">Team B</div>
+      <div class="t-score" id="g-score-b">0</div>
+    </div>
+  </div>
+
+  <div class="turn-banner" id="turn-banner">Team A's Turn</div>
+
+  <div class="sentence-area">
+    <div class="sentence-display" id="sent-display"></div>
+    <div class="guessed-row"  id="guessed-row"></div>
+  </div>
+
+  <div class="keyboard-wrap">
+    <div class="keyboard-grid" id="kbd-grid"></div>
+  </div>
+
+  <div class="action-row">
+    <button class="btn-guess ta" id="btn-a" onclick="buzzIn(0)">
+      🎯 <span id="lbl-a">Team A</span> — Guess the Sentence!
+    </button>
+    <button class="btn-guess tb" id="btn-b" onclick="buzzIn(1)">
+      🎯 <span id="lbl-b">Team B</span> — Guess the Sentence!
+    </button>
+  </div>
+</div>
+
+<!-- Sentence-guess modal -->
+<div class="modal-overlay hidden" id="guess-modal">
+  <div class="modal-box">
+    <div class="modal-icon">🎯</div>
+    <div class="modal-title" id="m-title">Team A is guessing!</div>
+    <div class="modal-sub">Did they say the sentence correctly?</div>
+    <div class="answer-reveal">
+      <div class="answer-text blurred" id="m-answer"></div>
+      <button class="reveal-btn" id="reveal-btn" onclick="toggleReveal()">👁 Show answer</button>
+    </div>
+    <div class="modal-actions">
+      <button class="m-btn correct" onclick="resolveGuess(true)">✓ Correct!</button>
+      <button class="m-btn wrong"   onclick="resolveGuess(false)">✗ Wrong!</button>
+      <button class="m-btn cancel"  onclick="closeModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Round-end overlay -->
+<div id="round-end" class="hidden">
+  <div class="round-end-box">
+    <div class="re-emoji"    id="re-emoji"></div>
+    <div class="re-title"    id="re-title"></div>
+    <div class="re-sub"      id="re-sub"></div>
+    <div class="re-sentence" id="re-sentence"></div>
+    <div class="re-scores">
+      <div class="re-score-item a">
+        <div class="name" id="re-name-a">Team A</div>
+        <div class="num"  id="re-score-a">0</div>
+      </div>
+      <div class="re-score-item b">
+        <div class="name" id="re-name-b">Team B</div>
+        <div class="num"  id="re-score-b">0</div>
+      </div>
+    </div>
+    <div class="re-actions">
+      <button class="re-btn primary"   onclick="nextRound()">Next Sentence →</button>
+      <button class="re-btn secondary" onclick="goSetup()">Change Settings</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRMZ-VR-OyW5gsYtSvVE3hNYjZlJFhe7QP0ue0V4IxSbgQKMOvPCYIkSLSn1y4d04gYmagwbcroJJKw/pub?gid=1778102853&single=true&output=csv';
+
+// ── State ──────────────────────────────────────────────────────────────────
+let allRows = [];
+let chosen  = null;
+let modalTeam = null;
+
+const gs = {
+  sentence:      '',
+  category:      '',
+  level:         '',
+  guessed:       new Set(),   // lowercase letters
+  letterResult:  {},          // letter → 'hit' | 'miss'
+  lives:         10,
+  turn:          0,           // 0=teamA, 1=teamB
+  scores:        [0, 0],
+  names:         ['Team A', 'Team B'],
+  playing:       false,
+  roundsDone:    0,
+};
+
+// ── CSV parse (handles quoted fields with commas) ──────────────────────────
+function parseCSV(raw) {
+  function splitLine(line) {
+    const out = []; let f = ''; let q = false;
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (c === '"') { q = !q; }
+      else if (c === ',' && !q) { out.push(f.trim()); f = ''; }
+      else { f += c; }
+    }
+    out.push(f.trim());
+    return out;
+  }
+  const lines = raw.replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim().split('\n');
+  if (lines.length < 2) return [];
+  const headers = splitLine(lines[0]).map(h => h.toLowerCase());
+  return lines.slice(1).filter(l => l.trim()).map(line => {
+    const vals = splitLine(line);
+    const obj = {};
+    headers.forEach((h, i) => obj[h] = (vals[i] || '').trim());
+    return obj;
+  }).filter(r => r.sentence);
+}
+
+// ── Boot ───────────────────────────────────────────────────────────────────
+async function init() {
+  try {
+    const res  = await fetch(CSV_URL);
+    const text = await res.text();
+    allRows = parseCSV(text);
+
+    // Populate category dropdown
+    const cats = [...new Set(allRows.map(r => r.category).filter(Boolean))].sort();
+    const sel  = document.getElementById('filter-cat');
+    cats.forEach(c => {
+      const o = document.createElement('option');
+      o.value = c; o.textContent = c;
+      sel.appendChild(o);
+    });
+
+    document.getElementById('filter-level').addEventListener('change', renderList);
+    document.getElementById('filter-cat').addEventListener('change', renderList);
+    renderList();
+
+    show('setup-screen');
+    hide('loading-screen');
+  } catch {
+    document.getElementById('loading-screen').innerHTML =
+      '<div style="color:#dc2626;text-align:center;padding:2rem;font-size:1.1rem;font-weight:700">' +
+      'Could not load sentences.<br>Check that the Google Sheet is published.</div>';
+  }
+}
+
+// ── Setup helpers ──────────────────────────────────────────────────────────
+function filtered() {
+  const lv = document.getElementById('filter-level').value;
+  const ct = document.getElementById('filter-cat').value;
+  return allRows.filter(r =>
+    (!lv || r.level === lv) && (!ct || r.category === ct)
+  );
+}
+
+function renderList() {
+  const rows = filtered();
+  const grid = document.getElementById('sent-grid');
+  grid.innerHTML = '';
+  chosen = null;
+  document.getElementById('start-btn').disabled = true;
+
+  if (!rows.length) {
+    grid.innerHTML = '<div class="empty-state">No sentences match this filter.</div>';
+    return;
+  }
+  rows.forEach(r => {
+    const card = document.createElement('div');
+    card.className = 'sentence-card';
+    card.innerHTML = `<div class="sent-text">${esc(r.sentence)}</div>
+      <div class="sent-meta">
+        <span class="badge level">${esc(r.level)}</span>
+        <span class="badge cat">${esc(r.category)}</span>
+      </div>`;
+    card.onclick = () => choose(r, card);
+    grid.appendChild(card);
+  });
+}
+
+function choose(r, el) {
+  document.querySelectorAll('.sentence-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  chosen = r;
+  document.getElementById('start-btn').disabled = false;
+}
+
+function pickRandom() {
+  const rows = filtered();
+  if (!rows.length) return;
+  const r = rows[Math.floor(Math.random() * rows.length)];
+  const cards = document.querySelectorAll('.sentence-card');
+  for (const card of cards) {
+    if (card.querySelector('.sent-text').textContent === r.sentence) {
+      choose(r, card); break;
+    }
+  }
+}
+
+// ── Game start ─────────────────────────────────────────────────────────────
+function startGame() {
+  if (!chosen) return;
+  gs.names = [
+    document.getElementById('name-a').value.trim() || 'Team A',
+    document.getElementById('name-b').value.trim() || 'Team B',
+  ];
+  loadRound(chosen);
+  show('game-screen');
+  hide('setup-screen');
+}
+
+function loadRound(row) {
+  gs.sentence     = row.sentence;
+  gs.category     = row.category;
+  gs.level        = row.level;
+  gs.guessed      = new Set();
+  gs.letterResult = {};
+  gs.lives        = 10;
+  gs.turn         = 0;
+  gs.playing      = true;
+  render();
+}
+
+// ── Render ─────────────────────────────────────────────────────────────────
+function render() {
+  // meta
+  document.getElementById('g-meta').textContent = `${gs.level} • ${gs.category}`;
+
+  // names + scores
+  ['a','b'].forEach((t, i) => {
+    document.getElementById(`g-name-${t}`).textContent  = gs.names[i];
+    document.getElementById(`g-score-${t}`).textContent = gs.scores[i];
+    document.getElementById(`lbl-${t}`).textContent     = gs.names[i];
+  });
+
+  // active team highlight
+  document.getElementById('panel-a').classList.toggle('active', gs.turn === 0);
+  document.getElementById('panel-b').classList.toggle('active', gs.turn === 1);
+  document.getElementById('btn-a').classList.toggle('active', gs.turn === 0);
+  document.getElementById('btn-b').classList.toggle('active', gs.turn === 1);
+
+  // turn banner
+  document.getElementById('turn-banner').textContent = `${gs.names[gs.turn]}'s Turn`;
+
+  // lives
+  document.getElementById('l-count').textContent  = gs.lives;
+  document.getElementById('l-hearts').textContent =
+    '❤️'.repeat(gs.lives) + '🖤'.repeat(10 - gs.lives);
+
+  // sentence
+  renderSentence();
+
+  // guessed letters
+  const gl = [...gs.guessed].sort();
+  document.getElementById('guessed-row').innerHTML = gl.length
+    ? `Guessed: <span class="letters">${gl.join('  ').toUpperCase()}</span>`
+    : '';
+
+  // keyboard
+  renderKeyboard();
+}
+
+function renderSentence() {
+  const wrap = document.getElementById('sent-display');
+  wrap.innerHTML = '';
+
+  // Split into words (on spaces), preserving word-internal punctuation
+  const tokens = gs.sentence.split(' ').filter(Boolean);
+  tokens.forEach(token => {
+    const group = document.createElement('div');
+    group.className = 'word-group';
+    [...token].forEach(ch => {
+      const el = document.createElement('div');
+      if (/[a-zA-Z]/.test(ch)) {
+        el.className = 'letter-tile' + (gs.guessed.has(ch.toLowerCase()) ? ' revealed' : '');
+        el.textContent = gs.guessed.has(ch.toLowerCase()) ? ch.toUpperCase() : '_';
+      } else {
+        el.className = 'punct-tile';
+        el.textContent = ch;
+      }
+      group.appendChild(el);
+    });
+    wrap.appendChild(group);
+  });
+}
+
+function renderKeyboard() {
+  const grid = document.getElementById('kbd-grid');
+  grid.innerHTML = '';
+  for (const ch of 'ABCDEFGHIJKLMNOPQRSTUVWXYZ') {
+    const lo  = ch.toLowerCase();
+    const btn = document.createElement('button');
+    btn.className = 'key-btn';
+    btn.textContent = ch;
+    if (gs.guessed.has(lo)) {
+      btn.disabled = true;
+      btn.classList.add(gs.letterResult[lo] === 'hit' ? 'hit' : 'miss');
+    } else {
+      btn.onclick = () => guessLetter(lo);
+    }
+    grid.appendChild(btn);
+  }
+}
+
+// ── Game logic ─────────────────────────────────────────────────────────────
+function guessLetter(lo) {
+  if (!gs.playing || gs.guessed.has(lo)) return;
+  gs.guessed.add(lo);
+  gs.lives--;
+  gs.letterResult[lo] = gs.sentence.toLowerCase().includes(lo) ? 'hit' : 'miss';
+
+  // Check win: all letters revealed
+  const allDone = [...gs.sentence].every(c => !/[a-zA-Z]/.test(c) || gs.guessed.has(c.toLowerCase()));
+  if (allDone) { endRound(gs.turn); return; }
+
+  if (gs.lives <= 0) { endRound(null); return; }
+
+  gs.turn = 1 - gs.turn;
+  render();
+}
+
+function buzzIn(team) {
+  if (!gs.playing) return;
+  modalTeam = team;
+  document.getElementById('m-title').textContent = `${gs.names[team]} is guessing the sentence!`;
+  document.getElementById('m-answer').textContent = gs.sentence;
+  document.getElementById('m-answer').classList.add('blurred');
+  document.getElementById('reveal-btn').textContent = '👁 Show answer';
+  show('guess-modal');
+}
+
+function toggleReveal() {
+  const el  = document.getElementById('m-answer');
+  const btn = document.getElementById('reveal-btn');
+  const hidden = el.classList.toggle('blurred');
+  btn.textContent = hidden ? '👁 Show answer' : '🙈 Hide answer';
+}
+
+function resolveGuess(correct) {
+  closeModal();
+  if (correct) {
+    endRound(modalTeam);
+  } else {
+    // Wrong sentence guess: turn passes, no life lost
+    gs.turn = 1 - gs.turn;
+    render();
+  }
+}
+
+function closeModal() {
+  hide('guess-modal');
+  modalTeam = null;
+}
+
+function endRound(winner) {
+  gs.playing = false;
+  gs.roundsDone++;
+
+  if (winner !== null) {
+    gs.scores[winner]++;
+    document.getElementById('re-emoji').textContent  = '🎉';
+    document.getElementById('re-title').textContent  = `${gs.names[winner]} wins!`;
+    document.getElementById('re-sub').textContent    = 'They guessed the sentence!';
+  } else {
+    document.getElementById('re-emoji').textContent  = '😈';
+    document.getElementById('re-title').textContent  = 'Teacher wins!';
+    document.getElementById('re-sub').textContent    = 'All 10 lives used up — better luck next time!';
+  }
+
+  document.getElementById('re-sentence').textContent = gs.sentence;
+  document.getElementById('re-name-a').textContent   = gs.names[0];
+  document.getElementById('re-name-b').textContent   = gs.names[1];
+  document.getElementById('re-score-a').textContent  = gs.scores[0];
+  document.getElementById('re-score-b').textContent  = gs.scores[1];
+  show('round-end');
+}
+
+// ── Navigation ─────────────────────────────────────────────────────────────
+function nextRound() {
+  // Keep scores, go back to setup to pick next sentence
+  hide('round-end');
+  hide('game-screen');
+
+  // Show session bar
+  if (gs.roundsDone > 0) {
+    document.getElementById('bar-a').textContent = `${gs.names[0]} — ${gs.scores[0]}`;
+    document.getElementById('bar-b').textContent = `${gs.names[1]} — ${gs.scores[1]}`;
+    document.getElementById('session-bar').classList.remove('hidden');
+  }
+
+  chosen = null;
+  document.getElementById('start-btn').disabled = true;
+  renderList();
+  show('setup-screen');
+}
+
+function goSetup() {
+  // Reset everything
+  gs.scores    = [0, 0];
+  gs.roundsDone = 0;
+  gs.playing   = false;
+  hide('round-end');
+  hide('game-screen');
+  hide('guess-modal');
+  document.getElementById('session-bar').classList.add('hidden');
+  chosen = null;
+  document.getElementById('start-btn').disabled = true;
+  renderList();
+  show('setup-screen');
+}
+
+// ── Tiny helpers ───────────────────────────────────────────────────────────
+function show(id) { document.getElementById(id).classList.remove('hidden'); }
+function hide(id) { document.getElementById(id).classList.add('hidden'); }
+function esc(s)   { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+init();
+</script>
+</body>
+</html>

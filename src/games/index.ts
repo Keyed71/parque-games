@@ -1,6 +1,7 @@
 import type { GameDefinition } from '../types'
 import HerdMentality from './herd-mentality/HerdMentality'
 import Jeopardy from './jeopardy/Jeopardy'
+import MysterySentence from './mystery-sentence/MysterySentence'
 
 const games: GameDefinition[] = [
   {
@@ -17,6 +18,13 @@ const games: GameDefinition[] = [
     icon: '/jeopardy.png',
     dataUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRMZ-VR-OyW5gsYtSvVE3hNYjZlJFhe7QP0ue0V4IxSbgQKMOvPCYIkSLSn1y4d04gYmagwbcroJJKw/pub?gid=2045134284&single=true&output=csv',
     component: Jeopardy,
+  },
+  {
+    id: 'mystery-sentence',
+    title: 'Mystery Sentence',
+    description: 'Guess letters to reveal the hidden sentence — 10 lives per round!',
+    icon: '🔤',
+    component: MysterySentence,
   },
   {
     id: 'word-family',
