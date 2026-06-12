@@ -719,11 +719,13 @@ function guessLetter(lo) {
   gs.letterResult[lo] = hit ? 'hit' : 'miss';
 
   if (hit) {
-    const pts = VOWELS.has(lo) ? 10 : 20;
+    const count    = [...gs.sentence.toLowerCase()].filter(c => c === lo).length;
+    const ptsEach  = VOWELS.has(lo) ? 10 : 20;
+    const pts      = ptsEach * count;
     gs.scores[gs.turn]   += pts;
     gs.roundPts[gs.turn] += pts;
-    const type = VOWELS.has(lo) ? 'vowel' : 'consonant';
-    showFlash(`+${pts} pts — ${gs.names[gs.turn]} found a ${type}!`);
+    const times = count === 1 ? 'once' : `${count}×`;
+    showFlash(`+${pts} pts — ${lo.toUpperCase()} appears ${times} (${ptsEach} pts each)`);
   } else {
     showFlash(`No ${lo.toUpperCase()} — turn passes`);
   }
