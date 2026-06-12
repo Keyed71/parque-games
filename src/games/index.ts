@@ -23,7 +23,7 @@ const games: GameDefinition[] = [
     title: 'Word Family',
     description: 'Group words by the suffix or prefix that connects them.',
     icon: '/affixation.png',
-    externalUrl: 'https://word-family-game-kieron-s-projects.vercel.app',
+    externalUrl: 'https://word-family-game.vercel.app',
   },
 ]
 
