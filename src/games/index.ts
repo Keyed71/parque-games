@@ -23,7 +23,7 @@ const games: GameDefinition[] = [
     id: 'mystery-sentence',
     title: 'Mystery Sentence',
     description: 'Guess letters to reveal the hidden sentence — 10 lives per round!',
-    icon: '🔤',
+    icon: '/hanging_sentence.png',
     component: MysterySentence,
   },
   {
