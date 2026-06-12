@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grammar Jeopardy — Level 2</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Nunito', 'Segoe UI', Arial, sans-serif; background: #eef2ff; color: #1e293b; height: 100vh; overflow: hidden; }
+
+        /* —— SETUP —— */
+        #setup-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; padding: 20px; background: linear-gradient(135deg, #ede9fe 0%, #dbeafe 100%); }
+        .setup-title { font-size: 3rem; font-weight: 900; color: #1e3a8a; margin-bottom: 6px; text-align: center; }
+        .setup-subtitle { font-size: 1rem; color: #6366f1; margin-bottom: 10px; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 700; }
+        .setup-card { background: white; border: 2px solid #c7d2fe; border-radius: 18px; padding: 36px; width: 100%; max-width: 480px; box-shadow: 0 4px 24px rgba(99,102,241,0.12); }
+        .setup-label { font-size: 0.82rem; color: #6366f1; text-transform: uppercase; letter-spacing: 0.1em; display: block; margin-bottom: 12px; font-weight: 700; }
+        .team-count-buttons { display: flex; gap: 8px; margin-bottom: 28px; }
+        .team-count-btn { width: 48px; height: 48px; border-radius: 10px; border: 2px solid #c7d2fe; background: #eef2ff; color: #6366f1; font-size: 1.2rem; font-weight: 800; cursor: pointer; transition: all 0.15s; }
+        .team-count-btn:hover { border-color: #6366f1; background: #e0e7ff; }
+        .team-count-btn.active { border-color: #6366f1; background: #6366f1; color: white; }
+        #team-names { display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
+        .team-name-row { display: flex; align-items: center; gap: 10px; }
+        .team-color-dot { width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0; }
+        .team-name-input { flex: 1; padding: 9px 13px; border-radius: 8px; border: 2px solid #c7d2fe; background: #f8faff; color: #1e293b; font-size: 0.95rem; font-family: inherit; transition: border-color 0.15s; }
+        .team-name-input:focus { outline: none; border-color: #6366f1; }
+        .start-btn { width: 100%; padding: 15px; background: linear-gradient(135deg, #f59e0b, #fbbf24); color: white; border: none; border-radius: 12px; font-size: 1.15rem; font-weight: 800; font-family: inherit; cursor: pointer; transition: all 0.15s; box-shadow: 0 4px 12px rgba(245,158,11,0.3); }
+        .start-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(245,158,11,0.45); }
+
+        /* —— PDF BUTTON —— */
+        .pdf-btn {
+            margin-bottom: 22px;
+            padding: 10px 22px;
+            background: white;
+            border: 2px solid #c7d2fe;
+            border-radius: 10px;
+            color: #6366f1;
+            font-size: 0.88rem;
+            font-weight: 800;
+            font-family: inherit;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.15s;
+            box-shadow: 0 2px 8px rgba(99,102,241,0.10);
+            letter-spacing: 0.03em;
+        }
+        .pdf-btn:hover { border-color: #6366f1; background: #eef2ff; transform: translateY(-1px); box-shadow: 0 4px 14px rgba(99,102,241,0.18); }
+        .pdf-btn svg { flex-shrink: 0; }
+
+        /* —— SPINNER —— */
+        #spinner-screen { display: none; flex-direction: column; align-items: center; justify-content: center; height: 100vh; padding: 20px; background: linear-gradient(135deg, #ede9fe 0%, #dbeafe 100%); }
+        .spinner-title { font-size: 1.2rem; color: #6366f1; text-transform: uppercase; letter-spacing: 0.2em; margin-bottom: 36px; font-weight: 700; }
+        #spinner-card { width: 230px; height: 230px; border-radius: 24px; display: flex; align-items: center; justify-content: center; font-size: 1.9rem; font-weight: 800; color: white; text-shadow: 0 2px 8px rgba(0,0,0,0.25); margin-bottom: 28px; box-shadow: 0 8px 40px rgba(0,0,0,0.2); text-align: center; padding: 12px; line-height: 1.3; }
+        #spinner-result { display: none; font-size: 2rem; font-weight: 900; color: #1e3a8a; text-align: center; margin-bottom: 28px; animation: fadeUp 0.5s ease; }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+        #play-btn { display: none; padding: 15px 54px; background: linear-gradient(135deg, #f59e0b, #fbbf24); color: white; border: none; border-radius: 14px; font-size: 1.2rem; font-weight: 800; font-family: inherit; cursor: pointer; transition: all 0.15s; animation: fadeUp 0.5s ease 0.15s both; box-shadow: 0 4px 20px rgba(245,158,11,0.4); }
+        #play-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 28px rgba(245,158,11,0.55); }
+
+        /* —— GAME —— */
+        #game-screen { display: none; flex-direction: column; height: 100vh; padding: 10px; gap: 8px; background: #eef2ff; }
+        .game-title { text-align: center; font-size: 1.1rem; font-weight: 900; color: #1e3a8a; letter-spacing: 0.06em; flex-shrink: 0; text-transform: uppercase; }
+        #score-bar { display: flex; gap: 8px; justify-content: center; flex-shrink: 0; flex-wrap: wrap; }
+        .score-card { background: white; border: 2px solid #c7d2fe; border-radius: 10px; padding: 6px 16px; text-align: center; min-width: 100px; transition: all 0.3s; box-shadow: 0 2px 8px rgba(99,102,241,0.08); }
+        .score-card.active-turn { border-color: #f59e0b; box-shadow: 0 0 16px rgba(245,158,11,0.4); transform: scale(1.06); }
+        .score-team-name { font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px; }
+        .score-value { font-size: 1.5rem; font-weight: 900; color: #1e3a8a; }
+        .turn-arrow { font-size: 0.6rem; color: #f59e0b; margin-top: 2px; letter-spacing: 0.05em; font-weight: 700; }
+
+        /* —— BOARD —— */
+        #board { flex: 1; display: grid; gap: 5px; min-height: 0; }
+        .category-header { background: #1e3a8a; border: 2px solid #1e40af; border-radius: 8px; padding: 8px 4px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; }
+        .category-id { font-size: 1.5rem; font-weight: 900; color: #fbbf24; line-height: 1; }
+        .category-name { font-size: 0.65rem; color: #bfdbfe; text-transform: uppercase; letter-spacing: 0.04em; line-height: 1.3; font-weight: 700; }
+        .q-cell { background: #2563eb; border: 2px solid #1d4ed8; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1.4rem; font-weight: 900; color: white; transition: all 0.15s; user-select: none; box-shadow: 0 2px 8px rgba(37,99,235,0.25); }
+        .q-cell:hover:not(.used) { background: #1d4ed8; border-color: #fbbf24; transform: scale(1.04); box-shadow: 0 4px 20px rgba(37,99,235,0.45); }
+        .q-cell.used { cursor: default; box-shadow: none; }
+
+        /* —— MODAL —— */
+        #modal-overlay { display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.75); z-index: 100; align-items: center; justify-content: center; padding: 20px; }
+        #modal-overlay.open { display: flex; }
+        .modal { background: white; border-radius: 20px; width: 100%; max-width: 700px; max-height: 92vh; overflow-y: auto; padding: 0; animation: popIn 0.18s ease-out; box-shadow: 0 24px 64px rgba(15,23,42,0.3); }
+        @keyframes popIn { from { transform: scale(0.92); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .modal-top-bar { background: linear-gradient(135deg, #1e3a8a, #2563eb); padding: 20px 24px; border-radius: 20px 20px 0 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+        .modal-cat-label { font-size: 0.72rem; color: #93c5fd; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px; font-weight: 700; }
+        .modal-val-label { font-size: 2.6rem; font-weight: 900; color: #fbbf24; line-height: 1; }
+        .modal-team-badge { padding: 7px 16px; border-radius: 20px; font-size: 0.82rem; font-weight: 800; color: white; text-align: center; text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap; border: 2px solid rgba(255,255,255,0.3); }
+        .modal-close { background: rgba(255,255,255,0.15); border: none; color: white; font-size: 1.3rem; cursor: pointer; padding: 8px 12px; line-height: 1; flex-shrink: 0; border-radius: 8px; transition: background 0.15s; }
+        .modal-close:hover { background: rgba(255,255,255,0.3); }
+        .modal-body { padding: 24px; }
+        .modal-question { font-size: 1.5rem; line-height: 1.7; color: #0f172a; background: #f8faff; border-radius: 12px; padding: 22px 26px; margin-bottom: 18px; white-space: pre-line; font-weight: 600; border: 2px solid #e0e7ff; }
+        .show-answer-btn { display: block; width: 100%; padding: 13px; background: transparent; border: 2px solid #c7d2fe; border-radius: 10px; color: #6366f1; font-size: 1rem; font-family: inherit; cursor: pointer; margin-bottom: 14px; transition: all 0.15s; font-weight: 700; }
+        .show-answer-btn:hover { border-color: #6366f1; background: #eef2ff; }
+        #modal-answer { display: none; background: #f0fdf4; border: 2px solid #86efac; border-radius: 12px; padding: 20px 24px; margin-bottom: 16px; }
+        #modal-answer.visible { display: block; }
+        .answer-label { font-size: 0.72rem; color: #16a34a; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; font-weight: 800; }
+        .answer-text { font-size: 1.3rem; color: #14532d; white-space: pre-line; line-height: 1.65; font-weight: 700; }
+
+        /* —— VERDICT —— */
+        #verdict-section { display: none; margin-top: 8px; }
+        .verdict-label { font-size: 0.78rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px; font-weight: 700; }
+        #verdict-buttons { display: flex; gap: 12px; margin-bottom: 12px; }
+        .verdict-btn { flex: 1; padding: 15px 10px; border: none; border-radius: 12px; font-size: 1.15rem; font-weight: 800; font-family: inherit; cursor: pointer; transition: all 0.15s; color: white; }
+        .correct-btn { background: #16a34a; }
+        .correct-btn:hover { background: #15803d; transform: translateY(-2px); box-shadow: 0 4px 16px rgba(22,163,74,0.45); }
+        .wrong-btn { background: #dc2626; }
+        .wrong-btn:hover { background: #b91c1c; transform: translateY(-2px); box-shadow: 0 4px 16px rgba(220,38,38,0.45); }
+        .skip-btn { display: block; width: 100%; padding: 9px; background: transparent; border: 2px solid #e2e8f0; border-radius: 8px; color: #94a3b8; font-size: 0.85rem; font-family: inherit; cursor: pointer; transition: all 0.15s; }
+        .skip-btn:hover { border-color: #fca5a5; color: #dc2626; }
+
+        /* —— WORKSHEET (hidden on screen, visible when printing) —— */
+        #worksheet { display: none; }
+
+        @media print {
+            body { overflow: visible; height: auto; background: white; }
+            #setup-screen, #spinner-screen, #game-screen, #modal-overlay { display: none !important; }
+            #worksheet {
+                display: block !important;
+                font-family: Georgia, 'Times New Roman', serif;
+                color: #000;
+                max-width: 720px;
+                margin: 0 auto;
+                padding: 0;
+                font-size: 11pt;
+                line-height: 1.6;
+            }
+            .ws-header {
+                border-bottom: 3px solid #1e3a8a;
+                padding-bottom: 14px;
+                margin-bottom: 24px;
+            }
+            .ws-title {
+                font-size: 18pt;
+                font-weight: bold;
+                color: #1e3a8a;
+                margin-bottom: 4px;
+            }
+            .ws-subtitle {
+                font-size: 10pt;
+                color: #444;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+            }
+            .ws-meta {
+                font-size: 9pt;
+                color: #666;
+                margin-top: 6px;
+            }
+            .ws-name-line {
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 18px;
+                gap: 20px;
+            }
+            .ws-name-field {
+                flex: 1;
+                border-bottom: 1px solid #000;
+                padding-bottom: 2px;
+                font-size: 10pt;
+                color: #333;
+            }
+            .ws-section-title {
+                font-size: 13pt;
+                font-weight: bold;
+                color: #1e3a8a;
+                margin: 20px 0 12px 0;
+                padding: 6px 10px;
+                background: #eef2ff;
+                border-left: 4px solid #2563eb;
+            }
+            .ws-category {
+                margin-bottom: 20px;
+                page-break-inside: avoid;
+            }
+            .ws-cat-header {
+                font-weight: bold;
+                font-size: 10.5pt;
+                margin-bottom: 8px;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+                color: #1e3a8a;
+            }
+            .ws-cat-letter {
+                display: inline-block;
+                width: 22px;
+                height: 22px;
+                background: #1e3a8a;
+                color: white;
+                text-align: center;
+                border-radius: 4px;
+                font-size: 10pt;
+                line-height: 22px;
+                margin-right: 6px;
+                font-weight: bold;
+            }
+            .ws-question {
+                margin-bottom: 10px;
+                padding-left: 12px;
+            }
+            .ws-q-label {
+                font-size: 8.5pt;
+                color: #555;
+                font-style: italic;
+                margin-right: 4px;
+            }
+            .ws-q-text {
+                font-size: 10.5pt;
+                line-height: 1.7;
+                white-space: pre-line;
+            }
+            .ws-answer-line {
+                border-bottom: 1px solid #bbb;
+                min-height: 22px;
+                margin-top: 4px;
+                margin-bottom: 2px;
+            }
+            .ws-answers-page {
+                page-break-before: always;
+            }
+            .ws-answer-block {
+                margin-bottom: 8px;
+                padding-left: 12px;
+            }
+            .ws-answer-text {
+                font-size: 10pt;
+                line-height: 1.6;
+                white-space: pre-line;
+                color: #14532d;
+                background: #f0fdf4;
+                padding: 4px 8px;
+                border-radius: 4px;
+                border-left: 3px solid #86efac;
+            }
+            .ws-points {
+                font-size: 8.5pt;
+                color: #555;
+                font-style: italic;
+                margin-right: 4px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- —— SETUP —— -->
+<div id="setup-screen">
+    <div class="setup-title">Grammar Jeopardy</div>
+    <div class="setup-subtitle">Level 2 — Grammar Challenge</div>
+
+    <button class="pdf-btn" onclick="printWorksheet()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+            <polyline points="10 9 9 9 8 9"/>
+        </svg>
+        Print Student Worksheet (PDF)
+    </button>
+
+    <div class="setup-card">
+        <label class="setup-label">Number of teams</label>
+        <div class="team-count-buttons">
+            <button class="team-count-btn" onclick="setTeamCount(2)">2</button>
+            <button class="team-count-btn" onclick="setTeamCount(3)">3</button>
+            <button class="team-count-btn" onclick="setTeamCount(4)">4</button>
+            <button class="team-count-btn" onclick="setTeamCount(5)">5</button>
+            <button class="team-count-btn" onclick="setTeamCount(6)">6</button>
+        </div>
+        <label class="setup-label">Team names</label>
+        <div id="team-names"></div>
+        <button class="start-btn" onclick="setupComplete()">🎲 Spin to See Who Goes First!</button>
+    </div>
+</div>
+
+<!-- —— SPINNER —— -->
+<div id="spinner-screen">
+    <div class="spinner-title">Who goes first?</div>
+    <div id="spinner-card"></div>
+    <div id="spinner-result"></div>
+    <button id="play-btn" onclick="beginGame()">🎮 Let's Play!</button>
+</div>
+
+<!-- —— GAME —— -->
+<div id="game-screen">
+    <div class="game-title">Grammar Jeopardy — Level 2</div>
+    <div id="score-bar"></div>
+    <div id="board"></div>
+</div>
+
+<!-- —— MODAL —— -->
+<div id="modal-overlay">
+    <div class="modal">
+        <div class="modal-top-bar">
+            <div>
+                <div class="modal-cat-label" id="modal-cat-label"></div>
+                <div class="modal-val-label" id="modal-val-label"></div>
+            </div>
+            <div class="modal-team-badge" id="modal-team-badge"></div>
+            <button class="modal-close" onclick="closeModal()" title="Close without retiring question">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="modal-question" id="modal-question"></div>
+            <button class="show-answer-btn" id="show-answer-btn" onclick="showAnswer()">▶ Reveal Answer</button>
+            <div id="modal-answer">
+                <div class="answer-label">Model Answer</div>
+                <div class="answer-text" id="modal-answer-text"></div>
+            </div>
+            <div id="verdict-section">
+                <div class="verdict-label">Was the answer correct?</div>
+                <div id="verdict-buttons">
+                    <button class="verdict-btn correct-btn" onclick="verdict(true)">✓ Correct</button>
+                    <button class="verdict-btn wrong-btn" onclick="verdict(false)">✗ Wrong</button>
+                </div>
+                <button class="skip-btn" onclick="skipQuestion()">Skip — retire question without scoring</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- —— WORKSHEET (printed only) —— -->
+<div id="worksheet">
+    <div class="ws-header">
+        <div class="ws-title">Grammar Jeopardy — Level 2</div>
+        <div class="ws-subtitle">Grammar Practice Worksheet</div>
+        <div class="ws-meta">Cambridge School — Parque das Nações</div>
+    </div>
+    <div class="ws-name-line">
+        <div class="ws-name-field">Name: ___________________________________</div>
+        <div class="ws-name-field">Date: ___________________________________</div>
+    </div>
+    <div id="ws-questions"></div>
+    <div class="ws-answers-page" id="ws-answers">
+        <div class="ws-header">
+            <div class="ws-title">Grammar Jeopardy — Level 2</div>
+            <div class="ws-subtitle">Answer Key</div>
+            <div class="ws-meta">Cambridge School — Parque das Nações &nbsp;|&nbsp; Teacher's Copy</div>
+        </div>
+    </div>
+</div>
+
+<script>
+const TEAM_COLORS = ['#e74c3c','#3498db','#27ae60','#f39c12','#9b59b6','#16a085'];
+
+const gameData = [
+  {
+    id: 'A', name: 'There is / There are',
+    questions: [
+      {
+        value: 100,
+        prompt: 'Fill in the gap:\n\n"_____ a great new café near the office."',
+        answer: 'There is / There\'s\n\nSingular countable noun → THERE IS (not There Are).\nContraction: There\'s = there is.'
+      },
+      {
+        value: 200,
+        prompt: 'Fill in the gap:\n\n"_____ several important issues we need to discuss."',
+        answer: 'There are\n\nPlural countable noun → THERE ARE.'
+      },
+      {
+        value: 300,
+        prompt: 'Write the full question:\n\n(a bank / near the hotel?)',
+        answer: 'Is there a bank near the hotel?\n\nQuestion form: IS THERE + singular noun + ...?'
+      },
+      {
+        value: 400,
+        prompt: 'Fill in the gaps (past simple):\n\n"Last week _____ a problem with the internet.\n_____ hundreds of complaints."',
+        answer: 'there was / There were\n\nPast simple:\n"A problem" is singular → there WAS.\n"Hundreds of complaints" is plural → there WERE.'
+      },
+      {
+        value: 500,
+        prompt: 'Correct the TWO mistakes:\n\n"There is twenty people at the meeting.\nThere are a lot of noise outside."',
+        answer: 'There ARE twenty people at the meeting.\n(twenty people = plural → are)\n\nThere IS a lot of noise outside.\n(noise = uncountable → always singular → is)'
+      },
+    ]
+  },
+  {
+    id: 'B', name: 'Present Simple',
+    questions: [
+      {
+        value: 100,
+        prompt: 'Fill in the gap:\n\n"My manager _____ (ALWAYS / SEND) emails late at night."',
+        answer: 'always sends\n\nWith he / she / it → add -S.\nAdverbs of frequency go BEFORE the main verb.\nsend → sends'
+      },
+      {
+        value: 200,
+        prompt: 'Make it negative:\n\n"She travels abroad for work."',
+        answer: "She doesn't travel abroad for work.\n\n3rd person negative → DOESN'T + infinitive.\n(No -S after doesn't!)"
+      },
+      {
+        value: 300,
+        prompt: 'Write the question:\n\n(the office / open / on Saturdays?)',
+        answer: "Does the office open on Saturdays?\n\n3rd person question → DOES + subject + infinitive.\n(No -S on the verb after does!)"
+      },
+      {
+        value: 400,
+        prompt: 'Fill in the gaps:\n\n"Carlos _____ (NOT / DRINK) coffee —\nhe _____ (PREFER) green tea."',
+        answer: "doesn't drink / prefers\n\n3rd person negative → DOESN'T + infinitive (no -s).\n3rd person affirmative → verb + -S.\nprefer → prefers"
+      },
+      {
+        value: 500,
+        prompt: 'Find and correct THREE mistakes:\n\n"She don\'t understand the question.\nHe often miss the morning meeting.\nDo she work from home on Fridays?"',
+        answer: "She DOESN'T understand the question.\n(3rd person → doesn't, not don't)\n\nHe often MISSES the morning meeting.\n(3rd person → verb + -s, even after adverbs)\n\nDOES she work from home on Fridays?\n(3rd person question → DOES, not Do)"
+      },
+    ]
+  },
+  {
+    id: 'C', name: 'Pres Simple vs Continuous',
+    questions: [
+      {
+        value: 100,
+        prompt: 'Fill in the gap:\n\n"Quiet please — the director\n_____ (GIVE) a presentation."',
+        answer: 'is giving\n\nThe action is happening RIGHT NOW at this moment.\nRight now → present continuous (is/am/are + -ing).'
+      },
+      {
+        value: 200,
+        prompt: 'Fill in the gaps:\n\n"I _____ (NORMALLY / TAKE) the train,\nbut today I _____ (DRIVE) because\nthere\'s a strike."',
+        answer: 'normally take / am driving\n\n"Normally" = a habit → present simple.\n"Today" = a temporary situation → present continuous.'
+      },
+      {
+        value: 300,
+        prompt: 'Which sentence is correct? Say why.\n\nA) I am wanting a new job.\nB) I want a new job.',
+        answer: 'B) I want a new job. ✓\n\n"Want" is a STATE verb (feelings / desires).\nState verbs don\'t normally use the continuous form.\nOther state verbs: know, need, believe, prefer, love, hate.'
+      },
+      {
+        value: 400,
+        prompt: 'Fill in the gaps:\n\n"She _____ (WORK) in marketing,\nbut this month she _____ (HELP)\nthe sales team with a big campaign."',
+        answer: 'works / is helping\n\n"In marketing" = her regular job → present simple.\n"This month" = something temporary → present continuous.'
+      },
+      {
+        value: 500,
+        prompt: 'Correct the THREE mistakes:\n\n"I\'m knowing the answer.\nWe usually are having lunch at 1pm.\nThis week she works on a special project."',
+        answer: 'I KNOW the answer.\n("know" is a state verb — no continuous form)\n\nWe usually HAVE lunch at 1pm.\n(routine with "usually" → present simple)\n\nThis week she IS WORKING on a special project.\n("this week" signals a temporary situation now → continuous)'
+      },
+    ]
+  },
+  {
+    id: 'D', name: 'Comparatives & Superlatives',
+    questions: [
+      {
+        value: 100,
+        prompt: 'Fill in the gap:\n\n"Living in the city is _____\n(EXPENSIVE) than in the countryside."',
+        answer: 'more expensive\n\nLong adjective (3+ syllables) → MORE + adjective + than.\nexpensive → more expensive'
+      },
+      {
+        value: 200,
+        prompt: 'Fill in the gap:\n\n"This is _____ (BAD) traffic\nI have ever seen in this city."',
+        answer: 'the worst\n\nIrregular superlative:\nbad → worse → the worst\n\n(Also: good → better → the best)'
+      },
+      {
+        value: 300,
+        prompt: 'Fill in the gaps:\n\n"The new laptop is _____ (FAST)\nbut _____ (RELIABLE) than the old one."',
+        answer: 'faster / less reliable\n\nfaster: short adjective → -er.\nless reliable: to express a lower degree → LESS + adjective.\n(OR: not as reliable as the old one.)'
+      },
+      {
+        value: 400,
+        prompt: 'Fill in the gaps using IRREGULAR forms:\n\n"Last year was _____ (BAD) for sales,\nbut this year is already _____\n(GOOD) than last year."',
+        answer: 'worse / better\n\nIrregular comparatives:\nbad → worse\ngood → better\n\n(Superlatives: the worst / the best)'
+      },
+      {
+        value: 500,
+        prompt: 'Correct the THREE mistakes:\n\n"This is the most cheap option available.\nHe arrived more late than expected.\nShe is the most good candidate we\'ve seen."',
+        answer: 'This is the CHEAPEST option available.\n(short adjective → -est, not "most")\n\nHe arrived LATER than expected.\n(short adjective → -er, not "more")\n\nShe is the BEST candidate we\'ve seen.\n(irregular: good → better → the best)'
+      },
+    ]
+  },
+  {
+    id: 'E', name: 'Past Simple',
+    questions: [
+      {
+        value: 100,
+        prompt: 'Fill in the gap:\n\n"She _____ (MOVE) to a new\napartment last month."',
+        answer: 'moved\n\nRegular verb in the past simple: add -ED.\nmove → moved\n\n"Last month" = finished time in the past → past simple.'
+      },
+      {
+        value: 200,
+        prompt: 'Make it negative:\n\n"I finished work early yesterday."',
+        answer: "I didn't finish work early yesterday.\n\nNegative past simple: DIDN'T + infinitive.\n(No -ed on the main verb after didn't!)"
+      },
+      {
+        value: 300,
+        prompt: 'Write the full question:\n\n(you / enjoy / the conference / last week?)',
+        answer: 'Did you enjoy the conference last week?\n\nQuestion form: DID + subject + infinitive?\n(No -ed on the main verb after did!)'
+      },
+      {
+        value: 400,
+        prompt: 'Fill in the gaps:\n\n"He _____ (NOT / GO) to the party\nbecause he _____ (FEEL) unwell.\nHe _____ (STAY) home and _____ (REST)."',
+        answer: "didn't go / felt / stayed / rested\n\ngo → irregular: went (but didn't go in the negative)\nfeel → irregular past: felt\nstay → regular: stayed\nrest → regular: rested"
+      },
+      {
+        value: 500,
+        prompt: 'Correct the THREE mistakes:\n\n"She goed to the shop but it was closed.\nDid he ate breakfast this morning?\nThey didn\'t arrived on time for the meeting."',
+        answer: 'She WENT to the shop...\n(go is irregular: go → went, not "goed")\n\nDid he EAT breakfast this morning?\n(after did/didn\'t → infinitive, not past tense)\n\nThey didn\'t ARRIVE on time...\n(after didn\'t → infinitive, not past form)'
+      },
+    ]
+  },
+];
+
+// —— WORKSHEET BUILD ——
+function buildWorksheet() {
+    const qDiv = document.getElementById('ws-questions');
+    const aDiv = document.getElementById('ws-answers');
+    qDiv.innerHTML = '';
+    // remove old answer categories (keep header)
+    while (aDiv.children.length > 1) aDiv.removeChild(aDiv.lastChild);
+
+    const qSection = document.createElement('div');
+    qSection.innerHTML = '<div class="ws-section-title">Questions</div>';
+    qDiv.appendChild(qSection);
+
+    const aSection = document.createElement('div');
+    aSection.innerHTML = '<div class="ws-section-title">Answer Key</div>';
+    aDiv.appendChild(aSection);
+
+    gameData.forEach(cat => {
+        // Questions block
+        const qCat = document.createElement('div');
+        qCat.className = 'ws-category';
+        qCat.innerHTML = `<div class="ws-cat-header"><span class="ws-cat-letter">${cat.id}</span>${cat.name}</div>`;
+        cat.questions.forEach((q, i) => {
+            const item = document.createElement('div');
+            item.className = 'ws-question';
+            item.innerHTML = `<div><span class="ws-q-label">$${q.value}</span><span class="ws-q-text">${q.prompt}</span></div><div class="ws-answer-line"></div>`;
+            qCat.appendChild(item);
+        });
+        qSection.appendChild(qCat);
+
+        // Answers block
+        const aCat = document.createElement('div');
+        aCat.className = 'ws-category';
+        aCat.innerHTML = `<div class="ws-cat-header"><span class="ws-cat-letter">${cat.id}</span>${cat.name}</div>`;
+        cat.questions.forEach((q, i) => {
+            const item = document.createElement('div');
+            item.className = 'ws-answer-block';
+            item.innerHTML = `<div><span class="ws-points">$${q.value} — </span><span class="ws-q-text" style="font-size:9.5pt;">${q.prompt.replace(/\n/g,' ')}</span></div><div class="ws-answer-text">${q.answer}</div>`;
+            aCat.appendChild(item);
+        });
+        aSection.appendChild(aCat);
+    });
+}
+
+function printWorksheet() {
+    buildWorksheet();
+    window.print();
+}
+
+// —— SOUND ——
+let audioCtx = null;
+function getAudio() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    return audioCtx;
+}
+function playTone(freq, type, duration, volume, delay = 0) {
+    try {
+        const ctx = getAudio(); const osc = ctx.createOscillator(); const gain = ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.type = type; osc.frequency.value = freq;
+        const t = ctx.currentTime + delay;
+        gain.gain.setValueAtTime(volume, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + duration);
+        osc.start(t); osc.stop(t + duration + 0.01);
+    } catch(e) {}
+}
+function playCorrect() {
+    [[523,'sine',0.45,0.28,0],[659,'sine',0.45,0.28,0.13],[784,'sine',0.45,0.28,0.26],[1047,'sine',0.65,0.35,0.39]]
+        .forEach(([f,type,dur,vol,d]) => playTone(f,type,dur,vol,d));
+}
+function playWrong() {
+    for (let i = 0; i < 3; i++) {
+        try {
+            const ctx = getAudio(); const osc = ctx.createOscillator(); const gain = ctx.createGain();
+            osc.connect(gain); gain.connect(ctx.destination); osc.type = 'sawtooth';
+            const t = ctx.currentTime + i * 0.19;
+            osc.frequency.setValueAtTime(260, t); osc.frequency.exponentialRampToValueAtTime(75, t + 0.16);
+            gain.gain.setValueAtTime(0.22, t); gain.gain.exponentialRampToValueAtTime(0.001, t + 0.16);
+            osc.start(t); osc.stop(t + 0.17);
+        } catch(e) {}
+    }
+}
+function playSpinTick() { playTone(650, 'square', 0.04, 0.09); }
+function playSpinLand() {
+    [[440,'sine',0.25,0.25,0],[550,'sine',0.25,0.25,0.07],[880,'sine',0.5,0.35,0.14]]
+        .forEach(([f,type,dur,vol,d]) => playTone(f,type,dur,vol,d));
+}
+let tickTimer = null;
+function startTick() {
+    stopTick();
+    playTone(1000, 'square', 0.03, 0.07);
+    tickTimer = setInterval(() => playTone(1000, 'square', 0.03, 0.07), 1000);
+}
+function stopTick() { if (tickTimer) { clearInterval(tickTimer); tickTimer = null; } }
+
+// —— STATE ——
+let teams = [], numTeams = 2, used = {}, currentQ = null, currentTeam = 0;
+
+// —— SETUP ——
+function setTeamCount(n) {
+    numTeams = n;
+    document.querySelectorAll('.team-count-btn').forEach((b,i) => b.classList.toggle('active', i === n-2));
+    renderTeamInputs();
+}
+function renderTeamInputs() {
+    const c = document.getElementById('team-names'); c.innerHTML = '';
+    for (let i = 0; i < numTeams; i++) {
+        const row = document.createElement('div'); row.className = 'team-name-row';
+        const dot = document.createElement('div'); dot.className = 'team-color-dot'; dot.style.background = TEAM_COLORS[i];
+        const inp = document.createElement('input'); inp.className = 'team-name-input'; inp.type = 'text';
+        inp.placeholder = `Team ${i+1}`; inp.id = `ti-${i}`;
+        row.append(dot, inp); c.appendChild(row);
+    }
+}
+function setupComplete() {
+    teams = Array.from({length: numTeams}, (_,i) => ({
+        name: document.getElementById(`ti-${i}`).value.trim() || `Team ${i+1}`,
+        color: TEAM_COLORS[i], score: 0,
+    }));
+    document.getElementById('setup-screen').style.display = 'none';
+    document.getElementById('spinner-screen').style.display = 'flex';
+    runSpinner();
+}
+
+// —— SPINNER ——
+function runSpinner() {
+    const winner = Math.floor(Math.random() * teams.length);
+    const card = document.getElementById('spinner-card');
+    const result = document.getElementById('spinner-result');
+    const playBtn = document.getElementById('play-btn');
+    result.style.display = 'none'; playBtn.style.display = 'none';
+    const totalFrames = 24 + teams.length * 4;
+    const seq = [];
+    for (let i = 0; i < totalFrames - 1; i++) seq.push(i % teams.length);
+    seq.push(winner);
+    let frame = 0;
+    function step() {
+        const ti = seq[frame];
+        card.textContent = teams[ti].name; card.style.background = teams[ti].color;
+        playSpinTick(); frame++;
+        if (frame < totalFrames) {
+            setTimeout(step, 55 + Math.pow(frame / totalFrames, 2.8) * 750);
+        } else {
+            currentTeam = winner; playSpinLand();
+            result.textContent = `🎉 ${teams[winner].name} goes first!`;
+            result.style.display = 'block'; playBtn.style.display = 'block';
+        }
+    }
+    step();
+}
+function beginGame() {
+    document.getElementById('spinner-screen').style.display = 'none';
+    document.getElementById('game-screen').style.display = 'flex';
+    renderScoreBar(); renderBoard(); updateTurnIndicator();
+}
+
+// —— SCORES & TURNS ——
+function renderScoreBar() {
+    const bar = document.getElementById('score-bar'); bar.innerHTML = '';
+    teams.forEach((t,i) => bar.insertAdjacentHTML('beforeend', `
+        <div class="score-card" id="sc-${i}">
+            <div class="score-team-name" style="color:${t.color}">${t.name}</div>
+            <div class="score-value" id="sv-${i}">0</div>
+            <div class="turn-arrow" id="ta-${i}" style="visibility:hidden">▲ YOUR TURN</div>
+        </div>`));
+}
+function updateScores() { teams.forEach((t,i) => document.getElementById(`sv-${i}`).textContent = t.score); }
+function updateTurnIndicator() {
+    teams.forEach((_,i) => {
+        document.getElementById(`sc-${i}`).classList.toggle('active-turn', i === currentTeam);
+        document.getElementById(`ta-${i}`).style.visibility = i === currentTeam ? 'visible' : 'hidden';
+    });
+}
+function advanceTurn() { currentTeam = (currentTeam + 1) % teams.length; updateTurnIndicator(); }
+
+// —— BOARD ——
+function renderBoard() {
+    const board = document.getElementById('board'); board.innerHTML = '';
+    board.style.gridTemplateColumns = `repeat(${gameData.length}, 1fr)`;
+    board.style.gridTemplateRows = `auto repeat(5, 1fr)`;
+    gameData.forEach(cat => board.insertAdjacentHTML('beforeend', `
+        <div class="category-header">
+            <div class="category-id">${cat.id}</div>
+            <div class="category-name">${cat.name}</div>
+        </div>`));
+    for (let qi = 0; qi < 5; qi++) {
+        gameData.forEach((cat,ci) => {
+            const q = cat.questions[qi], key = `${ci}-${qi}`, isUsed = !!used[key];
+            const cell = document.createElement('div');
+            cell.className = `q-cell${isUsed ? ' used' : ''}`; cell.id = `cell-${key}`;
+            if (!isUsed) { cell.textContent = `$${q.value}`; cell.onclick = () => openQ(ci, qi); }
+            board.appendChild(cell);
+        });
+    }
+}
+
+// —— MODAL ——
+function openQ(ci, qi) {
+    if (used[`${ci}-${qi}`]) return;
+    const cat = gameData[ci], q = cat.questions[qi];
+    currentQ = { ci, qi, value: q.value };
+    const t = teams[currentTeam];
+    document.getElementById('modal-cat-label').textContent   = `Category ${cat.id} — ${cat.name}`;
+    document.getElementById('modal-val-label').textContent   = `$${q.value}`;
+    document.getElementById('modal-question').textContent    = q.prompt;
+    document.getElementById('modal-answer-text').textContent = q.answer;
+    document.getElementById('modal-answer').classList.remove('visible');
+    document.getElementById('show-answer-btn').style.display = 'block';
+    document.getElementById('verdict-section').style.display = 'none';
+    const badge = document.getElementById('modal-team-badge');
+    badge.textContent = `${t.name}'s turn`; badge.style.background = t.color;
+    startTick();
+    document.getElementById('modal-overlay').classList.add('open');
+}
+function showAnswer() {
+    stopTick();
+    document.getElementById('modal-answer').classList.add('visible');
+    document.getElementById('show-answer-btn').style.display = 'none';
+    document.getElementById('verdict-section').style.display = 'block';
+}
+function verdict(isCorrect) {
+    if (isCorrect) {
+        teams[currentTeam].score += currentQ.value;
+        updateScores(); playCorrect(); markUsed('correct', currentTeam);
+    } else {
+        playWrong(); markUsed('wrong', currentTeam);
+    }
+    advanceTurn(); closeModal();
+}
+function skipQuestion() { markUsed('skip', null); closeModal(); }
+function markUsed(result, teamIndex) {
+    if (!currentQ) return;
+    const key = `${currentQ.ci}-${currentQ.qi}`; used[key] = true;
+    const cell = document.getElementById(`cell-${key}`);
+    if (!cell) return;
+    cell.classList.add('used'); cell.onclick = null;
+    if (result === 'correct') {
+        const col = teams[teamIndex].color;
+        cell.style.cssText += `background:${col};border-color:${col};font-size:2rem;`;
+        cell.textContent = '⭐';
+    } else if (result === 'wrong') {
+        cell.style.cssText += `background:#f1f5f9;border-color:#cbd5e1;font-size:2rem;`;
+        cell.textContent = '💨';
+    } else {
+        cell.style.background = '#f8faff'; cell.style.borderColor = '#e0e7ff'; cell.textContent = '';
+    }
+}
+function closeModal() {
+    stopTick(); document.getElementById('modal-overlay').classList.remove('open'); currentQ = null;
+}
+document.getElementById('modal-overlay').addEventListener('click', e => {
+    if (e.target === document.getElementById('modal-overlay')) closeModal();
+});
+
+// —— INIT ——
+setTeamCount(2);
+</script>
+</body>
+</html>
