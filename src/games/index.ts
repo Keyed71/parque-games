@@ -25,7 +25,7 @@ const games: GameDefinition[] = [
     title: 'Hanging Sentence',
     description: 'Guess letters to reveal the hidden sentence — 10 lives per round!',
     icon: '/hanging_sentence.png',
-    dataUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQQOA7JYpQHJPodeWxaoJzUqT1L6vftHr-jjo7Y7Y06lHAecXsk6aw5jFPeQhJgKMro7Wu1vzW5E7PS/pub?gid=1778102853&single=true&output=csv',
+    dataUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQQOA7JYpQHJPodeWxaoJzUqT1L6vftHr-jjo7Y7Y06lHAecXsk6aw5jFPeQhJgKMro7Wu1vzW5E7PS/pub?gid=1732264731&single=true&output=csv',
     component: MysterySentence,
   },
   {
