@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mystery Sentence</title>
+  <title>Hanging Sentence</title>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;900&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -331,7 +331,7 @@
 <!-- Setup -->
 <div id="setup-screen" class="hidden">
   <div class="setup-header">
-    <h1>Mystery Sentence</h1>
+    <h1>Hanging Sentence</h1>
     <p>Guess letters to reveal the hidden sentence before your lives run out</p>
   </div>
 
@@ -398,7 +398,7 @@
 <div id="game-screen" class="hidden">
   <div class="game-topbar">
     <button class="back-btn" onclick="goSetup()">← Back</button>
-    <div class="game-topbar-title">Mystery Sentence</div>
+    <div class="game-topbar-title">Hanging Sentence</div>
     <div class="game-topbar-meta" id="g-meta"></div>
   </div>
 
@@ -489,7 +489,7 @@
 </div>
 
 <script>
-const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRMZ-VR-OyW5gsYtSvVE3hNYjZlJFhe7QP0ue0V4IxSbgQKMOvPCYIkSLSn1y4d04gYmagwbcroJJKw/pub?gid=1778102853&single=true&output=csv';
+const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQQOA7JYpQHJPodeWxaoJzUqT1L6vftHr-jjo7Y7Y06lHAecXsk6aw5jFPeQhJgKMro7Wu1vzW5E7PS/pub?gid=1732264731&single=true&output=csv';
 
 const VOWELS = new Set(['a','e','i','o','u']);
 
@@ -534,7 +534,7 @@ function parseCSV(raw) {
     const obj = {};
     headers.forEach((h, i) => obj[h] = (vals[i] || '').trim());
     return obj;
-  }).filter(r => r.sentence);
+  }).filter(r => r['full correct sentence']);
 }
 
 // ── Boot ───────────────────────────────────────────────────────────────────
@@ -544,7 +544,7 @@ async function init() {
     const text = await res.text();
     allRows = parseCSV(text);
 
-    const cats = [...new Set(allRows.map(r => r.category).filter(Boolean))].sort();
+    const cats = [...new Set(allRows.map(r => r['tense / structure']).filter(Boolean))].sort();
     const sel  = document.getElementById('filter-cat');
     cats.forEach(c => {
       const o = document.createElement('option');
@@ -568,7 +568,7 @@ async function init() {
 function filtered() {
   const lv = document.getElementById('filter-level').value;
   const ct = document.getElementById('filter-cat').value;
-  return allRows.filter(r => (!lv || r.level === lv) && (!ct || r.category === ct));
+  return allRows.filter(r => (!lv || r['cefr level'] === lv) && (!ct || r['tense / structure'] === ct));
 }
 
 function updateMatchInfo() {
@@ -605,9 +605,9 @@ function startGame() {
 }
 
 function loadRound(row) {
-  gs.sentence     = row.sentence;
-  gs.category     = row.category;
-  gs.level        = row.level;
+  gs.sentence     = row['full correct sentence'];
+  gs.category     = row['tense / structure'];
+  gs.level        = row['cefr level'];
   gs.guessed      = new Set();
   gs.letterResult = {};
   gs.lives        = 10;
