@@ -7,7 +7,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;900&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Nunito', sans-serif; }
+    body { font-family: 'Nunito', sans-serif; background: #fdf6ec; }
     .hidden { display: none !important; }
 
     /* ── LOADING ──────────────────────────────────────── */
@@ -31,8 +31,9 @@
 
     .session-bar {
       background: #fff5ed; border-bottom: 2px solid #e8d0b0;
-      padding: 0.6rem 2rem; display: flex; align-items: center; flex-wrap: wrap;
+      padding: 0.6rem 2rem; display: flex; flex-wrap: wrap;
       gap: 1.25rem; font-size: 0.9rem; font-weight: 700; color: #7a2e1a;
+      align-items: center;
     }
     .session-bar span { opacity: 0.6; font-weight: 600; }
 
@@ -42,9 +43,8 @@
       font-size: 0.78rem; font-weight: 900; color: #7a2e1a;
       text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.6rem;
     }
-    .section-note { font-weight: 600; color: #94a3b8; text-transform: none; letter-spacing: 0; font-size: 0.75rem; }
+    .section-note { font-weight: 600; color: #94a3b8; text-transform: none; letter-spacing: 0; }
 
-    /* Level filter pills */
     .filter-row { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
     .level-pill {
       padding: 0.3rem 0.9rem; border: 2px solid #e8d0b0; border-radius: 20px;
@@ -56,7 +56,6 @@
     .level-pill.active { background: #c4592a; color: white; border-color: #c4592a; }
     .level-pill.pill-all.active { background: #7a2e1a; border-color: #7a2e1a; }
 
-    /* Structure list */
     .structures-panel {
       background: white; border: 2px solid #e8d0b0; border-radius: 16px;
       padding: 1rem 1.25rem; margin-bottom: 1.5rem;
@@ -68,17 +67,15 @@
     }
     .sel-link {
       background: none; border: none; padding: 0;
-      font-family: 'Nunito', sans-serif; font-size: 0.82rem; font-weight: 700;
-      color: #c4592a; cursor: pointer; text-decoration: underline;
+      font-family: 'Nunito', sans-serif; font-size: 0.82rem;
+      font-weight: 700; color: #c4592a; cursor: pointer; text-decoration: underline;
     }
     .struct-item {
       display: flex; align-items: center; gap: 0.65rem;
       padding: 0.45rem 0; border-bottom: 1px solid #f8fafc;
     }
     .struct-item:last-child { border-bottom: none; }
-    .struct-item input[type="checkbox"] {
-      width: 18px; height: 18px; accent-color: #c4592a; cursor: pointer; flex-shrink: 0;
-    }
+    .struct-item input[type="checkbox"] { width: 18px; height: 18px; accent-color: #c4592a; cursor: pointer; flex-shrink: 0; }
     .struct-item label { cursor: pointer; font-size: 0.95rem; font-weight: 700; color: #1e293b; flex: 1; }
     .lvl-badge {
       font-size: 0.68rem; font-weight: 900; padding: 0.15rem 0.55rem;
@@ -93,13 +90,12 @@
     .q-count { font-size: 0.75rem; font-weight: 700; color: #cbd5e1; flex-shrink: 0; }
     .no-structs { color: #94a3b8; font-size: 0.9rem; padding: 0.5rem 0; }
 
-    /* Team inputs */
     .team-row { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
     .team-card {
       background: white; border: 2px solid #e8d0b0; border-radius: 14px;
       padding: 0.75rem 1.25rem; display: flex; align-items: center; gap: 0.65rem;
     }
-    .team-card label { font-weight: 900; white-space: nowrap; font-size: 1rem; }
+    .team-card label { font-weight: 900; white-space: nowrap; font-size: 1.1rem; }
     .team-card.cx { border-color: #93c5fd; }
     .team-card.cx label { color: #1e40af; }
     .team-card.co { border-color: #f9a8d4; }
@@ -125,119 +121,135 @@
 
     /* ── GAME SCREEN ──────────────────────────────────── */
     #game-screen {
-      min-height: 100vh; background: #0f172a;
+      min-height: 100vh; background: #fdf6ec;
       display: flex; flex-direction: column;
     }
 
     .game-topbar {
       background: linear-gradient(150deg, #7a2e1a, #c4592a, #d4845a);
-      color: white; padding: 0.7rem 1.5rem;
+      color: white; padding: 0.75rem 1.5rem;
       display: flex; align-items: center; justify-content: space-between;
     }
     .game-topbar-title { font-size: 1.15rem; font-weight: 900; }
     .round-tag {
-      font-size: 0.8rem; font-weight: 700; opacity: 0.8;
-      background: rgba(255,255,255,0.15); border-radius: 20px;
-      padding: 0.2rem 0.75rem;
+      font-size: 0.82rem; font-weight: 700;
+      background: rgba(255,255,255,0.2); border-radius: 20px; padding: 0.2rem 0.85rem;
     }
 
     /* Scoreboard */
     .scoreboard {
+      background: white; border-bottom: 2px solid #e8d0b0;
       display: grid; grid-template-columns: 1fr auto 1fr;
-      background: #1e293b; color: white;
-      padding: 0.6rem 1.5rem 0.75rem; align-items: center; gap: 1rem;
+      align-items: center; padding: 0.75rem 2rem; gap: 1rem;
     }
-    .score-team { text-align: center; }
-    .score-team .st-symbol { font-size: 1.8rem; font-weight: 900; line-height: 1; }
-    .score-team.cx .st-symbol { color: #60a5fa; }
-    .score-team.co .st-symbol { color: #f472b6; }
-    .score-team .st-name {
-      font-size: 0.72rem; font-weight: 700; opacity: 0.55;
-      text-transform: uppercase; letter-spacing: 0.06em; margin: 0.1rem 0;
-    }
-    .score-team .st-wins { font-size: 2.4rem; font-weight: 900; line-height: 1; }
-    .score-team.cx .st-wins { color: #93c5fd; }
-    .score-team.co .st-wins { color: #f9a8d4; }
-    .score-team .st-label { font-size: 0.6rem; opacity: 0.35; text-transform: uppercase; letter-spacing: 0.06em; }
+    .score-team { display: flex; flex-direction: column; align-items: center; gap: 0.1rem; }
+    .score-team .st-symbol { font-size: 1.6rem; font-weight: 900; line-height: 1; }
+    .score-team.cx .st-symbol { color: #1d4ed8; }
+    .score-team.co .st-symbol { color: #be185d; }
+    .score-team .st-name  { font-size: 0.7rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.06em; }
+    .score-team .st-wins  { font-size: 2.8rem; font-weight: 900; line-height: 1; }
+    .score-team.cx .st-wins { color: #1d4ed8; }
+    .score-team.co .st-wins { color: #be185d; }
+    .score-team .st-label { font-size: 0.62rem; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
     .draws-col { text-align: center; }
-    .draws-col .dc-num { font-size: 1.6rem; font-weight: 900; opacity: 0.4; }
-    .draws-col .dc-lbl { font-size: 0.62rem; opacity: 0.3; text-transform: uppercase; letter-spacing: 0.06em; }
+    .draws-col .dc-num  { font-size: 1.8rem; font-weight: 900; color: #cbd5e1; line-height: 1; }
+    .draws-col .dc-lbl  { font-size: 0.6rem; color: #cbd5e1; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
 
     /* Turn banner */
     .turn-banner {
-      text-align: center; padding: 0.55rem 1rem;
+      text-align: center; padding: 0.6rem 1rem;
       font-size: 1.05rem; font-weight: 900;
       text-transform: uppercase; letter-spacing: 0.06em;
     }
-    .turn-banner.cx { background: #1d4ed8; color: #eff6ff; }
-    .turn-banner.co { background: #be185d; color: #fdf2f8; }
+    .turn-banner.cx { background: #dbeafe; color: #1e40af; border-bottom: 3px solid #93c5fd; }
+    .turn-banner.co { background: #fce7f3; color: #9d174d; border-bottom: 3px solid #f9a8d4; }
 
     /* Grid */
     .grid-wrap {
       flex: 1; display: flex; align-items: center; justify-content: center;
-      padding: 1.5rem 1rem;
+      padding: 1.75rem 1rem;
     }
+    .grid-container { position: relative; }
     .grid {
       display: grid; grid-template-columns: repeat(3, 1fr);
-      gap: 14px;
-      width: min(94vw, 540px);
+      gap: 14px; width: min(90vw, 520px);
     }
+
+    /* Win line SVG overlay */
+    #win-line-svg {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      pointer-events: none; overflow: visible;
+    }
+    #win-line-svg line {
+      stroke-linecap: round;
+      stroke-width: 10;
+      stroke-dasharray: 1000;
+      stroke-dashoffset: 1000;
+      transition: stroke-dashoffset 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Cells */
     .cell {
-      aspect-ratio: 1; border-radius: 20px;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      aspect-ratio: 1; border-radius: 18px;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
       cursor: pointer; padding: 0.75rem; text-align: center;
-      border: 3px solid rgba(255,255,255,0.08);
-      background: #1e293b;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.3);
-      transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s, background 0.2s;
+      background: white;
+      border: 3px solid #e2e8f0;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+      transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+      position: relative;
     }
     .cell:hover:not(.claimed) {
-      transform: translateY(-4px) scale(1.02);
-      box-shadow: 0 10px 32px rgba(0,0,0,0.45);
+      transform: translateY(-4px);
+      box-shadow: 0 10px 28px rgba(0,0,0,0.13);
       border-color: #c4592a;
-      background: #263348;
     }
     .cell.claimed { cursor: default; }
-    .cell.cx { background: #1e3a5f; border-color: #1d4ed8; }
-    .cell.co { background: #4a1030; border-color: #be185d; }
+    .cell.cx { background: #eff6ff; border-color: #2563eb; box-shadow: 0 4px 16px rgba(37,99,235,0.18); }
+    .cell.co { background: #fdf2f8; border-color: #be185d; box-shadow: 0 4px 16px rgba(190,24,93,0.18); }
     .cell.win {
-      animation: win-pulse 0.6s ease-out;
-      box-shadow: 0 0 0 3px #fbbf24, 0 10px 32px rgba(251,191,36,0.5);
-      transform: scale(1.05);
+      transform: scale(1.06);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+      z-index: 1;
     }
-    @keyframes win-pulse {
-      0%   { transform: scale(1); }
-      50%  { transform: scale(1.08); }
-      100% { transform: scale(1.05); }
-    }
+    .cell.win.cx { box-shadow: 0 8px 32px rgba(37,99,235,0.35); }
+    .cell.win.co { box-shadow: 0 8px 32px rgba(190,24,93,0.35); }
+
     .cell-mark {
-      font-size: clamp(2.2rem, 6vw, 3.8rem);
-      font-weight: 900; line-height: 1; margin-bottom: 0.25rem;
+      font-size: clamp(2.6rem, 8vw, 4.5rem);
+      font-weight: 900; line-height: 1; margin-bottom: 0.2rem;
     }
-    .cell.cx .cell-mark { color: #60a5fa; }
-    .cell.co .cell-mark { color: #f472b6; }
-    .cell-structure-name {
-      font-size: clamp(0.72rem, 1.7vw, 1rem);
-      font-weight: 900; color: #f1f5f9; line-height: 1.25;
+    .cell.cx .cell-mark { color: #1d4ed8; }
+    .cell.co .cell-mark { color: #be185d; }
+    .cell-struct-small {
+      font-size: clamp(0.58rem, 1.3vw, 0.78rem);
+      font-weight: 700; color: #94a3b8; line-height: 1.2;
     }
-    .cell.cx .cell-structure-name { color: #93c5fd; opacity: 0.75; font-size: clamp(0.6rem, 1.3vw, 0.8rem); }
-    .cell.co .cell-structure-name { color: #f9a8d4; opacity: 0.75; font-size: clamp(0.6rem, 1.3vw, 0.8rem); }
+    .cell.cx .cell-struct-small { color: #93c5fd; }
+    .cell.co .cell-struct-small { color: #f9a8d4; }
+
+    .cell-struct-name {
+      font-size: clamp(0.78rem, 2vw, 1rem);
+      font-weight: 900; color: #1e293b; line-height: 1.3;
+    }
     .cell-level-tag {
-      font-size: clamp(0.6rem, 1.2vw, 0.75rem);
-      font-weight: 700; color: rgba(255,255,255,0.3);
-      text-transform: uppercase; letter-spacing: 0.05em;
-      margin-top: 0.2rem;
+      font-size: clamp(0.6rem, 1.2vw, 0.72rem);
+      font-weight: 700; color: #94a3b8;
+      text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.2rem;
     }
 
     /* ── QUESTION MODAL ───────────────────────────────── */
     .modal-overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.72);
+      position: fixed; inset: 0; background: rgba(0,0,0,0.6);
       display: flex; align-items: center; justify-content: center;
       z-index: 100; padding: 1rem;
     }
     .modal-box {
       background: white; border-radius: 24px;
       padding: 2rem 2.25rem; max-width: 540px; width: 100%;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.3);
     }
     .m-struct-tag {
       display: inline-block; background: #fef3c7; color: #92400e;
@@ -252,19 +264,17 @@
     .m-type-label.gap   { color: #0891b2; }
     .m-type-label.error { color: #dc2626; }
     .m-question {
-      font-size: 1.45rem; font-weight: 700; color: #0f172a;
+      font-size: 1.4rem; font-weight: 700; color: #0f172a;
       line-height: 1.45; margin-bottom: 1.4rem;
     }
     .answer-reveal { margin-bottom: 1.25rem; }
     .answer-box {
-      background: #f8fafc; border-radius: 12px;
-      padding: 0.9rem 1.1rem; font-size: 1.1rem;
-      font-weight: 700; color: #1e293b; transition: filter 0.25s;
+      background: #f8fafc; border-radius: 12px; padding: 0.9rem 1.1rem;
+      font-size: 1.1rem; font-weight: 700; color: #1e293b;
+      transition: filter 0.25s;
     }
     .answer-box.blurred { filter: blur(7px); user-select: none; }
-    .answer-note {
-      font-size: 0.8rem; font-weight: 700; color: #64748b; margin-top: 0.5rem;
-    }
+    .answer-note { font-size: 0.8rem; font-weight: 700; color: #64748b; margin-top: 0.5rem; }
     .reveal-btn {
       background: none; border: none; margin-top: 0.5rem;
       font-family: 'Nunito', sans-serif; font-size: 0.85rem;
@@ -283,19 +293,20 @@
 
     /* ── ROUND END ────────────────────────────────────── */
     #round-end {
-      position: fixed; inset: 0; background: rgba(15,23,42,0.88);
+      position: fixed; inset: 0; background: rgba(15,23,42,0.75);
       display: flex; align-items: center; justify-content: center;
       z-index: 200; padding: 1rem;
     }
     .re-box {
       background: white; border-radius: 28px;
-      padding: 2.5rem 2.75rem; max-width: 480px; width: 100%; text-align: center;
+      padding: 2.5rem 2.75rem; max-width: 460px; width: 100%; text-align: center;
+      box-shadow: 0 32px 80px rgba(0,0,0,0.35);
     }
     .re-mark { font-size: 5rem; line-height: 1; margin-bottom: 0.2rem; font-weight: 900; }
     .re-mark.cx   { color: #1d4ed8; }
     .re-mark.co   { color: #be185d; }
     .re-mark.draw { font-size: 3.5rem; }
-    .re-title { font-size: 2rem; font-weight: 900; margin-bottom: 0.15rem; }
+    .re-title { font-size: 2rem; font-weight: 900; margin-bottom: 0.15rem; color: #0f172a; }
     .re-sub   { color: #64748b; font-size: 0.92rem; margin-bottom: 1.75rem; }
     .re-scores {
       display: flex; gap: 1.5rem; justify-content: center;
@@ -304,9 +315,9 @@
     .re-score { text-align: center; }
     .re-score .rs-name { font-size: 0.72rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.06em; color: #64748b; }
     .re-score .rs-num  { font-size: 3rem; font-weight: 900; line-height: 1.1; }
-    .re-score.cx   .rs-num { color: #1d4ed8; }
-    .re-score.co   .rs-num { color: #be185d; }
-    .re-score.draws .rs-num { color: #94a3b8; }
+    .re-score.cx    .rs-num { color: #1d4ed8; }
+    .re-score.co    .rs-num { color: #be185d; }
+    .re-score.draws .rs-num { color: #cbd5e1; }
     .re-score .rs-lbl { font-size: 0.68rem; color: #94a3b8; font-weight: 700; }
     .re-actions { display: flex; gap: 0.65rem; justify-content: center; flex-wrap: wrap; }
     .re-btn {
@@ -333,17 +344,13 @@
     <h1>Noughts &amp; Crosses</h1>
     <p>Pick grammar structures, then battle it out on the grid!</p>
   </div>
-
   <div id="session-bar" class="session-bar hidden">
     <span>Session:</span>
     <strong id="bar-x">Team X — 0 wins</strong>
     <strong id="bar-o">Team O — 0 wins</strong>
     <span id="bar-draws">0 draws</span>
   </div>
-
   <div class="setup-body">
-
-    <!-- Level filter -->
     <div class="section-label">Filter by CEFR level</div>
     <div class="filter-row" id="level-filters">
       <button class="level-pill pill-all active" data-level="">All</button>
@@ -354,27 +361,16 @@
       <button class="level-pill" data-level="C1">C1</button>
       <button class="level-pill" data-level="C2">C2</button>
     </div>
-
-    <!-- Structures -->
     <div class="section-label">
       Grammar structures
       <span class="section-note">— check the ones to include in the grid</span>
     </div>
     <div class="structures-panel" id="structures-panel"></div>
-
-    <!-- Teams -->
     <div class="section-label">Teams</div>
     <div class="team-row">
-      <div class="team-card cx">
-        <label>✕</label>
-        <input type="text" id="name-x" value="Team X" maxlength="20">
-      </div>
-      <div class="team-card co">
-        <label>○</label>
-        <input type="text" id="name-o" value="Team O" maxlength="20">
-      </div>
+      <div class="team-card cx"><label>✕</label><input type="text" id="name-x" value="Team X" maxlength="20"></div>
+      <div class="team-card co"><label>○</label><input type="text" id="name-o" value="Team O" maxlength="20"></div>
     </div>
-
     <div class="match-info" id="match-info"></div>
     <button class="btn-start" id="start-btn" onclick="startGame()" disabled>▶ Start Game</button>
   </div>
@@ -386,7 +382,6 @@
     <div class="game-topbar-title">Noughts &amp; Crosses</div>
     <div class="round-tag" id="round-tag">Round 1</div>
   </div>
-
   <div class="scoreboard">
     <div class="score-team cx">
       <div class="st-symbol">✕</div>
@@ -405,11 +400,12 @@
       <div class="st-label">wins</div>
     </div>
   </div>
-
   <div class="turn-banner cx" id="turn-banner">Team X's Turn</div>
-
   <div class="grid-wrap">
-    <div class="grid" id="grid"></div>
+    <div class="grid-container">
+      <div class="grid" id="grid"></div>
+      <svg id="win-line-svg" class="hidden"><line id="win-line" /></svg>
+    </div>
   </div>
 </div>
 
@@ -417,12 +413,12 @@
 <div class="modal-overlay hidden" id="q-modal">
   <div class="modal-box">
     <div class="m-struct-tag" id="m-struct"></div>
-    <div class="m-type-label" id="m-type"></div>
-    <div class="m-question" id="m-question"></div>
+    <div class="m-type-label"  id="m-type"></div>
+    <div class="m-question"    id="m-question"></div>
     <div class="answer-reveal">
       <div class="answer-box blurred" id="m-answer"></div>
-      <div class="answer-note hidden" id="m-note"></div>
-      <button class="reveal-btn" id="reveal-btn" onclick="toggleReveal()">👁 Show answer</button>
+      <div class="answer-note hidden"  id="m-note"></div>
+      <button class="reveal-btn" onclick="toggleReveal()">👁 Show answer</button>
     </div>
     <div class="modal-actions">
       <button class="m-btn correct" onclick="resolveQuestion(true)">✓ Correct!</button>
@@ -435,7 +431,7 @@
 <!-- Round end -->
 <div id="round-end" class="hidden">
   <div class="re-box">
-    <div class="re-mark" id="re-mark"></div>
+    <div class="re-mark"  id="re-mark"></div>
     <div class="re-title" id="re-title"></div>
     <div class="re-sub"   id="re-sub"></div>
     <div class="re-scores">
@@ -471,21 +467,20 @@ const WIN_LINES = [
   [0,4,8],[2,4,6],
 ];
 
-// ── State ──────────────────────────────────────────────────────────────────
 let allRows      = [];
-let structureMap = {};   // structure name → [rows]
+let structureMap = {};
 let levelFilter  = '';
-let activeCell   = null; // grid index of cell being questioned
+let pendingCell  = null; // index of cell waiting on question result
 
 const gs = {
-  grid:       [],   // 9 × { structure, question, owner: null|'X'|'O' }
-  turn:       'X',
-  names:      { X: 'Team X', O: 'Team O' },
-  scores:     { X: 0, O: 0, draws: 0 },
-  roundsDone: 0,
-  playing:    false,
-  winner:     null,   // null | 'X' | 'O' | 'draw'
-  winLine:    [],
+  grid:               [],
+  turn:               'X',
+  names:              { X: 'Team X', O: 'Team O' },
+  scores:             { X: 0, O: 0, draws: 0 },
+  roundsDone:         0,
+  playing:            false,
+  winner:             null,
+  winLine:            [],
   selectedStructures: [],
 };
 
@@ -496,7 +491,7 @@ function parseCSV(raw) {
     for (const c of line) {
       if (c === '"') { inQ = !inQ; }
       else if (c === ',' && !inQ) { out.push(f.trim()); f = ''; }
-      else { f += c; }
+      else f += c;
     }
     out.push(f.trim());
     return out;
@@ -517,16 +512,13 @@ async function init() {
   try {
     const res  = await fetch(CSV_URL);
     const text = await res.text();
-    allRows    = parseCSV(text);
-
+    allRows = parseCSV(text);
     allRows.forEach(r => {
       const s = r['tense / structure'];
       if (!s) return;
       if (!structureMap[s]) structureMap[s] = [];
       structureMap[s].push(r);
     });
-
-    // Wire level-filter buttons
     document.getElementById('level-filters').addEventListener('click', e => {
       const btn = e.target.closest('.level-pill');
       if (!btn) return;
@@ -537,7 +529,6 @@ async function init() {
       renderStructurePanel();
       updateMatchInfo();
     });
-
     renderStructurePanel();
     updateMatchInfo();
     show('setup-screen');
@@ -551,11 +542,9 @@ async function init() {
 
 // ── Setup ──────────────────────────────────────────────────────────────────
 function getVisibleStructures() {
-  const seen = new Set();
-  const out  = [];
+  const seen = new Set(); const out = [];
   allRows.forEach(r => {
-    const s = r['tense / structure'];
-    const l = r['cefr level'];
+    const s = r['tense / structure'], l = r['cefr level'];
     if (!s) return;
     if (levelFilter && l !== levelFilter) return;
     if (!seen.has(s)) { seen.add(s); out.push({ structure: s, level: l }); }
@@ -564,37 +553,31 @@ function getVisibleStructures() {
 }
 
 function renderStructurePanel() {
-  // Snapshot currently checked structures before clearing
-  const checked = new Set(
-    [...document.querySelectorAll('.struct-cb:checked')].map(cb => cb.value)
-  );
-
-  const panel   = document.getElementById('structures-panel');
-  const visible = getVisibleStructures();
+  const checked  = new Set([...document.querySelectorAll('.struct-cb:checked')].map(cb => cb.value));
+  const visible  = getVisibleStructures();
+  const panel    = document.getElementById('structures-panel');
 
   let html = `<div class="sel-all-row">
     <button class="sel-link" onclick="selectAll(true)">Select all</button>
     <button class="sel-link" onclick="selectAll(false)">Deselect all</button>
   </div>`;
 
-  if (visible.length === 0) {
+  if (!visible.length) {
     html += '<div class="no-structs">No structures found for this level.</div>';
   } else {
     visible.forEach(({ structure, level }) => {
-      const id  = `cb-${CSS.escape(structure)}`;
+      const id  = `cb-${structure.replace(/[^a-zA-Z0-9]/g,'-')}`;
       const lc  = level.toLowerCase();
       const cnt = structureMap[structure]?.length ?? 0;
-      html += `
-        <div class="struct-item">
-          <input type="checkbox" class="struct-cb" id="${id}" value="${structure}"
-            ${checked.has(structure) ? 'checked' : ''} onchange="updateMatchInfo()">
-          <label for="${id}">${structure}</label>
-          <span class="lvl-badge lvl-${lc}">${level}</span>
-          <span class="q-count">${cnt}q</span>
-        </div>`;
+      html += `<div class="struct-item">
+        <input type="checkbox" class="struct-cb" id="${id}" value="${structure}"
+          ${checked.has(structure) ? 'checked' : ''} onchange="updateMatchInfo()">
+        <label for="${id}">${structure}</label>
+        <span class="lvl-badge lvl-${lc}">${level}</span>
+        <span class="q-count">${cnt}q</span>
+      </div>`;
     });
   }
-
   panel.innerHTML = html;
 }
 
@@ -611,18 +594,16 @@ function updateMatchInfo() {
   const sel  = getCheckedStructures();
   const info = document.getElementById('match-info');
   const btn  = document.getElementById('start-btn');
-
-  if (sel.length === 0) {
+  if (!sel.length) {
     info.textContent = 'Select at least one structure to start.';
     info.className   = 'match-info warn';
     btn.disabled     = true;
     return;
   }
-
   const totalQ = sel.reduce((n, s) => n + (structureMap[s]?.length ?? 0), 0);
   const note   = sel.length < 9
-    ? `${sel.length} structure${sel.length > 1 ? 's' : ''} — each will appear multiple times in the 9-cell grid`
-    : `${sel.length} structures — 9 randomly selected for the grid`;
+    ? `${sel.length} structure${sel.length > 1 ? 's' : ''} — each appears multiple times in the 9-cell grid`
+    : `${sel.length} structures — 9 randomly placed in the grid`;
   info.textContent = `${note} · ${totalQ} questions available`;
   info.className   = 'match-info';
   btn.disabled     = false;
@@ -638,26 +619,16 @@ function shuffle(arr) {
 }
 
 function buildGrid(selected) {
-  // Distribute structures evenly across 9 cells
-  let pool;
-  if (selected.length >= 9) {
-    pool = shuffle([...selected]).slice(0, 9);
-  } else {
-    pool = [];
-    for (let i = 0; i < 9; i++) pool.push(selected[i % selected.length]);
-    shuffle(pool);
-  }
+  let pool = selected.length >= 9
+    ? shuffle([...selected]).slice(0, 9)
+    : shuffle(Array.from({ length: 9 }, (_, i) => selected[i % selected.length]));
 
-  // Assign one unique question per cell (best-effort, avoids duplicates)
   const usedKeys = new Set();
   return pool.map(structure => {
-    const rows       = structureMap[structure] ?? [];
-    const candidates = rows.filter(r => {
-      const key = r['sentence id'] || r['full correct sentence'];
-      return !usedKeys.has(key);
-    });
-    const source = candidates.length > 0 ? candidates : rows;
-    const q      = source[Math.floor(Math.random() * source.length)] ?? null;
+    const rows  = structureMap[structure] ?? [];
+    const fresh = rows.filter(r => !usedKeys.has(r['sentence id'] || r['full correct sentence']));
+    const src   = fresh.length ? fresh : rows;
+    const q     = src[Math.floor(Math.random() * src.length)] ?? null;
     if (q) usedKeys.add(q['sentence id'] || q['full correct sentence']);
     return { structure, question: q, owner: null };
   });
@@ -666,8 +637,7 @@ function buildGrid(selected) {
 // ── Game start ─────────────────────────────────────────────────────────────
 function startGame() {
   const sel = getCheckedStructures();
-  if (sel.length === 0) return;
-
+  if (!sel.length) return;
   gs.names = {
     X: document.getElementById('name-x').value.trim() || 'Team X',
     O: document.getElementById('name-o').value.trim() || 'Team O',
@@ -679,7 +649,6 @@ function startGame() {
   gs.winLine = [];
   gs.playing = true;
   gs.roundsDone++;
-
   hide('setup-screen');
   show('game-screen');
   renderGame();
@@ -687,49 +656,81 @@ function startGame() {
 
 // ── Render ─────────────────────────────────────────────────────────────────
 function renderGame() {
-  document.getElementById('round-tag').textContent    = `Round ${gs.roundsDone}`;
-  document.getElementById('g-name-x').textContent    = gs.names.X;
-  document.getElementById('g-name-o').textContent    = gs.names.O;
-  document.getElementById('g-wins-x').textContent    = gs.scores.X;
-  document.getElementById('g-wins-o').textContent    = gs.scores.O;
-  document.getElementById('g-draws').textContent     = gs.scores.draws;
-
+  document.getElementById('round-tag').textContent = `Round ${gs.roundsDone}`;
+  document.getElementById('g-name-x').textContent  = gs.names.X;
+  document.getElementById('g-name-o').textContent  = gs.names.O;
+  document.getElementById('g-wins-x').textContent  = gs.scores.X;
+  document.getElementById('g-wins-o').textContent  = gs.scores.O;
+  document.getElementById('g-draws').textContent   = gs.scores.draws;
   const banner = document.getElementById('turn-banner');
   banner.textContent = `${gs.names[gs.turn]}'s Turn`;
   banner.className   = `turn-banner ${gs.turn.toLowerCase()}`;
-
   renderGrid();
 }
 
 function renderGrid() {
   const gridEl = document.getElementById('grid');
   gridEl.innerHTML = '';
+  document.getElementById('win-line-svg').classList.add('hidden');
+
   gs.grid.forEach((cell, i) => {
-    const el = document.createElement('div');
+    const el       = document.createElement('div');
     const winClass = gs.winLine.includes(i) ? ' win' : '';
 
     if (cell.owner) {
       el.className = `cell claimed ${cell.owner.toLowerCase()}${winClass}`;
       el.innerHTML = `
         <div class="cell-mark">${cell.owner === 'X' ? '✕' : '○'}</div>
-        <div class="cell-structure-name">${cell.structure}</div>`;
+        <div class="cell-struct-small">${cell.structure}</div>`;
     } else {
       el.className = `cell${winClass}`;
       el.innerHTML = `
-        <div class="cell-structure-name">${cell.structure}</div>
+        <div class="cell-struct-name">${cell.structure}</div>
         <div class="cell-level-tag">${cell.question?.['cefr level'] ?? ''}</div>`;
-      if (gs.playing && !gs.winner) {
-        el.addEventListener('click', () => openQuestion(i));
-      }
+      if (gs.playing && !gs.winner) el.addEventListener('click', () => openQuestion(i));
     }
     gridEl.appendChild(el);
   });
 }
 
+// ── Win line ───────────────────────────────────────────────────────────────
+function animateWinLine(winLine, team) {
+  const gridEl   = document.getElementById('grid');
+  const cells    = [...gridEl.querySelectorAll('.cell')];
+  const gridRect = gridEl.getBoundingClientRect();
+  const cellA    = cells[winLine[0]].getBoundingClientRect();
+  const cellC    = cells[winLine[2]].getBoundingClientRect();
+
+  const x1 = cellA.left + cellA.width  / 2 - gridRect.left;
+  const y1 = cellA.top  + cellA.height / 2 - gridRect.top;
+  const x2 = cellC.left + cellC.width  / 2 - gridRect.left;
+  const y2 = cellC.top  + cellC.height / 2 - gridRect.top;
+
+  const length = Math.hypot(x2 - x1, y2 - y1);
+  const color  = team === 'X' ? '#1d4ed8' : '#be185d';
+
+  const svgEl  = document.getElementById('win-line-svg');
+  const lineEl = document.getElementById('win-line');
+
+  svgEl.setAttribute('viewBox', `0 0 ${gridRect.width} ${gridRect.height}`);
+  lineEl.setAttribute('x1', x1); lineEl.setAttribute('y1', y1);
+  lineEl.setAttribute('x2', x2); lineEl.setAttribute('y2', y2);
+  lineEl.setAttribute('stroke', color);
+  lineEl.style.strokeDasharray  = length;
+  lineEl.style.strokeDashoffset = length;
+
+  svgEl.classList.remove('hidden');
+
+  // Force reflow then animate
+  lineEl.getBoundingClientRect();
+  lineEl.style.strokeDashoffset = '0';
+}
+
 // ── Question modal ─────────────────────────────────────────────────────────
 function openQuestion(idx) {
   if (!gs.playing || gs.grid[idx].owner) return;
-  activeCell    = idx;
+  pendingCell = idx;
+
   const { structure, question: q } = gs.grid[idx];
   if (!q) { resolveQuestion(false); return; }
 
@@ -737,12 +738,10 @@ function openQuestion(idx) {
   const errVer = q['error version']?.trim();
 
   let type, text;
-  if (gapped && errVer) {
-    type = Math.random() < 0.5 ? 'gap' : 'error';
-    text = type === 'gap' ? gapped : errVer;
-  } else if (gapped) { type = 'gap';   text = gapped;  }
-  else if (errVer)   { type = 'error'; text = errVer;  }
-  else               { type = '';      text = q['full correct sentence']; }
+  if      (gapped && errVer) { type = Math.random() < 0.5 ? 'gap' : 'error'; text = type === 'gap' ? gapped : errVer; }
+  else if (gapped)           { type = 'gap';   text = gapped;  }
+  else if (errVer)           { type = 'error'; text = errVer;  }
+  else                       { type = '';      text = q['full correct sentence']; }
 
   const note = type === 'gap'
     ? (q['target verb'] ? `Target verb: ${q['target verb']}` : '')
@@ -752,12 +751,11 @@ function openQuestion(idx) {
   document.getElementById('m-question').textContent = text;
   document.getElementById('m-answer').textContent   = q['full correct sentence'];
   document.getElementById('m-answer').classList.add('blurred');
-  document.getElementById('reveal-btn').textContent = '👁 Show answer';
 
   const typeEl = document.getElementById('m-type');
-  if (type === 'gap')   { typeEl.textContent = '✏️  Fill in the gap';      typeEl.className = 'm-type-label gap'; }
-  else if (type === 'error') { typeEl.textContent = '🔍  Correct the error'; typeEl.className = 'm-type-label error'; }
-  else { typeEl.textContent = ''; typeEl.className = 'm-type-label'; }
+  if      (type === 'gap')   { typeEl.textContent = '✏️  Fill in the gap';      typeEl.className = 'm-type-label gap'; }
+  else if (type === 'error') { typeEl.textContent = '🔍  Correct the error';    typeEl.className = 'm-type-label error'; }
+  else                       { typeEl.textContent = '';                          typeEl.className = 'm-type-label'; }
 
   const noteEl = document.getElementById('m-note');
   noteEl.textContent = note;
@@ -768,26 +766,32 @@ function openQuestion(idx) {
 
 function toggleReveal() {
   const box = document.getElementById('m-answer');
-  const btn = document.getElementById('reveal-btn');
-  const blurred = box.classList.toggle('blurred');
-  btn.textContent = blurred ? '👁 Show answer' : '🙈 Hide answer';
+  const btn = document.querySelector('.reveal-btn');
+  box.classList.toggle('blurred');
+  btn.textContent = box.classList.contains('blurred') ? '👁 Show answer' : '🙈 Hide answer';
 }
 
 function resolveQuestion(correct) {
-  closeModal();
-  if (correct && activeCell !== null) {
-    gs.grid[activeCell].owner = gs.turn;
+  // Save pendingCell BEFORE closing the modal (closeModal nulls it)
+  const cellIdx = pendingCell;
+  hide('q-modal');
+  pendingCell = null;
+
+  if (correct && cellIdx !== null) {
+    gs.grid[cellIdx].owner = gs.turn;
     const result = checkWin();
-    if (result) { endRound(result); return; }
+    if (result) {
+      endRound(result);
+      return;
+    }
   }
-  activeCell = null;
   gs.turn = gs.turn === 'X' ? 'O' : 'X';
   renderGame();
 }
 
 function closeModal() {
   hide('q-modal');
-  activeCell = null;
+  pendingCell = null;
 }
 
 // ── Win detection ──────────────────────────────────────────────────────────
@@ -811,15 +815,15 @@ function endRound(result) {
 
   if (result === 'draw') {
     gs.scores.draws++;
-    document.getElementById('re-mark').textContent = '🤝';
-    document.getElementById('re-mark').className   = 're-mark draw';
+    document.getElementById('re-mark').textContent  = '🤝';
+    document.getElementById('re-mark').className    = 're-mark draw';
     document.getElementById('re-title').textContent = "It's a Draw!";
     document.getElementById('re-sub').textContent   = 'No winner this round — well played both teams!';
   } else {
     gs.scores[result]++;
-    document.getElementById('re-mark').textContent = result === 'X' ? '✕' : '○';
-    document.getElementById('re-mark').className   = `re-mark ${result.toLowerCase()}`;
-    document.getElementById('re-title').textContent = `${gs.names[result]} wins!`;
+    document.getElementById('re-mark').textContent  = result === 'X' ? '✕' : '○';
+    document.getElementById('re-mark').className    = `re-mark ${result.toLowerCase()}`;
+    document.getElementById('re-title').textContent = `${gs.names[result]} wins the round!`;
     document.getElementById('re-sub').textContent   = `${gs.names[result]} got three in a row!`;
   }
 
@@ -829,15 +833,24 @@ function endRound(result) {
   document.getElementById('re-wins-o').textContent = gs.scores.O;
   document.getElementById('re-draws').textContent  = gs.scores.draws;
 
-  renderGrid(); // highlights winning cells
-  show('round-end');
+  renderGrid(); // show owned cells and win highlights
+
+  if (result !== 'draw') {
+    // Animate win line, then show overlay
+    requestAnimationFrame(() => {
+      animateWinLine(gs.winLine, result);
+      setTimeout(() => show('round-end'), 900);
+    });
+  } else {
+    setTimeout(() => show('round-end'), 300);
+  }
 }
 
 // ── Navigation ─────────────────────────────────────────────────────────────
 function nextRound() {
   hide('round-end');
   gs.grid    = buildGrid(gs.selectedStructures);
-  gs.turn    = gs.winner === 'X' ? 'O' : 'X'; // loser starts next round
+  gs.turn    = gs.winner === 'X' ? 'O' : 'X';
   gs.winner  = null;
   gs.winLine = [];
   gs.playing = true;
@@ -854,7 +867,7 @@ function editGame() {
 }
 
 function updateSessionBar() {
-  if (gs.roundsDone === 0) return;
+  if (!gs.roundsDone) return;
   const { X, O, draws } = gs.scores;
   document.getElementById('bar-x').textContent     = `${gs.names.X} — ${X} win${X !== 1 ? 's' : ''}`;
   document.getElementById('bar-o').textContent     = `${gs.names.O} — ${O} win${O !== 1 ? 's' : ''}`;
@@ -862,9 +875,8 @@ function updateSessionBar() {
   document.getElementById('session-bar').classList.remove('hidden');
 }
 
-// ── Helpers ────────────────────────────────────────────────────────────────
 function show(id) { document.getElementById(id).classList.remove('hidden'); }
-function hide(id) { document.getElementById(id).classList.add('hidden');    }
+function hide(id) { document.getElementById(id).classList.add('hidden'); }
 
 init();
 </script>
