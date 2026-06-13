@@ -33,7 +33,7 @@ const games: GameDefinition[] = [
     id: 'noughts-crosses',
     title: 'Noughts & Crosses',
     description: 'Grammar battle on a 3×3 grid — gap fills and error corrections.',
-    icon: '✕○',
+    icon: '/noughts_and_crosses.png',
     component: NoughtsCrosses,
   },
   {
