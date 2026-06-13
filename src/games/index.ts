@@ -2,6 +2,7 @@ import type { GameDefinition } from '../types'
 import HerdMentality from './herd-mentality/HerdMentality'
 import Jeopardy from './jeopardy/Jeopardy'
 import MysterySentence from './mystery-sentence/MysterySentence'
+import NoughtsCrosses from './noughts-crosses/NoughtsCrosses'
 
 const games: GameDefinition[] = [
   {
@@ -27,6 +28,13 @@ const games: GameDefinition[] = [
     icon: '/hanging_sentence.png',
     dataUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQQOA7JYpQHJPodeWxaoJzUqT1L6vftHr-jjo7Y7Y06lHAecXsk6aw5jFPeQhJgKMro7Wu1vzW5E7PS/pub?gid=1732264731&single=true&output=csv',
     component: MysterySentence,
+  },
+  {
+    id: 'noughts-crosses',
+    title: 'Noughts & Crosses',
+    description: 'Grammar battle on a 3×3 grid — gap fills and error corrections.',
+    icon: '✕○',
+    component: NoughtsCrosses,
   },
   {
     id: 'word-family',
