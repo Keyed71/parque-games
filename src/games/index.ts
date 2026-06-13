@@ -9,6 +9,7 @@ const games: GameDefinition[] = [
     title: 'Herd Mentality',
     description: 'Think like the herd — or face the pink cow!',
     icon: '/herd_mentality.png',
+    dataUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQQOA7JYpQHJPodeWxaoJzUqT1L6vftHr-jjo7Y7Y06lHAecXsk6aw5jFPeQhJgKMro7Wu1vzW5E7PS/pub?gid=2013736668&single=true&output=csv',
     component: HerdMentality,
   },
   {
@@ -16,14 +17,15 @@ const games: GameDefinition[] = [
     title: 'Jeopardy',
     description: 'Pick a category, pick a value, answer the question!',
     icon: '/jeopardy.png',
-    dataUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRMZ-VR-OyW5gsYtSvVE3hNYjZlJFhe7QP0ue0V4IxSbgQKMOvPCYIkSLSn1y4d04gYmagwbcroJJKw/pub?gid=2045134284&single=true&output=csv',
+    dataUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQQOA7JYpQHJPodeWxaoJzUqT1L6vftHr-jjo7Y7Y06lHAecXsk6aw5jFPeQhJgKMro7Wu1vzW5E7PS/pub?gid=2045134284&single=true&output=csv',
     component: Jeopardy,
   },
   {
     id: 'mystery-sentence',
-    title: 'Mystery Sentence',
+    title: 'Hanging Sentence',
     description: 'Guess letters to reveal the hidden sentence — 10 lives per round!',
     icon: '/hanging_sentence.png',
+    dataUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQQOA7JYpQHJPodeWxaoJzUqT1L6vftHr-jjo7Y7Y06lHAecXsk6aw5jFPeQhJgKMro7Wu1vzW5E7PS/pub?gid=1778102853&single=true&output=csv',
     component: MysterySentence,
   },
   {
