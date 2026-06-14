@@ -3,6 +3,7 @@ import HerdMentality from './herd-mentality/HerdMentality'
 import Jeopardy from './jeopardy/Jeopardy'
 import MysterySentence from './mystery-sentence/MysterySentence'
 import NoughtsCrosses from './noughts-crosses/NoughtsCrosses'
+import ThreeInARow from './three-in-a-row/ThreeInARow'
 
 const games: GameDefinition[] = [
   {
@@ -35,6 +36,13 @@ const games: GameDefinition[] = [
     description: 'Grammar battle on a 3×3 grid — gap fills and error corrections.',
     icon: '/noughts_and_crosses.png',
     component: NoughtsCrosses,
+  },
+  {
+    id: 'three-in-a-row',
+    title: '3 in a Row',
+    description: 'Bigger grid, 2–4 teams — score a point for every line of three you make.',
+    icon: '▦',
+    component: ThreeInARow,
   },
   {
     id: 'word-family',

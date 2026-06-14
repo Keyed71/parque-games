@@ -123,6 +123,8 @@ Vercel auto-deploys from `main`. The new game appears in the portal selector imm
 | Game | Type | Level | Notes |
 |---|---|---|---|
 | Herd Mentality | React component | Any | Questions from Google Sheet via `dataUrl` |
+| Noughts & Crosses | React + HTML iframe | Any | `public/games/noughts-crosses.html`; grammar CSV; bg music |
+| 3 in a Row | React + HTML iframe | Any | `public/games/three-in-a-row.html`; 4×4/5×5, 2–4 teams, line scoring; same grammar CSV |
 | FCE Jeopardy | HTML iframe | B2 | `public/games/fce-jeopardy.html` |
 | Grammar Jeopardy — Final Review | HTML iframe | B1 | `public/games/grammar-jeopardy-b1.html` |
 | Grammar Jeopardy — Level 6 (B2) | HTML iframe | B2 | `public/games/grammar-jeopardy-b2.html` |
