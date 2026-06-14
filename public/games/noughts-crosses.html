@@ -977,7 +977,7 @@ function openQuestion(idx) {
 
   const noteEl = document.getElementById('m-note');
   noteEl.textContent = note;
-  noteEl.classList.toggle('hidden', !note);
+  noteEl.classList.add('hidden'); // stays hidden until the teacher reveals the answer
 
   // Reset the reveal button label each time the modal opens
   document.querySelector('.reveal-btn').textContent = '👁 Show answer';
@@ -986,10 +986,13 @@ function openQuestion(idx) {
 }
 
 function toggleReveal() {
-  const box = document.getElementById('m-answer');
-  const btn = document.querySelector('.reveal-btn');
+  const box  = document.getElementById('m-answer');
+  const note = document.getElementById('m-note');
+  const btn  = document.querySelector('.reveal-btn');
   box.classList.toggle('blurred');
-  btn.textContent = box.classList.contains('blurred') ? '👁 Show answer' : '🙈 Hide answer';
+  const revealed = !box.classList.contains('blurred');
+  note.classList.toggle('hidden', !revealed || !note.textContent);
+  btn.textContent = revealed ? '🙈 Hide answer' : '👁 Show answer';
 }
 
 function resolveQuestion(correct) {
