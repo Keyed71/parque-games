@@ -41,7 +41,7 @@ const games: GameDefinition[] = [
     id: 'three-in-a-row',
     title: '3 in a Row',
     description: 'Bigger grid, 2–4 teams — score a point for every line of three you make.',
-    icon: '▦',
+    icon: '/3_in_a_row.png',
     component: ThreeInARow,
   },
   {

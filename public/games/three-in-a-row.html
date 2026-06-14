@@ -123,6 +123,14 @@
       box-shadow: 0 4px 18px rgba(122,46,26,0.22);
     }
     .game-topbar-title { font-size: 1.15rem; font-weight: 900; }
+    .topbar-right { display: flex; align-items: center; gap: 0.65rem; }
+    .sound-btn {
+      background: rgba(255,255,255,0.2); border: none; border-radius: 50%;
+      width: 2rem; height: 2rem; font-size: 0.95rem; line-height: 1; cursor: pointer; color: white;
+      display: flex; align-items: center; justify-content: center; transition: background 0.15s, transform 0.1s;
+    }
+    .sound-btn:hover { background: rgba(255,255,255,0.32); transform: scale(1.08); }
+    .sound-btn.muted { opacity: 0.55; }
     .round-tag { font-size: 0.82rem; font-weight: 700; background: rgba(255,255,255,0.2); border-radius: 20px; padding: 0.2rem 0.85rem; }
 
     /* Scoreboard (2–4 teams) */
@@ -305,11 +313,17 @@
   </div>
 </div>
 
+<!-- Background music (plays only while a game is in progress) -->
+<audio id="bg-music" src="/audio/chamber_metronome.mp3" loop preload="auto"></audio>
+
 <!-- Game -->
 <div id="game-screen" class="hidden">
   <div class="game-topbar">
     <div class="game-topbar-title">3 in a Row</div>
-    <div class="round-tag" id="round-tag">Round 1</div>
+    <div class="topbar-right">
+      <button class="sound-btn" id="sound-btn" onclick="toggleMute()" title="Toggle music">🔊</button>
+      <div class="round-tag" id="round-tag">Round 1</div>
+    </div>
   </div>
   <div class="scoreboard" id="scoreboard"></div>
   <div class="turn-banner t-a" id="turn-banner">Team 1's Turn</div>
@@ -391,6 +405,33 @@ const gs = {
 
 function currentTeam() { return gs.teams[gs.turnIndex]; }
 
+// ── Background music ────────────────────────────────────────────────────────
+const MUSIC_VOLUME = 0.18; // subtle — sits under the teacher's voice
+let musicMuted = localStorage.getItem('tir-music-muted') === '1';
+
+function startMusic() {
+  const a = document.getElementById('bg-music');
+  a.volume = MUSIC_VOLUME;
+  if (musicMuted) return;
+  a.play().catch(() => {});
+}
+function stopMusic() {
+  const a = document.getElementById('bg-music');
+  a.pause(); a.currentTime = 0;
+}
+function toggleMute() {
+  musicMuted = !musicMuted;
+  localStorage.setItem('tir-music-muted', musicMuted ? '1' : '0');
+  const a = document.getElementById('bg-music'), btn = document.getElementById('sound-btn');
+  if (musicMuted) { a.pause(); btn.textContent = '🔇'; btn.classList.add('muted'); }
+  else { btn.textContent = '🔊'; btn.classList.remove('muted'); if (gs.playing || gs.ended) a.play().catch(() => {}); }
+}
+function syncSoundBtn() {
+  const btn = document.getElementById('sound-btn');
+  btn.textContent = musicMuted ? '🔇' : '🔊';
+  btn.classList.toggle('muted', musicMuted);
+}
+
 // ── Mark markup ─────────────────────────────────────────────────────────────
 function markHTML(key) {
   const s = TEAM_META[key].symbol;
@@ -456,6 +497,7 @@ async function init() {
     renderStructurePanel();
     renderTeamInputs();
     updateMatchInfo();
+    syncSoundBtn();
     show('setup-screen'); hide('loading-screen');
   } catch {
     document.getElementById('loading-screen').innerHTML =
@@ -599,6 +641,7 @@ function startGame() {
   gs.ended     = false;
   gs.roundsDone++;
   hide('setup-screen'); show('game-screen');
+  startMusic();
   renderGame();
 }
 
@@ -875,6 +918,7 @@ function nextRound() {
 
 function editGame() {
   hide('round-end'); hide('game-screen');
+  stopMusic();
   updateSessionBar();
   updateMatchInfo();
   show('setup-screen');
