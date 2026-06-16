@@ -106,6 +106,13 @@
       color: white; cursor: pointer; transition: background 0.15s;
     }
     .host-btn:hover { background: rgba(255,255,255,0.34); }
+    .sound-btn {
+      background: rgba(255,255,255,0.2); border: none; border-radius: 50%;
+      width: 2rem; height: 2rem; font-size: 0.95rem; line-height: 1; cursor: pointer; color: white;
+      display: flex; align-items: center; justify-content: center; transition: background 0.15s, transform 0.1s;
+    }
+    .sound-btn:hover { background: rgba(255,255,255,0.32); transform: scale(1.08); }
+    .sound-btn.muted { opacity: 0.55; }
 
     /* Scoreboard */
     .scoreboard {
@@ -281,11 +288,15 @@
   </div>
 </div>
 
+<!-- Background music (plays only while a game is in progress) -->
+<audio id="bg-music" src="/audio/on_the_tail.mp3" loop preload="auto"></audio>
+
 <!-- Game -->
 <div id="game-screen" class="hidden">
   <div class="game-topbar">
     <div class="game-topbar-title">Family Fortunes</div>
     <div class="topbar-right">
+      <button class="sound-btn" id="sound-btn" onclick="toggleMute()" title="Toggle music">🔊</button>
       <button class="host-btn" id="host-btn" onclick="openKey()" title="Open the answer key on your phone">📱 Answer key</button>
       <div class="round-tag" id="round-tag">Round 1</div>
     </div>
@@ -363,6 +374,33 @@ function hide(id) { document.getElementById(id).classList.add('hidden'); }
 function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 function activeTeam() { return gs.teams[gs.activeIndex]; }
 
+// ── Background music ──────────────────────────────────────────────────────────
+const MUSIC_VOLUME = 0.18; // subtle — sits under the teacher's voice
+let musicMuted = localStorage.getItem('ff-music-muted') === '1';
+
+function startMusic() {
+  const a = document.getElementById('bg-music');
+  a.volume = MUSIC_VOLUME;
+  if (musicMuted) return;
+  a.play().catch(() => {});
+}
+function stopMusic() {
+  const a = document.getElementById('bg-music');
+  a.pause(); a.currentTime = 0;
+}
+function toggleMute() {
+  musicMuted = !musicMuted;
+  localStorage.setItem('ff-music-muted', musicMuted ? '1' : '0');
+  const a = document.getElementById('bg-music'), btn = document.getElementById('sound-btn');
+  if (musicMuted) { a.pause(); btn.textContent = '🔇'; btn.classList.add('muted'); }
+  else { btn.textContent = '🔊'; btn.classList.remove('muted'); if (gs.playing) a.play().catch(() => {}); }
+}
+function syncSoundBtn() {
+  const btn = document.getElementById('sound-btn');
+  btn.textContent = musicMuted ? '🔇' : '🔊';
+  btn.classList.toggle('muted', musicMuted);
+}
+
 // ── Setup wiring ──────────────────────────────────────────────────────────────
 function renderTeamInputs() {
   const wrap = document.getElementById('team-inputs');
@@ -393,6 +431,7 @@ document.getElementById('guesses-row').addEventListener('click', e => {
 
 renderTeamInputs();
 initKeyUI();
+syncSoundBtn();
 
 // ── Game start ────────────────────────────────────────────────────────────────
 function startGame() {
@@ -405,6 +444,7 @@ function startGame() {
   gs.scores         = Object.fromEntries(gs.teams.map(k => [k, 0]));
   gs.roundIndex     = 0;
   hide('setup-screen'); show('game-screen');
+  startMusic();
   beginRound();
 }
 
@@ -646,6 +686,7 @@ function nextRound() {
 
 function playAgain() {
   hide('round-end'); hide('game-screen');
+  stopMusic();
   show('setup-screen');
 }
 
