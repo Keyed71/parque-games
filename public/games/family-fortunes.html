@@ -263,8 +263,8 @@
       <ul>
         <li>Each round shows one survey question with <strong>10 hidden answers</strong> (worth 100 points in total).</li>
         <li>The game runs for <strong>as many rounds as there are teams</strong>, so every team starts a round once — no first-mover advantage.</li>
-        <li>On their turn a team keeps guessing until their guesses run out. Click a board answer to reveal it.</li>
-        <li><strong>Not on the board?</strong> That guess is used up and the <em>next team gets one free steal guess</em>. Then play returns to the original team if they have guesses left.</li>
+        <li>Teams take turns <strong>one guess at a time</strong> (Team 1, Team 2, Team 1…) — three guesses each. Click a board answer to reveal it.</li>
+        <li><strong>Not on the board?</strong> That guess is used up and the <em>next team gets one free bonus guess</em> — then turns carry on as normal.</li>
       </ul>
     </div>
 
@@ -354,7 +354,7 @@ const gs = {
   revealed: [],            // bool per answer
   owner: [],               // team key or 'miss' or null per answer
   activeIndex: 0,
-  steal: { active: false, teamIndex: null, returnIndex: null },
+  steal: { active: false, teamIndex: null },
   playing: false,
 };
 
@@ -414,7 +414,7 @@ function beginRound() {
   gs.owner        = Array(10).fill(null);
   gs.guessesLeft  = Object.fromEntries(gs.teams.map(k => [k, gs.guessesPer]));
   gs.activeIndex  = gs.roundIndex % gs.teamCount;   // a new team starts each round
-  gs.steal        = { active: false, teamIndex: null, returnIndex: null };
+  gs.steal        = { active: false, teamIndex: null };
   gs.playing      = true;
   render();
 }
@@ -535,20 +535,19 @@ function boardFull() { return gs.revealed.every(Boolean); }
 
 function afterActive() {
   if (boardFull()) return endRound();
-  if (gs.guessesLeft[activeTeam()] > 0) { render(); return; }   // same team keeps going
-  advanceActive();
+  advanceActive();   // alternating turns — always pass to the next team
 }
 
 function startSteal() {
   if (boardFull()) return endRound();
-  gs.steal = { active: true, teamIndex: (gs.activeIndex + 1) % gs.teamCount, returnIndex: gs.activeIndex };
+  gs.steal = { active: true, teamIndex: (gs.activeIndex + 1) % gs.teamCount };
   render();
 }
 
 function afterSteal() {
   if (boardFull()) return endRound();
-  gs.activeIndex = gs.steal.returnIndex;
-  if (gs.guessesLeft[activeTeam()] > 0) { render(); return; }   // control returns to original team
+  // free steal done — turns carry on as normal, so the next team (the one that
+  // just stole) now takes its own guess. advanceActive() steps off the miss-er.
   advanceActive();
 }
 
