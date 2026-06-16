@@ -4,6 +4,7 @@ import Jeopardy from './jeopardy/Jeopardy'
 import MysterySentence from './mystery-sentence/MysterySentence'
 import NoughtsCrosses from './noughts-crosses/NoughtsCrosses'
 import ThreeInARow from './three-in-a-row/ThreeInARow'
+import FamilyFortunes from './family-fortunes/FamilyFortunes'
 
 const games: GameDefinition[] = [
   {
@@ -43,6 +44,13 @@ const games: GameDefinition[] = [
     description: 'Bigger grid, 2–4 teams — score a point for every line of three you make.',
     icon: '/3_in_a_row.png',
     component: ThreeInARow,
+  },
+  {
+    id: 'family-fortunes',
+    title: 'Family Fortunes',
+    description: 'Guess the top 10 survey answers — teams, steals and a round each to go first.',
+    icon: '💯',
+    component: FamilyFortunes,
   },
   {
     id: 'word-family',
