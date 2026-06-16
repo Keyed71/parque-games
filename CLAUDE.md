@@ -125,7 +125,7 @@ Vercel auto-deploys from `main`. The new game appears in the portal selector imm
 | Herd Mentality | React component | Any | Questions from Google Sheet via `dataUrl` |
 | Noughts & Crosses | React + HTML iframe | Any | `public/games/noughts-crosses.html`; grammar CSV; bg music |
 | 3 in a Row | React + HTML iframe | Any | `public/games/three-in-a-row.html`; 4×4/5×5, 2–4 teams, line scoring; same grammar CSV |
-| Family Fortunes | React + HTML iframe | Any | `public/games/family-fortunes.html`; 2–4 teams, 10 answers/question (baked-in `QUESTIONS` array, no CSV), one round per team, steal on a miss, host-view answer key |
+| Family Fortunes | React + HTML iframe | Any | `public/games/family-fortunes.html`; 2–4 teams, 10 answers/question, one round per team, steal on a miss. Questions live in `public/games/family-fortunes-questions.js` (shared, no CSV); teacher scans an in-game QR to open the host answer key `public/games/family-fortunes-key.html` on their phone |
 | FCE Jeopardy | HTML iframe | B2 | `public/games/fce-jeopardy.html` |
 | Grammar Jeopardy — Final Review | HTML iframe | B1 | `public/games/grammar-jeopardy-b1.html` |
 | Grammar Jeopardy — Level 6 (B2) | HTML iframe | B2 | `public/games/grammar-jeopardy-b2.html` |

@@ -57,6 +57,25 @@
     .rules-help ul { margin: 0.35rem 0 0 1.1rem; }
     .rules-help li { margin-bottom: 0.2rem; }
 
+    /* Host answer-key callout + QR */
+    .key-callout {
+      display: flex; gap: 1.1rem; align-items: center;
+      background: #fff8f0; border: 2px solid #e8d0b0; border-radius: 16px;
+      padding: 1rem 1.2rem; margin-bottom: 1.5rem;
+    }
+    .key-qr { flex-shrink: 0; width: 120px; height: 120px; background: #fff; border-radius: 10px; padding: 6px; display: flex; align-items: center; justify-content: center; }
+    .key-qr svg, .key-qr img { width: 100%; height: 100%; display: block; }
+    .key-text { font-size: 0.85rem; font-weight: 600; color: #7a2e1a; line-height: 1.5; }
+    .key-title { font-size: 1rem; font-weight: 900; color: #7a2e1a; margin-bottom: 0.3rem; }
+    .key-link { display: inline-block; margin-top: 0.45rem; font-size: 0.8rem; font-weight: 800; color: #c4592a; word-break: break-all; }
+
+    /* QR modal */
+    #key-modal { position: fixed; inset: 0; background: rgba(15,23,42,0.7); display: flex; align-items: center; justify-content: center; z-index: 300; padding: 1rem; }
+    .key-box { background: #fff; border-radius: 24px; padding: 1.75rem 2rem; max-width: 360px; width: 100%; text-align: center; box-shadow: 0 24px 64px rgba(0,0,0,0.3); }
+    .key-box .key-qr { width: 220px; height: 220px; margin: 0.8rem auto; }
+    .key-modal-note { font-size: 0.82rem; font-weight: 600; color: #64748b; line-height: 1.5; margin-bottom: 0.6rem; }
+    .key-box .key-link { margin-bottom: 1rem; }
+
     .btn-start {
       display: inline-block; padding: 0.875rem 2.5rem;
       background: linear-gradient(135deg, #c4592a, #d4845a); color: white; border: none; border-radius: 12px;
@@ -87,7 +106,6 @@
       color: white; cursor: pointer; transition: background 0.15s;
     }
     .host-btn:hover { background: rgba(255,255,255,0.34); }
-    .host-btn.on { background: #fde68a; color: #7a2e1a; }
 
     /* Scoreboard */
     .scoreboard {
@@ -162,7 +180,6 @@
     /* hidden state */
     .slot:not(.revealed) .ans { color: #93b4e8; opacity: 0.55; font-weight: 700; font-size: 1rem; font-style: italic; }
     .slot:not(.revealed) .pts { color: #fbbf24; background: rgba(255,255,255,0.08); }
-    .slot.host-peek:not(.revealed) .ans { color: #fde68a; opacity: 0.9; font-style: normal; font-weight: 900; font-size: 1.2rem; }
     /* revealed state — coloured by owning team */
     .slot.revealed { cursor: default; animation: flipIn 0.4s ease-out; }
     .slot.revealed.owned { background: linear-gradient(135deg, var(--tc), var(--td)); border-color: var(--td); color: #fff; }
@@ -251,6 +268,15 @@
       </ul>
     </div>
 
+    <div class="key-callout">
+      <div class="key-qr" id="setup-qr"></div>
+      <div class="key-text">
+        <div class="key-title">📱 Open the answer key on your phone</div>
+        <p>Scan this with your phone to see every answer and its number. The teacher uses it to know which board number to reveal — <strong>keep it on your phone, don't project it.</strong></p>
+        <a class="key-link" id="setup-key-link" href="#" target="_blank" rel="noopener"></a>
+      </div>
+    </div>
+
     <button class="btn-start" id="start-btn" onclick="startGame()">▶ Start Game</button>
   </div>
 </div>
@@ -260,7 +286,7 @@
   <div class="game-topbar">
     <div class="game-topbar-title">Family Fortunes</div>
     <div class="topbar-right">
-      <button class="host-btn" id="host-btn" onclick="toggleHost()" title="Briefly reveal the answers to the host">🔑 Host view</button>
+      <button class="host-btn" id="host-btn" onclick="openKey()" title="Open the answer key on your phone">📱 Answer key</button>
       <div class="round-tag" id="round-tag">Round 1</div>
     </div>
   </div>
@@ -276,6 +302,17 @@
   <div class="action-bar" id="action-bar"></div>
 </div>
 
+<!-- Answer-key QR modal -->
+<div id="key-modal" class="hidden" onclick="if(event.target===this) closeKey()">
+  <div class="key-box">
+    <div class="key-title">📱 Host answer key</div>
+    <div class="key-qr" id="modal-qr"></div>
+    <p class="key-modal-note">Scan with your phone to see every answer and its number.<br>Don't project this — it's for the teacher only.</p>
+    <a class="key-link" id="modal-key-link" href="#" target="_blank" rel="noopener"></a>
+    <button class="re-btn secondary" onclick="closeKey()">Close</button>
+  </div>
+</div>
+
 <!-- Round / game end -->
 <div id="round-end" class="hidden">
   <div class="re-box">
@@ -287,6 +324,8 @@
   </div>
 </div>
 
+<script src="/games/family-fortunes-questions.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
 <script>
 // ── Team metadata ────────────────────────────────────────────────────────────
 const TEAM_META = {
@@ -297,39 +336,8 @@ const TEAM_META = {
 };
 const TEAM_KEYS = ['A', 'B', 'C', 'D'];
 
-// ── Question bank — every question has 10 answers, points sum to 100 ──────────
-const QUESTIONS = [
-  { prompt: 'Name a subject you study at school', answers: [
-    ['Maths',22],['English',18],['Science',15],['History',11],['Geography',9],
-    ['Art',7],['PE / Sport',6],['Music',5],['Computing / ICT',4],['Languages',3] ] },
-  { prompt: 'Name something you find in a kitchen', answers: [
-    ['Fridge',20],['Oven / Cooker',17],['Kettle',13],['Sink',11],['Microwave',10],
-    ['Table',8],['Toaster',7],['Cupboard',6],['Plates',5],['Knife / Cutlery',3] ] },
-  { prompt: 'Name a famous scientist', answers: [
-    ['Albert Einstein',26],['Isaac Newton',18],['Marie Curie',14],['Charles Darwin',11],['Stephen Hawking',9],
-    ['Galileo',7],['Nikola Tesla',6],['Thomas Edison',4],['Aristotle',3],['Louis Pasteur',2] ] },
-  { prompt: 'Name a type of transport', answers: [
-    ['Car',23],['Bus',18],['Train',15],['Bike',11],['Plane',9],
-    ['Motorbike',7],['Boat / Ship',6],['Tram',4],['Taxi',4],['Scooter',3] ] },
-  { prompt: "Name an animal you'd find on a farm", answers: [
-    ['Cow',22],['Pig',18],['Sheep',15],['Chicken',13],['Horse',10],
-    ['Goat',8],['Duck',6],['Dog',4],['Cat',2],['Goose',2] ] },
-  { prompt: 'Name a fruit', answers: [
-    ['Apple',21],['Banana',18],['Orange',15],['Strawberry',11],['Grape',9],
-    ['Pineapple',7],['Watermelon',6],['Mango',5],['Pear',4],['Kiwi',4] ] },
-  { prompt: 'Name something you take to the beach', answers: [
-    ['Towel',20],['Sunscreen',16],['Swimsuit',13],['Bucket & spade',11],['Sunglasses',9],
-    ['Umbrella / Parasol',8],['Ball',7],['Hat',6],['Drinks / Cooler',6],['Book',4] ] },
-  { prompt: 'Name a country in Europe', answers: [
-    ['France',17],['Spain',15],['Germany',14],['Italy',13],['Portugal',11],
-    ['England / UK',10],['Netherlands',7],['Greece',6],['Switzerland',4],['Poland',3] ] },
-  { prompt: 'Name a job that wears a uniform', answers: [
-    ['Police officer',20],['Nurse / Doctor',17],['Firefighter',15],['Soldier',12],['Chef',9],
-    ['Pilot',8],['Waiter',6],['Postman',5],['Security guard',4],['Cleaner',4] ] },
-  { prompt: 'Name something you do before going to bed', answers: [
-    ['Brush teeth',22],['Put on pyjamas',16],['Read',13],['Wash / Shower',11],['Watch TV',9],
-    ['Use phone',9],['Drink water',7],['Set an alarm',6],['Say goodnight',4],['Pray',3] ] },
-];
+// ── Question bank — shared with the host key page (family-fortunes-questions.js) ──
+const QUESTIONS = window.FF_QUESTIONS;
 
 // ── Game state ────────────────────────────────────────────────────────────────
 const gs = {
@@ -348,7 +356,6 @@ const gs = {
   activeIndex: 0,
   steal: { active: false, teamIndex: null, returnIndex: null },
   playing: false,
-  hostPeek: false,
 };
 
 function show(id) { document.getElementById(id).classList.remove('hidden'); }
@@ -385,6 +392,7 @@ document.getElementById('guesses-row').addEventListener('click', e => {
 });
 
 renderTeamInputs();
+initKeyUI();
 
 // ── Game start ────────────────────────────────────────────────────────────────
 function startGame() {
@@ -408,8 +416,6 @@ function beginRound() {
   gs.activeIndex  = gs.roundIndex % gs.teamCount;   // a new team starts each round
   gs.steal        = { active: false, teamIndex: null, returnIndex: null };
   gs.playing      = true;
-  gs.hostPeek     = false;
-  document.getElementById('host-btn').classList.remove('on');
   render();
 }
 
@@ -476,12 +482,9 @@ function renderBoard() {
         <span class="body"><span class="ans">${text}</span><span class="pts">${pts}</span></span>
       </div>`;
     }
-    const peek = gs.hostPeek ? ' host-peek' : '';
-    const shownText = gs.hostPeek ? text : 'Click to reveal';
-    const shownPts  = gs.hostPeek ? pts : '?';
-    return `<div class="slot${peek}" onclick="onSlot(${i})">
+    return `<div class="slot" onclick="onSlot(${i})">
       <span class="rank">${rank}</span>
-      <span class="body"><span class="ans">${shownText}</span><span class="pts">${shownPts}</span></span>
+      <span class="body"><span class="ans">Click to reveal</span><span class="pts">?</span></span>
     </div>`;
   }).join('');
 }
@@ -557,11 +560,33 @@ function advanceActive() {
   endRound();   // nobody has guesses left
 }
 
-function toggleHost() {
-  gs.hostPeek = !gs.hostPeek;
-  document.getElementById('host-btn').classList.toggle('on', gs.hostPeek);
-  renderBoard();
+// ── Host answer-key QR ────────────────────────────────────────────────────────
+function keyUrl() { return location.origin + '/games/family-fortunes-key.html'; }
+
+function renderQR(elId, url) {
+  const el = document.getElementById(elId);
+  if (typeof qrcode === 'undefined') { el.innerHTML = '<span style="font-size:0.7rem;color:#94a3b8">QR unavailable</span>'; return; }
+  const qr = qrcode(0, 'M');
+  qr.addData(url);
+  qr.make();
+  el.innerHTML = qr.createSvgTag({ cellSize: 4, margin: 0 });
 }
+
+function initKeyUI() {
+  const url = keyUrl();
+  renderQR('setup-qr', url);
+  const link = document.getElementById('setup-key-link');
+  link.href = url; link.textContent = url.replace(/^https?:\/\//, '');
+}
+
+function openKey() {
+  const url = keyUrl();
+  renderQR('modal-qr', url);
+  const link = document.getElementById('modal-key-link');
+  link.href = url; link.textContent = url.replace(/^https?:\/\//, '');
+  show('key-modal');
+}
+function closeKey() { hide('key-modal'); }
 
 // ── Round / game end ──────────────────────────────────────────────────────────
 function endRound() {
