@@ -114,6 +114,38 @@
     .back-btn:hover { border-color: white; color: white; }
     .game-topbar-title { font-size: 1rem; font-weight: 900; }
     .game-topbar-meta { font-size: 0.78rem; color: rgba(255,255,255,0.5); }
+    .topbar-right { display: flex; align-items: center; gap: 0.6rem; }
+    .key-num {
+      font-size: 0.82rem; font-weight: 900; color: #1e293b;
+      background: #fbbf24; border-radius: 8px; padding: 0.15rem 0.55rem; white-space: nowrap;
+    }
+    .hs-key-btn {
+      background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.25);
+      color: white; border-radius: 8px; padding: 0.25rem 0.65rem;
+      font-family: 'Nunito', sans-serif; font-size: 0.8rem; font-weight: 800; cursor: pointer;
+      white-space: nowrap; transition: background 0.15s;
+    }
+    .hs-key-btn:hover { background: rgba(255,255,255,0.24); }
+
+    /* Host answer-key callout + QR (setup screen) */
+    .key-callout {
+      display: flex; gap: 1.1rem; align-items: center;
+      background: #fff8f0; border: 2px solid #e8d0b0; border-radius: 16px;
+      padding: 1rem 1.2rem; margin-bottom: 1.5rem;
+    }
+    .key-qr { flex-shrink: 0; width: 120px; height: 120px; background: #fff; border-radius: 10px; padding: 6px; display: flex; align-items: center; justify-content: center; }
+    .key-qr svg, .key-qr img { width: 100%; height: 100%; display: block; }
+    .key-text { font-size: 0.85rem; font-weight: 600; color: #7a2e1a; line-height: 1.5; }
+    .key-title { font-size: 1rem; font-weight: 900; color: #7a2e1a; margin-bottom: 0.3rem; }
+    .key-link { display: inline-block; margin-top: 0.45rem; font-size: 0.8rem; font-weight: 800; color: #c4592a; word-break: break-all; }
+
+    /* QR modal */
+    #key-modal { position: fixed; inset: 0; background: rgba(15,23,42,0.7); display: flex; align-items: center; justify-content: center; z-index: 300; padding: 1rem; }
+    .key-box { background: #fff; border-radius: 24px; padding: 1.75rem 2rem; max-width: 360px; width: 100%; text-align: center; box-shadow: 0 24px 64px rgba(0,0,0,0.3); }
+    .key-box .key-qr { width: 220px; height: 220px; margin: 0.8rem auto; }
+    .key-modal-note { font-size: 0.82rem; font-weight: 600; color: #64748b; line-height: 1.5; margin-bottom: 0.6rem; }
+    .key-box .key-link { margin-bottom: 1rem; }
+    .key-close { padding: 0.6rem 1.6rem; border: none; border-radius: 10px; background: #e2e8f0; color: #334155; font-family: 'Nunito', sans-serif; font-weight: 900; cursor: pointer; }
 
     /* Scoreboard */
     .scoreboard {
@@ -388,9 +420,30 @@
       </div>
     </div>
 
+    <!-- Host answer key -->
+    <div class="key-callout">
+      <div class="key-qr" id="setup-qr"></div>
+      <div class="key-text">
+        <div class="key-title">📱 Open the answer key on your phone</div>
+        <p>Scan this to see the full sentences. Each round shows a <strong>Key #number</strong> on the game screen — find that number on your phone to check a team's guess. <strong>Keep it on your phone, don't project it.</strong></p>
+        <a class="key-link" id="setup-key-link" href="#" target="_blank" rel="noopener"></a>
+      </div>
+    </div>
+
     <!-- Match count + start -->
     <div class="match-info" id="match-info"></div>
     <button class="btn-start" id="start-btn" onclick="startGame()">▶ Start Game</button>
+  </div>
+</div>
+
+<!-- Answer-key QR modal -->
+<div id="key-modal" class="hidden" onclick="if(event.target===this) closeKey()">
+  <div class="key-box">
+    <div class="key-title">📱 Host answer key</div>
+    <div class="key-qr" id="modal-qr"></div>
+    <p class="key-modal-note">Scan with your phone, then look up the <strong>Key #</strong> shown on the game screen.<br>Don't project this — it's for the teacher only.</p>
+    <a class="key-link" id="modal-key-link" href="#" target="_blank" rel="noopener"></a>
+    <button class="key-close" onclick="closeKey()">Close</button>
   </div>
 </div>
 
@@ -399,7 +452,11 @@
   <div class="game-topbar">
     <button class="back-btn" onclick="goSetup()">← Back</button>
     <div class="game-topbar-title">Hanging Sentence</div>
-    <div class="game-topbar-meta" id="g-meta"></div>
+    <div class="topbar-right">
+      <span class="game-topbar-meta" id="g-meta"></span>
+      <span class="key-num" id="g-keynum" title="Look up this number on the host answer key">Key #0</span>
+      <button class="hs-key-btn" onclick="openKey()">📱 Answer key</button>
+    </div>
   </div>
 
   <div class="scoreboard">
@@ -488,6 +545,7 @@
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
 <script>
 const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQQOA7JYpQHJPodeWxaoJzUqT1L6vftHr-jjo7Y7Y06lHAecXsk6aw5jFPeQhJgKMro7Wu1vzW5E7PS/pub?gid=1732264731&single=true&output=csv';
 
@@ -500,6 +558,7 @@ let flashTimer = null;
 
 const gs = {
   sentence:     '',
+  sentenceNum:  0,    // 1-based row number in the sheet — matches the host key page
   category:     '',
   level:        '',
   guessed:      new Set(),
@@ -554,6 +613,7 @@ async function init() {
     document.getElementById('filter-level').addEventListener('change', updateMatchInfo);
     document.getElementById('filter-cat').addEventListener('change', updateMatchInfo);
     updateMatchInfo();
+    initKeyUI();
 
     show('setup-screen');
     hide('loading-screen');
@@ -606,6 +666,7 @@ function startGame() {
 
 function loadRound(row) {
   gs.sentence     = row['full correct sentence'];
+  gs.sentenceNum  = allRows.indexOf(row) + 1;   // stable number shared with the key page
   gs.category     = row['tense / structure'];
   gs.level        = row['cefr level'];
   gs.guessed      = new Set();
@@ -621,6 +682,7 @@ function loadRound(row) {
 // ── Render ─────────────────────────────────────────────────────────────────
 function render() {
   document.getElementById('g-meta').textContent = `${gs.level} • ${gs.category}`;
+  document.getElementById('g-keynum').textContent = `Key #${gs.sentenceNum}`;
 
   ['a','b'].forEach((t, i) => {
     document.getElementById(`g-name-${t}`).textContent  = gs.names[i];
@@ -832,6 +894,34 @@ function goSetup() {
   updateMatchInfo();
   show('setup-screen');
 }
+
+// ── Host answer-key QR ───────────────────────────────────────────────────────
+function keyUrl() { return location.origin + '/games/mystery-sentence-key.html'; }
+
+function renderQR(elId, url) {
+  const el = document.getElementById(elId);
+  if (typeof qrcode === 'undefined') { el.innerHTML = '<span style="font-size:0.7rem;color:#94a3b8">QR unavailable</span>'; return; }
+  const qr = qrcode(0, 'M');
+  qr.addData(url);
+  qr.make();
+  el.innerHTML = qr.createSvgTag({ cellSize: 4, margin: 0 });
+}
+
+function initKeyUI() {
+  const url = keyUrl();
+  renderQR('setup-qr', url);
+  const link = document.getElementById('setup-key-link');
+  link.href = url; link.textContent = url.replace(/^https?:\/\//, '');
+}
+
+function openKey() {
+  const url = keyUrl();
+  renderQR('modal-qr', url);
+  const link = document.getElementById('modal-key-link');
+  link.href = url; link.textContent = url.replace(/^https?:\/\//, '');
+  show('key-modal');
+}
+function closeKey() { hide('key-modal'); }
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 function show(id) { document.getElementById(id).classList.remove('hidden'); }

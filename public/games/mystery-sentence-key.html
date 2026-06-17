@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hanging Sentence — Host Answer Key</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Nunito', sans-serif; background: #fdf6ec; color: #1e293b; padding-bottom: 2rem; }
+
+    .header {
+      position: sticky; top: 0; z-index: 10;
+      background: linear-gradient(150deg, #7a2e1a, #c4592a, #d4845a);
+      color: #fff; padding: 0.9rem 1rem 0.8rem;
+      box-shadow: 0 3px 14px rgba(122,46,26,0.25);
+    }
+    .header h1 { font-size: 1.2rem; font-weight: 900; }
+    .warn { font-size: 0.78rem; font-weight: 700; opacity: 0.95; margin-top: 0.15rem; }
+    .search {
+      width: 100%; margin-top: 0.65rem; padding: 0.6rem 0.9rem;
+      border: none; border-radius: 12px; font-family: 'Nunito', sans-serif;
+      font-size: 1rem; font-weight: 700; color: #1e293b;
+    }
+    .search::placeholder { color: #94a3b8; font-weight: 600; }
+
+    .wrap { max-width: 620px; margin: 0 auto; padding: 0.9rem 0.8rem 0; }
+    .count { font-size: 0.78rem; font-weight: 700; color: #94a3b8; margin: 0.2rem 0.3rem 0.8rem; }
+    .state { text-align: center; color: #94a3b8; font-weight: 700; padding: 2.5rem 1rem; }
+    .state.error { color: #dc2626; }
+
+    .card {
+      background: #fff; border: 2px solid #e8d0b0; border-radius: 16px;
+      margin-bottom: 0.7rem; padding: 0.75rem 1rem; box-shadow: 0 4px 14px rgba(122,46,26,0.07);
+    }
+    .card-top { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.45rem; }
+    .s-num { font-size: 1rem; font-weight: 900; color: #c4592a; }
+    .tag {
+      font-size: 0.66rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em;
+      border-radius: 8px; padding: 0.12rem 0.5rem;
+    }
+    .tag.lvl { background: #dbeafe; color: #1e40af; }
+    .tag.cat { background: #f1f5f9; color: #475569; }
+    .s-text { font-size: 1.15rem; font-weight: 800; color: #1d4ed8; line-height: 1.4; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>🔤 Hanging Sentence — Answer Key</h1>
+    <div class="warn">⚠️ Host only — keep this on your phone, don't project it.</div>
+    <input class="search" id="search" type="search" placeholder="Type a sentence number to jump, or search words…" autocomplete="off">
+  </div>
+  <div class="wrap">
+    <div class="count" id="count"></div>
+    <div id="list"><div class="state" id="state">Loading sentences…</div></div>
+  </div>
+
+  <script>
+    const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQQOA7JYpQHJPodeWxaoJzUqT1L6vftHr-jjo7Y7Y06lHAecXsk6aw5jFPeQhJgKMro7Wu1vzW5E7PS/pub?gid=1732264731&single=true&output=csv';
+
+    let rows = [];
+    const listEl = document.getElementById('list');
+    const countEl = document.getElementById('count');
+    const searchEl = document.getElementById('search');
+
+    function esc(s) { return (s || '').replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c])); }
+
+    // Same parser the game uses, so row order (and therefore #numbers) match exactly.
+    function parseCSV(raw) {
+      function splitLine(line) {
+        const out = []; let f = ''; let q = false;
+        for (let i = 0; i < line.length; i++) {
+          const c = line[i];
+          if (c === '"') { q = !q; }
+          else if (c === ',' && !q) { out.push(f.trim()); f = ''; }
+          else { f += c; }
+        }
+        out.push(f.trim());
+        return out;
+      }
+      const lines = raw.replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim().split('\n');
+      if (lines.length < 2) return [];
+      const headers = splitLine(lines[0]).map(h => h.toLowerCase());
+      return lines.slice(1).filter(l => l.trim()).map(line => {
+        const vals = splitLine(line);
+        const obj = {};
+        headers.forEach((h, i) => obj[h] = (vals[i] || '').trim());
+        return obj;
+      }).filter(r => r['full correct sentence']);
+    }
+
+    function render(query) {
+      const q = (query || '').trim().toLowerCase();
+      const isNumQuery = /^\d+$/.test(q);   // a bare number → jump to that sentence
+      let shown = 0;
+      const html = rows.map((r, ri) => {
+        const num = ri + 1;
+        const sentence = r['full correct sentence'];
+        const level = r['cefr level'] || '';
+        const cat = r['tense / structure'] || '';
+        const numberHit = isNumQuery && num === parseInt(q, 10);
+        const textHit = !isNumQuery && (
+          sentence.toLowerCase().includes(q) ||
+          level.toLowerCase().includes(q) ||
+          cat.toLowerCase().includes(q));
+        if (q && !numberHit && !textHit) return '';
+        shown++;
+        return `<div class="card">
+          <div class="card-top">
+            <span class="s-num">#${num}</span>
+            ${level ? `<span class="tag lvl">${esc(level)}</span>` : ''}
+            ${cat ? `<span class="tag cat">${esc(cat)}</span>` : ''}
+          </div>
+          <div class="s-text">${esc(sentence)}</div>
+        </div>`;
+      }).join('');
+
+      listEl.innerHTML = html || '<div class="state">No sentence, word or number matches that.</div>';
+      countEl.textContent = q
+        ? `${shown} result${shown !== 1 ? 's' : ''} for “${query.trim()}”`
+        : `${rows.length} sentences · type the number shown on the game screen to jump`;
+    }
+
+    async function init() {
+      try {
+        const res = await fetch(CSV_URL);
+        const text = await res.text();
+        rows = parseCSV(text);
+        searchEl.addEventListener('input', e => render(e.target.value));
+        render('');
+      } catch {
+        document.getElementById('state').textContent = 'Could not load sentences. Check that the Google Sheet is published.';
+        document.getElementById('state').className = 'state error';
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>
