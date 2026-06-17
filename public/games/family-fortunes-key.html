@@ -32,10 +32,12 @@
       margin-bottom: 0.9rem; overflow: hidden; box-shadow: 0 4px 14px rgba(122,46,26,0.07);
     }
     .q-prompt {
-      background: #fff5ed; padding: 0.7rem 1rem; font-size: 1rem; font-weight: 900; color: #7a2e1a;
+      position: relative;
+      background: #fff5ed; padding: 0.7rem 2.8rem 0.7rem 1rem; font-size: 1rem; font-weight: 900; color: #7a2e1a;
       border-bottom: 2px solid #f0dcc4; line-height: 1.3;
     }
     .q-prompt .pre { display: block; font-size: 0.68rem; font-weight: 800; color: #c4592a; text-transform: uppercase; letter-spacing: 0.07em; }
+    .q-num { position: absolute; top: 0.6rem; right: 0.9rem; font-size: 0.85rem; font-weight: 900; color: #d4a373; }
     .ans-row {
       display: flex; align-items: center; gap: 0.7rem; padding: 0.5rem 1rem;
       border-bottom: 1px solid #f5ece0; font-size: 1.05rem; font-weight: 800;
@@ -59,7 +61,7 @@
   <div class="header">
     <h1>📋 Family Fortunes — Answer Key</h1>
     <div class="warn">⚠️ Host only — keep this on your phone, don't project it.</div>
-    <input class="search" id="search" type="search" placeholder="Search a guess or question…" autocomplete="off">
+    <input class="search" id="search" type="search" placeholder="Search a guess or question, or type a number to jump…" autocomplete="off">
   </div>
   <div class="wrap">
     <div class="count" id="count"></div>
@@ -77,15 +79,18 @@
 
     function render(query) {
       const q = (query || '').trim().toLowerCase();
+      const isNumQuery = /^\d+$/.test(q);   // a bare number → jump to that question
       let shown = 0;
-      const html = QUESTIONS.map(item => {
-        const promptHit = item.prompt.toLowerCase().includes(q);
+      const html = QUESTIONS.map((item, qi) => {
+        const num = qi + 1;
+        const numberHit = isNumQuery && num === parseInt(q, 10);
+        const promptHit = !isNumQuery && item.prompt.toLowerCase().includes(q);
         const rows = item.answers.map(([text, pts], i) => {
-          const hit = q && !promptHit && text.toLowerCase().includes(q);
+          const hit = q && !isNumQuery && !promptHit && text.toLowerCase().includes(q);
           return { text, pts, rank: i + 1, hit };
         });
         const anyAnswerHit = rows.some(r => r.hit);
-        if (q && !promptHit && !anyAnswerHit) return '';
+        if (q && !numberHit && !promptHit && !anyAnswerHit) return '';
         shown++;
         const rowsHtml = rows.map(r =>
           `<div class="ans-row${r.hit ? ' hit' : ''}">
@@ -94,15 +99,15 @@
             <span class="a-pts">${r.pts}</span>
           </div>`).join('');
         return `<div class="card">
-          <div class="q-prompt"><span class="pre">We asked 100 people…</span>${esc(item.prompt)}</div>
+          <div class="q-prompt"><span class="q-num">#${num}</span><span class="pre">We asked 100 people…</span>${esc(item.prompt)}</div>
           ${rowsHtml}
         </div>`;
       }).join('');
 
-      listEl.innerHTML = html || '<div class="no-results">No answer or question matches that.</div>';
+      listEl.innerHTML = html || '<div class="no-results">No question, guess or number matches that.</div>';
       countEl.textContent = q
         ? `${shown} result${shown !== 1 ? 's' : ''} for “${query.trim()}”`
-        : `${QUESTIONS.length} questions · tap the search box to find a guess fast`;
+        : `${QUESTIONS.length} questions · search a word, or type a number to jump`;
     }
 
     searchEl.addEventListener('input', e => render(e.target.value));
