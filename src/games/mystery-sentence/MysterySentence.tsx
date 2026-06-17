@@ -11,7 +11,7 @@ export default function MysterySentence({ onExit }: GameProps) {
       <button
         onClick={onExit}
         style={{
-          position: 'fixed', top: 14, right: 14, zIndex: 9999,
+          position: 'fixed', top: 12, left: 12, zIndex: 9999,
           background: 'rgba(255,255,255,0.95)',
           border: '2px solid #e8d0b0', borderRadius: 10,
           padding: '8px 18px',

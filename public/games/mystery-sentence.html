@@ -24,7 +24,7 @@
 
     .setup-header {
       background: linear-gradient(150deg, #7a2e1a, #c4592a, #d4845a);
-      color: white; padding: 1.25rem 2rem;
+      color: white; padding: 1.25rem 2rem 1.25rem 7rem;   /* left room for the Hub button */
     }
     .setup-header h1 { font-size: 1.9rem; font-weight: 900; }
     .setup-header p  { font-size: 0.95rem; opacity: 0.85; margin-top: 0.1rem; }
@@ -96,14 +96,15 @@
 
     /* ── GAME SCREEN ──────────────────────────────────── */
     #game-screen {
-      min-height: 100vh; background: #f1f5f9;
+      min-height: 100vh;
+      background: linear-gradient(180deg, #f8fafc, #e7ecf3);
       display: flex; flex-direction: column;
     }
 
     .game-topbar {
       background: #1e293b; color: white;
-      padding: 0.6rem 1.25rem; display: flex;
-      align-items: center; justify-content: space-between;
+      padding: 0.6rem 1.25rem 0.6rem 7rem;   /* left room for the Hub button */
+      display: flex; align-items: center; justify-content: space-between;
     }
     .back-btn {
       background: transparent; border: 1px solid rgba(255,255,255,0.25);
@@ -170,15 +171,15 @@
 
     .lives-panel { text-align: center; }
     .lives-panel .l-label {
-      font-size: 0.7rem; opacity: 0.5; text-transform: uppercase;
-      letter-spacing: 0.06em; margin-bottom: 0.1rem;
+      font-size: 0.72rem; opacity: 0.55; text-transform: uppercase;
+      letter-spacing: 0.06em; margin-bottom: 0.15rem;
     }
-    .lives-panel .l-count { font-size: 2.5rem; font-weight: 900; line-height: 1; }
-    .lives-panel .l-hearts { font-size: 0.75rem; letter-spacing: 1px; }
+    .lives-panel .l-count { font-size: 2.6rem; font-weight: 900; line-height: 1; }
+    .lives-panel .l-hearts { font-size: 1.45rem; letter-spacing: 3px; line-height: 1.3; margin-top: 0.15rem; }
 
     .turn-banner {
       background: #fbbf24; color: #1e293b; text-align: center;
-      padding: 0.45rem 1rem; font-size: 1rem; font-weight: 900;
+      padding: 0.55rem 1rem; font-size: 1.15rem; font-weight: 900;
       letter-spacing: 0.06em; text-transform: uppercase;
     }
 
@@ -189,26 +190,29 @@
     }
     .sentence-display {
       display: flex; flex-wrap: wrap; justify-content: center;
-      gap: 0.5rem 2rem;          /* ← wider word gap */
-      max-width: 92vw; margin-bottom: 1.25rem;
+      gap: 0.7rem 2.5rem;          /* ← wider word gap */
+      max-width: min(94vw, 1040px); margin-bottom: 1.4rem;
+      background: #ffffff; border: 2px solid #e2e8f0; border-radius: 22px;
+      padding: 1.9rem 2.4rem; box-shadow: 0 12px 34px rgba(15,23,42,0.08);
     }
-    .word-group { display: flex; align-items: flex-end; gap: 3px; }
+    .word-group { display: flex; align-items: flex-end; gap: 4px; }
 
     .letter-tile {
-      width: clamp(1.4rem, 2.8vw, 2.1rem);
-      height: clamp(2rem, 3.8vw, 2.9rem);
-      border-bottom: 3px solid #334155;
+      width: clamp(1.9rem, 3.8vw, 3rem);
+      height: clamp(2.8rem, 5.2vw, 4.2rem);
+      border-bottom: 5px solid #cbd5e1;
       display: flex; align-items: flex-end; justify-content: center;
-      padding-bottom: 0.1rem;
-      font-size: clamp(1.1rem, 2.2vw, 1.7rem);
+      padding-bottom: 0.15rem;
+      font-size: clamp(1.7rem, 3.4vw, 2.8rem);
       font-weight: 900; color: #1e293b; text-transform: uppercase;
+      transition: color 0.15s, border-color 0.15s;
     }
     .letter-tile.revealed { color: #1d4ed8; border-color: #1d4ed8; }
 
     .punct-tile {
       display: flex; align-items: flex-end; justify-content: center;
-      padding-bottom: 0.1rem;
-      font-size: clamp(1.1rem, 2.2vw, 1.7rem);
+      padding-bottom: 0.15rem;
+      font-size: clamp(1.7rem, 3.4vw, 2.8rem);
       font-weight: 900; color: #334155;
     }
 
@@ -230,31 +234,24 @@
     .keyboard-wrap { padding: 0.5rem 1rem 0; }
     .keyboard-grid {
       display: flex; flex-wrap: wrap; justify-content: center;
-      gap: 5px; max-width: 660px; margin: 0 auto 0.6rem;
+      gap: 7px; max-width: 820px; margin: 0 auto 0.6rem;
     }
     .key-btn {
-      width: clamp(2rem, 3.8vw, 2.5rem);
-      height: clamp(2rem, 3.8vw, 2.5rem);
-      border: 2px solid #cbd5e1; border-radius: 7px;
+      width: clamp(2.5rem, 5vw, 3.4rem);
+      height: clamp(2.5rem, 5vw, 3.4rem);
+      border: 2px solid #cbd5e1; border-radius: 10px;
       background: white; font-family: 'Nunito', sans-serif;
-      font-size: clamp(0.75rem, 1.5vw, 1rem); font-weight: 900;
+      font-size: clamp(1rem, 2.1vw, 1.45rem); font-weight: 900;
       cursor: pointer; transition: background 0.1s, border-color 0.1s, transform 0.1s;
       color: #1e293b; position: relative;
+      box-shadow: 0 2px 0 #e2e8f0;
     }
     .key-btn:hover:not(:disabled) {
       background: #1d4ed8; color: white; border-color: #1d4ed8; transform: translateY(-1px);
     }
-    .key-btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
+    .key-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
     .key-btn.hit  { background: #dcfce7; border-color: #16a34a; color: #166534; }
     .key-btn.miss { background: #fee2e2; border-color: #dc2626; color: #991b1b; }
-
-    /* key-btn point badge */
-    .key-btn .pt-badge {
-      position: absolute; top: -7px; right: -5px;
-      font-size: 0.5rem; font-weight: 900; line-height: 1;
-      background: #fbbf24; color: #1e293b;
-      border-radius: 4px; padding: 1px 3px;
-    }
 
     /* Action buttons */
     .action-row {
@@ -741,12 +738,7 @@ function renderKeyboard() {
     btn.className = 'key-btn';
     btn.textContent = ch;
 
-    // Show point value badge on available keys
     if (!gs.guessed.has(lo)) {
-      const badge = document.createElement('span');
-      badge.className = 'pt-badge';
-      badge.textContent = VOWELS.has(lo) ? '10' : '20';
-      btn.appendChild(badge);
       btn.onclick = () => guessLetter(lo);
     } else {
       btn.disabled = true;
