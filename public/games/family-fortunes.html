@@ -263,6 +263,11 @@
       <button class="pill active" data-guesses="3">3 guesses</button>
     </div>
 
+    <div class="section-label">Question level <span class="section-note">— CEFR</span></div>
+    <div class="opt-row" id="levels-row">
+      <button class="pill active" data-level="all">All levels</button>
+    </div>
+
     <div class="section-label">Team names</div>
     <div class="team-inputs" id="team-inputs"></div>
 
@@ -357,6 +362,7 @@ const gs = {
   teams: ['A', 'B'],
   names: {},
   guessesPer: 3,
+  level: 'all',            // CEFR filter, or 'all'
   totalRounds: 2,
   roundIndex: 0,
   roundQuestions: [],
@@ -429,6 +435,20 @@ document.getElementById('guesses-row').addEventListener('click', e => {
   gs.guessesPer = +btn.dataset.guesses;
   [...e.currentTarget.children].forEach(b => b.classList.toggle('active', +b.dataset.guesses === gs.guessesPer));
 });
+document.getElementById('levels-row').addEventListener('click', e => {
+  const btn = e.target.closest('.pill'); if (!btn) return;
+  gs.level = btn.dataset.level;
+  [...e.currentTarget.children].forEach(b => b.classList.toggle('active', b.dataset.level === gs.level));
+});
+
+// Build the CEFR level pills from the levels present in the loaded sheet.
+function renderLevelPills() {
+  const row = document.getElementById('levels-row');
+  const levels = [...new Set(QUESTIONS.map(q => q.level).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+  row.innerHTML = '<button class="pill active" data-level="all">All levels</button>' +
+    levels.map(l => `<button class="pill" data-level="${l}">${l}</button>`).join('');
+  gs.level = 'all';
+}
 
 renderTeamInputs();
 initKeyUI();
@@ -441,7 +461,7 @@ syncSoundBtn();
   startBtn.disabled = true;
   startBtn.textContent = 'Loading questions…';
   window.loadFFQuestions()
-    .then(qs => { QUESTIONS = qs; startBtn.disabled = false; startBtn.textContent = startLabel; })
+    .then(qs => { QUESTIONS = qs; renderLevelPills(); startBtn.disabled = false; startBtn.textContent = startLabel; })
     .catch(err => {
       console.error(err);
       startBtn.disabled = true;
@@ -456,8 +476,10 @@ function startGame() {
   document.querySelectorAll('#team-inputs input').forEach(inp => {
     gs.names[inp.dataset.key] = inp.value.trim() || TEAM_META[inp.dataset.key].name;
   });
-  gs.totalRounds    = gs.teamCount;
-  gs.roundQuestions = shuffle([...QUESTIONS]).slice(0, gs.totalRounds);
+  const pool = gs.level === 'all' ? QUESTIONS : QUESTIONS.filter(q => q.level === gs.level);
+  if (!pool.length) return;
+  gs.roundQuestions = shuffle([...pool]).slice(0, gs.teamCount);
+  gs.totalRounds    = gs.roundQuestions.length;   // may be < teamCount if the level has few questions
   gs.scores         = Object.fromEntries(gs.teams.map(k => [k, 0]));
   gs.roundIndex     = 0;
   hide('setup-screen'); show('game-screen');
