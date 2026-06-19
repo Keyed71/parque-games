@@ -70,7 +70,7 @@
 
   <script src="/games/family-fortunes-questions.js"></script>
   <script>
-    const QUESTIONS = window.FF_QUESTIONS || [];
+    let QUESTIONS = [];
     const listEl = document.getElementById('list');
     const countEl = document.getElementById('count');
     const searchEl = document.getElementById('search');
@@ -111,7 +111,16 @@
     }
 
     searchEl.addEventListener('input', e => render(e.target.value));
-    render('');
+
+    // ── Load the question bank from the sheet, then render ──────────────────────
+    countEl.textContent = 'Loading answer key…';
+    window.loadFFQuestions()
+      .then(qs => { QUESTIONS = qs; render(''); })
+      .catch(err => {
+        console.error(err);
+        countEl.textContent = '';
+        listEl.innerHTML = '<div class="no-results">Could not load the answer key.<br>Check that the Google Sheet is published.</div>';
+      });
   </script>
 </body>
 </html>

@@ -82,6 +82,7 @@
       font-family: 'Nunito', sans-serif; font-size: 1.05rem; font-weight: 900; cursor: pointer; transition: transform 0.12s, box-shadow 0.12s;
     }
     .btn-start:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(196,89,42,0.35); }
+    .btn-start:disabled { opacity: 0.45; cursor: not-allowed; transform: none; box-shadow: none; }
 
     /* ── GAME SCREEN ──────────────────────────────────── */
     #game-screen {
@@ -347,8 +348,8 @@ const TEAM_META = {
 };
 const TEAM_KEYS = ['A', 'B', 'C', 'D'];
 
-// ── Question bank — shared with the host key page (family-fortunes-questions.js) ──
-const QUESTIONS = window.FF_QUESTIONS;
+// ── Question bank — loaded from the sheet via family-fortunes-questions.js ──
+let QUESTIONS = [];
 
 // ── Game state ────────────────────────────────────────────────────────────────
 const gs = {
@@ -433,8 +434,24 @@ renderTeamInputs();
 initKeyUI();
 syncSoundBtn();
 
+// ── Load questions from the published sheet, then enable play ──────────────────
+(function bootstrapQuestions() {
+  const startBtn = document.getElementById('start-btn');
+  const startLabel = startBtn.textContent;
+  startBtn.disabled = true;
+  startBtn.textContent = 'Loading questions…';
+  window.loadFFQuestions()
+    .then(qs => { QUESTIONS = qs; startBtn.disabled = false; startBtn.textContent = startLabel; })
+    .catch(err => {
+      console.error(err);
+      startBtn.disabled = true;
+      startBtn.textContent = '⚠ Could not load questions';
+    });
+})();
+
 // ── Game start ────────────────────────────────────────────────────────────────
 function startGame() {
+  if (!QUESTIONS.length) return;
   gs.names = {};
   document.querySelectorAll('#team-inputs input').forEach(inp => {
     gs.names[inp.dataset.key] = inp.value.trim() || TEAM_META[inp.dataset.key].name;
@@ -450,8 +467,8 @@ function startGame() {
 
 function beginRound() {
   gs.question     = gs.roundQuestions[gs.roundIndex];
-  gs.revealed     = Array(10).fill(false);
-  gs.owner        = Array(10).fill(null);
+  gs.revealed     = Array(gs.question.answers.length).fill(false);
+  gs.owner        = Array(gs.question.answers.length).fill(null);
   gs.guessesLeft  = Object.fromEntries(gs.teams.map(k => [k, gs.guessesPer]));
   gs.activeIndex  = gs.roundIndex % gs.teamCount;   // a new team starts each round
   gs.steal        = { active: false, teamIndex: null };
