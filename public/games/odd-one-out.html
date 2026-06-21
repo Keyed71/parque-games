@@ -250,7 +250,7 @@
 <div id="setup-screen" class="hidden">
   <div class="setup-header">
     <h1>Odd One Out</h1>
-    <p>Four options, one doesn't belong — spot it and explain why!</p>
+    <p>Spot the odd one out — or fill the gap. Four options, one answer.</p>
   </div>
 
   <div class="setup-body">
@@ -309,10 +309,10 @@
   <div class="turn-banner" id="turn-banner"></div>
 
   <div class="play-area">
-    <div class="prompt-text">Which one doesn't belong?</div>
+    <div class="prompt-text" id="prompt-text">Which one doesn't belong?</div>
     <div class="cards-grid" id="cards-grid"></div>
     <div class="explain hidden" id="explain">
-      <div class="ex-head">Why it's the odd one out</div>
+      <div class="ex-head" id="explain-head">Why it's the odd one out</div>
       <div class="ex-body" id="explain-body"></div>
     </div>
   </div>
@@ -417,7 +417,7 @@ function normaliseRow(r) {
   const options = [r.option1, r.option2, r.option3, r.option4].map(o => (o || '').trim());
   if (options.some(o => !o)) return null;               // need all four options
 
-  const raw = (r.odd_one || '').trim();
+  const raw = (r.answer || r.odd_one || '').trim();    // 'answer' (cloze) or 'odd_one' (classic)
   let oddIdx = -1;
   const asNum = parseInt(raw, 10);
   if (asNum >= 1 && asNum <= 4) {
@@ -425,11 +425,12 @@ function normaliseRow(r) {
   } else {
     oddIdx = options.findIndex(o => o.toLowerCase() === raw.toLowerCase());  // match by text
   }
-  if (oddIdx < 0) return null;                          // can't tell which is odd
+  if (oddIdx < 0) return null;                          // can't tell which answer is correct
 
   return {
     options,
     oddIdx,
+    prompt: (r.prompt || '').trim(),                    // optional custom question (e.g. a cloze sentence)
     explanation: (r.explanation || '').trim(),
     level: (r.level || '').trim(),
     theme: (r.theme || '').trim(),
@@ -532,7 +533,7 @@ function startGame() {
 function beginRound() {
   const q = gs.order[gs.qIndex];
   const cards = shuffle(q.options.map((text, i) => ({ text, isOdd: i === q.oddIdx })));
-  gs.question   = { cards, explanation: q.explanation, level: q.level, theme: q.theme };
+  gs.question   = { cards, prompt: q.prompt, explanation: q.explanation, level: q.level, theme: q.theme };
   gs.cardState  = cards.map(() => 'open');
   gs.resolved   = false;
   gs.stealMode  = false;
@@ -550,6 +551,10 @@ function render() {
   const meta = [gs.question.level, gs.question.theme].filter(Boolean).join(' · ');
   document.getElementById('g-meta').textContent =
     `Q ${gs.qIndex + 1} / ${gs.order.length}${meta ? '  —  ' + meta : ''}`;
+
+  // Use the row's own question when present (e.g. a cloze sentence), else the classic prompt.
+  document.getElementById('prompt-text').textContent =
+    gs.question.prompt || "Which one doesn't belong?";
 
   renderScoreboard();
   renderBanner();
@@ -589,17 +594,18 @@ function renderBanner() {
 
 function renderCards() {
   const grid = document.getElementById('cards-grid');
+  const okTag = gs.question.prompt ? '✓ Correct' : '✓ Odd one out';
   grid.innerHTML = gs.question.cards.map((c, i) => {
     const st = gs.cardState[i];
     let cls = 'ooo-card', tag = '';
     if (st === 'open') {
       cls += gs.resolved ? '' : ' clickable';
     } else if (st === 'correct') {
-      cls += ' correct'; tag = '✓ Odd one out';
+      cls += ' correct'; tag = okTag;
     } else if (st === 'wrong') {
       cls += ' wrong'; tag = '✗ ' + gs.cardOwner[i];
     } else if (st === 'reveal') {
-      cls += ' correct'; tag = '✓ Odd one out';
+      cls += ' correct'; tag = okTag;
     }
     if (gs.resolved && st === 'open') cls += ' dim';
     return `<div class="${cls}" onclick="pickCard(${i})">
@@ -612,6 +618,8 @@ function renderCards() {
 function renderExplain() {
   const ex = document.getElementById('explain');
   if (gs.resolved && gs.question.explanation) {
+    document.getElementById('explain-head').textContent =
+      gs.question.prompt ? 'Explanation' : "Why it's the odd one out";
     document.getElementById('explain-body').textContent = gs.question.explanation;
     ex.classList.remove('hidden');
   } else {

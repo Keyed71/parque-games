@@ -56,7 +56,7 @@ const games: GameDefinition[] = [
   {
     id: 'odd-one-out',
     title: 'Odd One Out',
-    description: "Four options, one doesn't belong — spot it and explain why!",
+    description: "Spot the odd one out — or fill the gap. Four options, one answer.",
     icon: '🧩',
     component: OddOneOut,
   },
