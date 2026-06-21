@@ -1,0 +1,76 @@
+option1,option2,option3,option4,odd_one,explanation,level,theme
+apple,carrot,banana,grape,2,"A carrot is a vegetable — the others are all fruit.",A1,Vocabulary
+dog,cat,table,horse,3,"A table is furniture — the others are all animals.",A1,Vocabulary
+red,blue,dog,green,3,"A dog is an animal — the others are all colours.",A1,Vocabulary
+Monday,July,Tuesday,Friday,2,"July is a month — the others are all days of the week.",A1,Vocabulary
+one,two,blue,three,3,"'Blue' is a colour — the others are all numbers.",A1,Vocabulary
+mother,teacher,father,sister,2,"A teacher is a job — the others are all family members.",A1,Vocabulary
+run,swim,happy,jump,3,"'Happy' is an adjective — the others are all action verbs.",A1,Grammar
+I,you,dog,he,3,"'Dog' is a noun — the others are all subject pronouns.",A1,Grammar
+big,table,small,tall,2,"'Table' is a noun — the others are all adjectives.",A1,Grammar
+coffee,tea,bread,water,3,"Bread is food — the others are all drinks.",A1,Vocabulary
+nose,shoe,ear,eye,2,"A shoe is clothing — the others are all parts of the body.",A1,Vocabulary
+rainy,sunny,kitchen,cloudy,3,"'Kitchen' is a room — the others all describe the weather.",A1,Vocabulary
+am,run,is,are,2,"'Run' is an action verb — the others are forms of 'be'.",A1,Grammar
+car,banana,bus,train,2,"A banana is a fruit — the others are all kinds of transport.",A1,Vocabulary
+happy,sad,chair,angry,3,"A chair is an object — the others are all feelings.",A1,Vocabulary
+went,goed,ate,saw,2,"'Goed' is not a word — the others are correct irregular past tenses.",A2,Grammar
+bigger,smaller,good,faster,3,"'Good' is a base adjective — the others are comparatives.",A2,Grammar
+always,blue,usually,often,2,"'Blue' is a colour — the others are adverbs of frequency.",A2,Grammar
+cooked,played,ran,watched,3,"'Ran' is an irregular past tense — the others are regular '-ed' verbs.",A2,Grammar
+doctor,hospital,nurse,dentist,2,"A hospital is a place — the others are all jobs.",A2,Vocabulary
+spring,summer,Monday,autumn,3,"Monday is a day — the others are all seasons.",A2,Vocabulary
+quickly,slowly,careful,carefully,3,"'Careful' is an adjective — the others are all adverbs.",A2,Grammar
+his,her,she,their,3,"'She' is a subject pronoun — the others are possessive adjectives.",A2,Grammar
+football,guitar,tennis,basketball,2,"A guitar is a musical instrument — the others are all sports.",A2,Vocabulary
+apple juice,milk,sandwich,lemonade,3,"A sandwich is food — the others are all drinks.",A2,Vocabulary
+was,were,is,did,3,"'Is' is present tense — the others are all past tense.",A2,Grammar
+taller,older,biggest,more beautiful,3,"'Biggest' is a superlative — the others are comparatives.",A2,Grammar
+kitchen,bedroom,garden,bathroom,3,"A garden is outside the house — the others are all rooms inside.",A2,Vocabulary
+cheese,butter,apple,milk,3,"An apple is a fruit — the others are all dairy products.",A2,Vocabulary
+swam,drank,swimming,sang,3,"'Swimming' is an '-ing' form — the others are past simple verbs.",A2,Grammar
+since,for,ago,yet,3,"'Ago' is used with the past simple — since, for and yet go with the present perfect.",B1,Grammar
+happiness,kindness,careful,sadness,3,"'Careful' is an adjective — the others are nouns ending in '-ness'.",B1,Word Formation
+running,swimming,athlete,cycling,3,"'Athlete' is a person — the others are sports activities.",B1,Vocabulary
+would,could,want,should,3,"'Want' is an ordinary verb — the others are modal verbs.",B1,Grammar
+honest,careful,beauty,useful,3,"'Beauty' is a noun — the others are all adjectives.",B1,Word Formation
+give up,look after,beautiful,take off,3,"'Beautiful' is an adjective — the others are all phrasal verbs.",B1,Vocabulary
+terrified,exhausted,tired,starving,3,"'Tired' is a normal adjective — the others are strong (extreme) adjectives.",B1,Vocabulary
+teacher,actor,teach,writer,3,"'Teach' is a verb — the others are people/jobs ending in '-er' or '-or'.",B1,Word Formation
+unhappy,impossible,disappear,incorrect,3,"'Disappear' is a verb — the others are adjectives with a negative prefix.",B1,Word Formation
+coffee,sugar,apples,water,3,"'Apples' is countable — the others are uncountable nouns.",B1,Grammar
+novel,magazine,author,newspaper,3,"An author is a person — the others are things you read.",B1,Vocabulary
+have eaten,has gone,did see,have been,3,"'Did see' is past simple — the others are present perfect.",B1,Grammar
+interesting,boring,interested,exciting,3,"'Interested' describes a feeling ('-ed'); the others describe the cause ('-ing').",B1,Grammar
+make a decision,do homework,make a mistake,make an effort,2,"'Homework' goes with 'do' — the others all collocate with 'make'.",B1,Collocations
+although,however,so,but,3,"'So' shows a result — the others all show contrast.",B1,Linking Words
+nevertheless,however,moreover,although,3,"'Moreover' adds information — the others signal contrast or concession.",B2,Linking Words
+picturesque,breathtaking,ugly,stunning,3,"'Ugly' is negative — the others are positive words for beautiful scenery.",B2,Vocabulary
+reluctant,eager,keen,willing,1,"'Reluctant' means unwilling — the others all mean willing/enthusiastic.",B2,Vocabulary
+amazed,astonished,annoyed,astounded,3,"'Annoyed' is mild irritation — the others all mean extremely surprised.",B2,Vocabulary
+on the other hand,in contrast,in addition,conversely,3,"'In addition' adds a point — the others all introduce a contrast.",B2,Linking Words
+could have,might have,will have,must have,3,"'Will have' refers to the future — the others speculate about the past.",B2,Grammar
+stubborn,determined,generous,persistent,3,"'Generous' is about giving — the others all describe being strong-willed.",B2,Vocabulary
+childhood,brotherhood,childish,neighbourhood,3,"'Childish' is an adjective — the others are nouns ending in '-hood'.",B2,Word Formation
+break the ice,hit the books,table and chair,piece of cake,3,"'Table and chair' is literal — the others are all idioms.",B2,Idioms
+scarcely,hardly,frequently,barely,3,"'Frequently' means often — the others all mean 'almost not'.",B2,Vocabulary
+infer,imply,shout,suggest,3,"'Shout' is about volume — the others are about indirect meaning.",B2,Vocabulary
+economical,economic,economy,financial,3,"'Economy' is a noun — the others are all adjectives.",B2,Word Formation
+albeit,whereas,therefore,whilst,3,"'Therefore' shows a result — the others signal contrast or concession.",B2,Linking Words
+mitigate,alleviate,worsen,ease,3,"'Worsen' means to make worse — the others all mean to reduce or relieve.",B2,Vocabulary
+I regret to inform you,Unfortunately,What's up,We are sorry,3,"'What's up' is very informal — the others are formal/polite expressions.",B2,Register
+meticulous,scrupulous,careless,thorough,3,"'Careless' means not careful — the others all mean extremely careful.",C1,Vocabulary
+notwithstanding,nonetheless,consequently,albeit,3,"'Consequently' shows result — the others all signal concession/contrast.",C1,Linking Words
+ubiquitous,omnipresent,scarce,widespread,3,"'Scarce' means rare — the others all mean found everywhere.",C1,Vocabulary
+allude,hint,declare,insinuate,3,"'Declare' is direct and open — the others all mean to suggest indirectly.",C1,Vocabulary
+lucid,coherent,garbled,articulate,3,"'Garbled' means unclear — the others all mean clear and easy to follow.",C1,Vocabulary
+bring about,give rise to,stem from,lead to,3,"'Stem from' shows cause (effect to cause) — the others mean to cause or produce.",C1,Vocabulary
+candid,frank,evasive,forthright,3,"'Evasive' means avoiding the truth — the others all mean honest and direct.",C1,Vocabulary
+exacerbate,aggravate,alleviate,compound,3,"'Alleviate' means to ease — the others all mean to make worse.",C1,Vocabulary
+tentative,provisional,definitive,conditional,3,"'Definitive' means final and certain — the others all mean not yet fixed.",C1,Vocabulary
+paramount,pivotal,trivial,crucial,3,"'Trivial' means unimportant — the others all mean extremely important.",C1,Vocabulary
+to my mind,arguably,indisputably,in my view,3,"'Indisputably' presents something as fact — the others hedge a personal opinion.",C1,Register
+proliferate,burgeon,dwindle,mushroom,3,"'Dwindle' means to shrink — the others all mean to grow rapidly.",C1,Vocabulary
+cohesion,coherence,cohesive,consistency,3,"'Cohesive' is an adjective — the others are all nouns.",C1,Word Formation
+pragmatic,practical,idealistic,realistic,3,"'Idealistic' is about ideals — the others all mean down-to-earth and practical.",C1,Vocabulary
+Notwithstanding the delay,Despite the delay,Because of the delay,In spite of the delay,3,"'Because of' gives a reason — the others all mean 'although / even with'.",C1,Linking Words

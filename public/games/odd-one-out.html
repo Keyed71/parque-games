@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Odd One Out</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Nunito', sans-serif; }
+    .hidden { display: none !important; }
+
+    /* ── LOADING ──────────────────────────────────────── */
+    #loading-screen {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; min-height: 100vh;
+      background: #fdf6ec; color: #7a2e1a; gap: 0.75rem;
+    }
+    #loading-screen .icon { font-size: 3rem; }
+    #loading-screen .text { font-size: 1.3rem; font-weight: 700; }
+
+    /* ── SETUP SCREEN ─────────────────────────────────── */
+    #setup-screen { min-height: 100vh; background: #fdf6ec; }
+
+    .setup-header {
+      background: linear-gradient(150deg, #7a2e1a, #c4592a, #d4845a);
+      color: white; padding: 1.25rem 2rem 1.25rem 7rem;   /* left room for the Hub button */
+    }
+    .setup-header h1 { font-size: 1.9rem; font-weight: 900; }
+    .setup-header p  { font-size: 0.95rem; opacity: 0.85; margin-top: 0.1rem; }
+
+    .setup-body { padding: 1.5rem 2rem; max-width: 620px; margin: 0 auto; }
+
+    .setup-row { display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end; margin-bottom: 1.25rem; }
+
+    .field-group { display: flex; flex-direction: column; gap: 0.3rem; }
+    .field-group label {
+      font-size: 0.78rem; font-weight: 900; color: #7a2e1a;
+      text-transform: uppercase; letter-spacing: 0.06em;
+    }
+    .field-group select {
+      padding: 0.5rem 0.75rem; border: 2px solid #e8d0b0;
+      border-radius: 10px; font-family: 'Nunito', sans-serif;
+      font-size: 0.95rem; background: white; color: #1e293b; min-width: 160px;
+    }
+    .field-group select:focus { outline: none; border-color: #c4592a; }
+
+    /* Team-count pills */
+    .pill-row { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .pill {
+      padding: 0.45rem 1rem; border: 2px solid #e8d0b0; border-radius: 999px;
+      background: white; font-family: 'Nunito', sans-serif; font-weight: 900;
+      font-size: 0.9rem; color: #7a2e1a; cursor: pointer; transition: all 0.12s;
+    }
+    .pill.active { background: linear-gradient(135deg, #c4592a, #d4845a); color: white; border-color: #c4592a; }
+
+    /* Team name inputs */
+    .team-row { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+    .team-card {
+      background: white; border: 2px solid #e8d0b0; border-radius: 14px;
+      padding: 0.55rem 0.9rem; display: flex; align-items: center; gap: 0.55rem;
+    }
+    .team-card .tc-dot { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
+    .team-card input {
+      width: 130px; padding: 0.3rem 0.55rem; border: 2px solid #e8d0b0;
+      border-radius: 8px; font-family: 'Nunito', sans-serif;
+      font-size: 0.92rem; font-weight: 700; color: #1e293b;
+    }
+    .team-card input:focus { outline: none; border-color: #c4592a; }
+
+    .points-legend {
+      background: white; border: 2px solid #e8d0b0; border-radius: 14px;
+      padding: 0.9rem 1.25rem; margin-bottom: 1.5rem;
+      display: flex; gap: 1.75rem; flex-wrap: wrap;
+    }
+    .pts-item { text-align: center; }
+    .pts-item .pts-val { font-size: 1.3rem; font-weight: 900; color: #c4592a; line-height: 1; }
+    .pts-item .pts-lbl { font-size: 0.72rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.15rem; }
+
+    .match-info {
+      font-size: 0.9rem; color: #64748b; font-weight: 600;
+      margin-bottom: 1rem; min-height: 1.4em;
+    }
+    .match-info.none { color: #dc2626; }
+
+    .btn-start {
+      display: inline-block; padding: 0.875rem 2.5rem;
+      background: linear-gradient(135deg, #c4592a, #d4845a);
+      color: white; border: none; border-radius: 12px;
+      font-family: 'Nunito', sans-serif; font-size: 1.05rem;
+      font-weight: 900; cursor: pointer;
+      transition: transform 0.12s, box-shadow 0.12s;
+    }
+    .btn-start:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(196,89,42,0.35); }
+    .btn-start:disabled { opacity: 0.35; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    /* ── GAME SCREEN ──────────────────────────────────── */
+    #game-screen {
+      min-height: 100vh;
+      background: linear-gradient(180deg, #f8fafc, #e7ecf3);
+      display: flex; flex-direction: column;
+    }
+
+    .game-topbar {
+      background: #1e293b; color: white;
+      padding: 0.6rem 1.25rem 0.6rem 7rem;   /* left room for the Hub button */
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .back-btn {
+      background: transparent; border: 1px solid rgba(255,255,255,0.25);
+      color: rgba(255,255,255,0.75); border-radius: 7px;
+      padding: 0.25rem 0.65rem; cursor: pointer;
+      font-family: 'Nunito', sans-serif; font-size: 0.8rem; font-weight: 700;
+    }
+    .back-btn:hover { border-color: white; color: white; }
+    .game-topbar-title { font-size: 1rem; font-weight: 900; }
+    .topbar-right { display: flex; align-items: center; gap: 0.7rem; }
+    .game-topbar-meta { font-size: 0.78rem; color: rgba(255,255,255,0.5); }
+
+    /* Scoreboard */
+    .scoreboard {
+      background: #1e293b; display: flex; justify-content: center;
+      gap: 1rem; flex-wrap: wrap; padding: 0.3rem 1.5rem 0.85rem; color: white;
+    }
+    .sb-team {
+      text-align: center; min-width: 110px; padding: 0.35rem 0.9rem;
+      border-radius: 12px; border: 2px solid transparent; transition: all 0.15s;
+    }
+    .sb-team .sb-name {
+      font-size: 0.72rem; font-weight: 900; text-transform: uppercase;
+      letter-spacing: 0.06em; opacity: 0.55; display: flex; align-items: center;
+      justify-content: center; gap: 0.35rem;
+    }
+    .sb-team .sb-dot { width: 9px; height: 9px; border-radius: 50%; }
+    .sb-team .sb-score { font-size: 2.4rem; font-weight: 900; line-height: 1.05; }
+    .sb-team.current { background: rgba(255,255,255,0.07); border-color: var(--tc); }
+    .sb-team.current .sb-name { opacity: 1; color: var(--tc); }
+    .sb-team.current .sb-score { color: var(--tc); }
+
+    .turn-banner {
+      text-align: center; padding: 0.55rem 1rem;
+      font-size: 1.15rem; font-weight: 900;
+      letter-spacing: 0.04em; text-transform: uppercase;
+      color: #1e293b; background: #fbbf24;
+    }
+    .turn-banner.steal { background: #fca5a5; color: #7f1d1d; }
+    .turn-banner.done  { background: #cbd5e1; color: #334155; }
+
+    /* Play area */
+    .play-area {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; padding: 1.25rem 2rem 0.5rem;
+    }
+    .prompt-text {
+      font-size: 1.4rem; font-weight: 900; color: #334155;
+      margin-bottom: 1.25rem; text-align: center;
+    }
+
+    .cards-grid {
+      display: grid; grid-template-columns: repeat(2, 1fr);
+      gap: 1.1rem; width: min(92vw, 820px);
+    }
+    .ooo-card {
+      background: white; border: 3px solid #e2e8f0; border-radius: 20px;
+      padding: 1.6rem 1.25rem; min-height: 7.5rem;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 0.4rem; cursor: pointer; text-align: center;
+      box-shadow: 0 8px 22px rgba(15,23,42,0.07);
+      transition: transform 0.12s, border-color 0.12s, box-shadow 0.12s;
+    }
+    .ooo-card .card-text {
+      font-size: clamp(1.3rem, 3vw, 2rem); font-weight: 900; color: #1e293b;
+    }
+    .ooo-card .card-tag {
+      font-size: 0.72rem; font-weight: 900; text-transform: uppercase;
+      letter-spacing: 0.06em; min-height: 0.9rem;
+    }
+    .ooo-card.clickable:hover { transform: translateY(-3px); border-color: #c4592a; box-shadow: 0 12px 28px rgba(196,89,42,0.18); }
+    .ooo-card.correct {
+      border-color: #16a34a; background: #f0fdf4;
+    }
+    .ooo-card.correct .card-text { color: #166534; }
+    .ooo-card.correct .card-tag  { color: #16a34a; }
+    .ooo-card.wrong {
+      border-color: #dc2626; background: #fef2f2; opacity: 0.92;
+    }
+    .ooo-card.wrong .card-text { color: #991b1b; text-decoration: line-through; }
+    .ooo-card.wrong .card-tag  { color: #dc2626; }
+    .ooo-card.dim { opacity: 0.4; }
+    .ooo-card:not(.clickable) { cursor: default; }
+
+    /* Explanation panel */
+    .explain {
+      width: min(92vw, 820px); margin: 1.1rem auto 0;
+      background: #fff8f0; border: 2px solid #e8d0b0; border-radius: 16px;
+      padding: 1rem 1.25rem; text-align: center;
+    }
+    .explain .ex-head { font-size: 0.82rem; font-weight: 900; color: #c4592a; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.35rem; }
+    .explain .ex-body { font-size: 1.1rem; font-weight: 700; color: #1e293b; line-height: 1.45; }
+
+    /* Action row */
+    .action-row {
+      display: flex; gap: 0.75rem; justify-content: center;
+      padding: 1rem 1rem 1.5rem; flex-wrap: wrap;
+    }
+    .act-btn {
+      padding: 0.7rem 1.9rem; border: none; border-radius: 12px;
+      font-family: 'Nunito', sans-serif; font-size: 1rem; font-weight: 900; cursor: pointer;
+      transition: transform 0.12s, box-shadow 0.12s;
+    }
+    .act-btn.primary { background: linear-gradient(135deg, #c4592a, #d4845a); color: white; }
+    .act-btn.primary:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(196,89,42,0.3); }
+    .act-btn.secondary { background: #e2e8f0; color: #334155; }
+
+    /* ── GAME OVER OVERLAY ────────────────────────────── */
+    #game-over {
+      position: fixed; inset: 0; background: rgba(15,23,42,0.82);
+      display: flex; align-items: center; justify-content: center; z-index: 200; padding: 1rem;
+    }
+    .go-box {
+      background: white; border-radius: 24px; padding: 2.25rem 2.75rem;
+      max-width: 520px; width: 100%; text-align: center;
+    }
+    .go-emoji { font-size: 3.5rem; margin-bottom: 0.3rem; }
+    .go-title { font-size: 2rem; font-weight: 900; margin-bottom: 0.15rem; color: #1e293b; }
+    .go-sub   { color: #64748b; font-size: 0.95rem; margin-bottom: 1.25rem; }
+    .go-scores { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.6rem; }
+    .go-rank {
+      display: flex; align-items: center; gap: 0.75rem;
+      background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 12px;
+      padding: 0.6rem 1rem;
+    }
+    .go-rank.winner { border-color: #fbbf24; background: #fffbeb; }
+    .go-rank .rk-pos { font-size: 1.1rem; font-weight: 900; color: #94a3b8; width: 1.8rem; text-align: left; }
+    .go-rank .rk-dot { width: 14px; height: 14px; border-radius: 50%; }
+    .go-rank .rk-name { font-size: 1.05rem; font-weight: 900; color: #1e293b; flex: 1; text-align: left; }
+    .go-rank .rk-score { font-size: 1.4rem; font-weight: 900; color: #c4592a; }
+    .go-actions { display: flex; gap: 0.6rem; justify-content: center; flex-wrap: wrap; }
+  </style>
+</head>
+<body>
+
+<!-- Loading -->
+<div id="loading-screen">
+  <div class="icon">🧩</div>
+  <div class="text">Loading questions…</div>
+</div>
+
+<!-- Setup -->
+<div id="setup-screen" class="hidden">
+  <div class="setup-header">
+    <h1>Odd One Out</h1>
+    <p>Four options, one doesn't belong — spot it and explain why!</p>
+  </div>
+
+  <div class="setup-body">
+    <div class="setup-row">
+      <div class="field-group">
+        <label>Level</label>
+        <select id="filter-level"><option value="">All levels</option></select>
+      </div>
+      <div class="field-group">
+        <label>Theme</label>
+        <select id="filter-theme"><option value="">All themes</option></select>
+      </div>
+    </div>
+
+    <div class="setup-row">
+      <div class="field-group">
+        <label>Teams</label>
+        <div class="pill-row" id="teams-row">
+          <button class="pill active" data-teams="2">2 teams</button>
+          <button class="pill" data-teams="3">3 teams</button>
+          <button class="pill" data-teams="4">4 teams</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="team-row" id="team-inputs"></div>
+
+    <div class="points-legend">
+      <div class="pts-item">
+        <div class="pts-val">+10</div>
+        <div class="pts-lbl">Spot it first</div>
+      </div>
+      <div class="pts-item">
+        <div class="pts-val">+5</div>
+        <div class="pts-lbl">Steal after a miss</div>
+      </div>
+    </div>
+
+    <div class="match-info" id="match-info"></div>
+    <button class="btn-start" id="start-btn" onclick="startGame()">▶ Start Game</button>
+  </div>
+</div>
+
+<!-- Game -->
+<div id="game-screen" class="hidden">
+  <div class="game-topbar">
+    <button class="back-btn" onclick="goSetup()">← Back</button>
+    <div class="game-topbar-title">Odd One Out</div>
+    <div class="topbar-right">
+      <span class="game-topbar-meta" id="g-meta"></span>
+      <button class="back-btn" onclick="endGame()">End game</button>
+    </div>
+  </div>
+
+  <div class="scoreboard" id="scoreboard"></div>
+  <div class="turn-banner" id="turn-banner"></div>
+
+  <div class="play-area">
+    <div class="prompt-text">Which one doesn't belong?</div>
+    <div class="cards-grid" id="cards-grid"></div>
+    <div class="explain hidden" id="explain">
+      <div class="ex-head">Why it's the odd one out</div>
+      <div class="ex-body" id="explain-body"></div>
+    </div>
+  </div>
+
+  <div class="action-row" id="action-row"></div>
+</div>
+
+<!-- Game over -->
+<div id="game-over" class="hidden">
+  <div class="go-box">
+    <div class="go-emoji" id="go-emoji">🏆</div>
+    <div class="go-title" id="go-title">Game Over!</div>
+    <div class="go-sub"   id="go-sub"></div>
+    <div class="go-scores" id="go-scores"></div>
+    <div class="go-actions">
+      <button class="act-btn primary"   onclick="goSetup()">Play Again</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ────────────────────────────────────────────────────────────────────────────
+   DATA SOURCE
+   Replace CSV_URL with the published-to-web CSV link of your new sheet tab.
+   Columns (lowercase headers, in any order):
+     option1, option2, option3, option4, odd_one, explanation, level, theme
+   • odd_one = the NUMBER (1-4) of the option that doesn't belong
+     (the exact option text also works as a fallback).
+   Until a real URL is wired in, the built-in SAMPLE_DATA below is used so the
+   game is playable for testing.
+──────────────────────────────────────────────────────────────────────────── */
+const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQQOA7JYpQHJPodeWxaoJzUqT1L6vftHr-jjo7Y7Y06lHAecXsk6aw5jFPeQhJgKMro7Wu1vzW5E7PS/pub?gid=624484674&single=true&output=csv';
+
+const SAMPLE_DATA = [
+  { option1:'apple', option2:'banana', option3:'carrot', option4:'orange', odd_one:'3', explanation:'A carrot is a vegetable — the others are all fruit.', level:'A1', theme:'Vocabulary' },
+  { option1:'run',   option2:'swim',   option3:'jump',   option4:'happy',  odd_one:'4', explanation:'"Happy" is an adjective — the others are all verbs.', level:'A1', theme:'Grammar' },
+  { option1:'went',  option2:'ate',    option3:'goed',   option4:'saw',    odd_one:'3', explanation:'"Goed" is not a word — the others are correct irregular past forms.', level:'A2', theme:'Grammar' },
+  { option1:'cat',   option2:'dog',    option3:'fish',   option4:'rose',   odd_one:'4', explanation:'A rose is a plant — the others are all animals.', level:'A1', theme:'Vocabulary' },
+  { option1:'quickly', option2:'slowly', option3:'careful', option4:'happily', odd_one:'3', explanation:'"Careful" is an adjective — the others are all adverbs.', level:'B1', theme:'Grammar' },
+  { option1:'Monday', option2:'Friday', option3:'Sunday', option4:'January', odd_one:'4', explanation:'January is a month — the others are all days of the week.', level:'A1', theme:'Vocabulary' },
+];
+
+const TEAM_KEYS = ['A', 'B', 'C', 'D'];
+const TEAM_META = {
+  A: { name: 'Team A', color: '#1d4ed8' },
+  B: { name: 'Team B', color: '#db2777' },
+  C: { name: 'Team C', color: '#16a34a' },
+  D: { name: 'Team D', color: '#d97706' },
+};
+
+const CORRECT_PTS = 10;
+const STEAL_PTS   = 5;
+
+// ── State ─────────────────────────────────────────────────────────────────────
+let allRows = [];
+
+const gs = {
+  teamCount: 2,
+  teams: ['A', 'B'],
+  names: {},
+  scores: {},
+  order: [],         // shuffled questions for this session
+  qIndex: 0,
+  question: null,    // { cards:[{text,isOdd}], explanation, level, theme }
+  guessQueue: [],    // team keys still allowed to guess this round
+  stealMode: false,
+  resolved: false,
+  cardState: [],     // per card: 'open' | 'correct' | 'wrong' | 'reveal'
+};
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+const show = id => document.getElementById(id).classList.remove('hidden');
+const hide = id => document.getElementById(id).classList.add('hidden');
+function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+
+// ── CSV parse ───────────────────────────────────────────────────────────────
+function parseCSV(raw) {
+  function splitLine(line) {
+    const out = []; let f = ''; let q = false;
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (c === '"') { q = !q; }
+      else if (c === ',' && !q) { out.push(f.trim()); f = ''; }
+      else { f += c; }
+    }
+    out.push(f.trim());
+    return out;
+  }
+  const lines = raw.replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim().split('\n');
+  if (lines.length < 2) return [];
+  const headers = splitLine(lines[0]).map(h => h.toLowerCase());
+  return lines.slice(1).filter(l => l.trim()).map(line => {
+    const vals = splitLine(line);
+    const obj = {};
+    headers.forEach((h, i) => obj[h] = (vals[i] || '').trim());
+    return obj;
+  });
+}
+
+// Turn a raw row into a usable question, or null if it's malformed.
+function normaliseRow(r) {
+  const options = [r.option1, r.option2, r.option3, r.option4].map(o => (o || '').trim());
+  if (options.some(o => !o)) return null;               // need all four options
+
+  const raw = (r.odd_one || '').trim();
+  let oddIdx = -1;
+  const asNum = parseInt(raw, 10);
+  if (asNum >= 1 && asNum <= 4) {
+    oddIdx = asNum - 1;                                 // "1".."4" → index
+  } else {
+    oddIdx = options.findIndex(o => o.toLowerCase() === raw.toLowerCase());  // match by text
+  }
+  if (oddIdx < 0) return null;                          // can't tell which is odd
+
+  return {
+    options,
+    oddIdx,
+    explanation: (r.explanation || '').trim(),
+    level: (r.level || '').trim(),
+    theme: (r.theme || '').trim(),
+  };
+}
+
+// ── Boot ──────────────────────────────────────────────────────────────────────
+async function init() {
+  try {
+    let rows;
+    if (CSV_URL && CSV_URL.startsWith('http')) {
+      const res = await fetch(CSV_URL);
+      rows = parseCSV(await res.text());
+    } else {
+      rows = SAMPLE_DATA;                               // no URL wired yet → sample
+    }
+    allRows = rows.map(normaliseRow).filter(Boolean);
+    if (!allRows.length) throw new Error('no valid rows');
+
+    fillFilter('filter-level', [...new Set(allRows.map(r => r.level).filter(Boolean))]);
+    fillFilter('filter-theme', [...new Set(allRows.map(r => r.theme).filter(Boolean))]);
+    document.getElementById('filter-level').addEventListener('change', updateMatchInfo);
+    document.getElementById('filter-theme').addEventListener('change', updateMatchInfo);
+
+    renderTeamInputs();
+    updateMatchInfo();
+    show('setup-screen');
+    hide('loading-screen');
+  } catch (e) {
+    document.getElementById('loading-screen').innerHTML =
+      '<div style="color:#dc2626;text-align:center;padding:2rem;font-size:1.1rem;font-weight:700">' +
+      'Could not load questions.<br>Check that the Google Sheet is published to the web.</div>';
+  }
+}
+
+function fillFilter(id, values) {
+  const sel = document.getElementById(id);
+  values.sort((a, b) => a.localeCompare(b)).forEach(v => {
+    const o = document.createElement('option');
+    o.value = v; o.textContent = v; sel.appendChild(o);
+  });
+}
+
+// ── Setup interactions ──────────────────────────────────────────────────────
+document.getElementById('teams-row').addEventListener('click', e => {
+  const btn = e.target.closest('.pill'); if (!btn) return;
+  gs.teamCount = +btn.dataset.teams;
+  gs.teams = TEAM_KEYS.slice(0, gs.teamCount);
+  [...e.currentTarget.children].forEach(b => b.classList.toggle('active', +b.dataset.teams === gs.teamCount));
+  renderTeamInputs();
+});
+
+function renderTeamInputs() {
+  document.getElementById('team-inputs').innerHTML = gs.teams.map(key => {
+    const m = TEAM_META[key];
+    const val = (gs.names[key] || m.name);
+    return `<div class="team-card">
+      <span class="tc-dot" style="background:${m.color}"></span>
+      <input type="text" data-key="${key}" value="${val}" maxlength="18">
+    </div>`;
+  }).join('');
+}
+
+function filtered() {
+  const lv = document.getElementById('filter-level').value;
+  const th = document.getElementById('filter-theme').value;
+  return allRows.filter(r => (!lv || r.level === lv) && (!th || r.theme === th));
+}
+
+function updateMatchInfo() {
+  const n = filtered().length;
+  const info = document.getElementById('match-info');
+  const btn  = document.getElementById('start-btn');
+  if (n === 0) {
+    info.textContent = 'No questions match these filters — try All levels / All themes.';
+    info.classList.add('none'); btn.disabled = true;
+  } else {
+    info.textContent = `${n} question${n === 1 ? '' : 's'} ready to play.`;
+    info.classList.remove('none'); btn.disabled = false;
+  }
+}
+
+// ── Game start ──────────────────────────────────────────────────────────────
+function startGame() {
+  const pool = filtered();
+  if (!pool.length) return;
+
+  gs.names = {};
+  document.querySelectorAll('#team-inputs input').forEach(inp => {
+    gs.names[inp.dataset.key] = inp.value.trim() || TEAM_META[inp.dataset.key].name;
+  });
+  gs.scores = Object.fromEntries(gs.teams.map(k => [k, 0]));
+  gs.order  = shuffle([...pool]);
+  gs.qIndex = 0;
+
+  hide('setup-screen'); show('game-screen');
+  beginRound();
+}
+
+function beginRound() {
+  const q = gs.order[gs.qIndex];
+  const cards = shuffle(q.options.map((text, i) => ({ text, isOdd: i === q.oddIdx })));
+  gs.question   = { cards, explanation: q.explanation, level: q.level, theme: q.theme };
+  gs.cardState  = cards.map(() => 'open');
+  gs.resolved   = false;
+  gs.stealMode  = false;
+
+  // Active team rotates each question; steal order follows after it.
+  const startIdx = gs.qIndex % gs.teamCount;
+  gs.guessQueue = [];
+  for (let k = 0; k < gs.teamCount; k++) gs.guessQueue.push(gs.teams[(startIdx + k) % gs.teamCount]);
+
+  render();
+}
+
+// ── Render ────────────────────────────────────────────────────────────────────
+function render() {
+  const meta = [gs.question.level, gs.question.theme].filter(Boolean).join(' · ');
+  document.getElementById('g-meta').textContent =
+    `Q ${gs.qIndex + 1} / ${gs.order.length}${meta ? '  —  ' + meta : ''}`;
+
+  renderScoreboard();
+  renderBanner();
+  renderCards();
+  renderExplain();
+  renderActions();
+}
+
+function renderScoreboard() {
+  const current = gs.resolved ? null : gs.guessQueue[0];
+  document.getElementById('scoreboard').innerHTML = gs.teams.map(key => {
+    const m = TEAM_META[key];
+    const cur = key === current ? ' current' : '';
+    return `<div class="sb-team${cur}" style="--tc:${m.color}">
+      <div class="sb-name"><span class="sb-dot" style="background:${m.color}"></span>${gs.names[key]}</div>
+      <div class="sb-score">${gs.scores[key]}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderBanner() {
+  const b = document.getElementById('turn-banner');
+  b.className = 'turn-banner';
+  if (gs.resolved) {
+    b.classList.add('done');
+    b.textContent = 'Answer revealed';
+    return;
+  }
+  const team = gs.names[gs.guessQueue[0]];
+  if (gs.stealMode) {
+    b.classList.add('steal');
+    b.textContent = `Steal! ${team}'s turn`;
+  } else {
+    b.textContent = `${team}'s turn`;
+  }
+}
+
+function renderCards() {
+  const grid = document.getElementById('cards-grid');
+  grid.innerHTML = gs.question.cards.map((c, i) => {
+    const st = gs.cardState[i];
+    let cls = 'ooo-card', tag = '';
+    if (st === 'open') {
+      cls += gs.resolved ? '' : ' clickable';
+    } else if (st === 'correct') {
+      cls += ' correct'; tag = '✓ Odd one out';
+    } else if (st === 'wrong') {
+      cls += ' wrong'; tag = '✗ ' + gs.cardOwner[i];
+    } else if (st === 'reveal') {
+      cls += ' correct'; tag = '✓ Odd one out';
+    }
+    if (gs.resolved && st === 'open') cls += ' dim';
+    return `<div class="${cls}" onclick="pickCard(${i})">
+      <div class="card-text">${c.text}</div>
+      <div class="card-tag">${tag}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderExplain() {
+  const ex = document.getElementById('explain');
+  if (gs.resolved && gs.question.explanation) {
+    document.getElementById('explain-body').textContent = gs.question.explanation;
+    ex.classList.remove('hidden');
+  } else {
+    ex.classList.add('hidden');
+  }
+}
+
+function renderActions() {
+  const row = document.getElementById('action-row');
+  if (!gs.resolved) { row.innerHTML = ''; return; }
+  const isLast = gs.qIndex >= gs.order.length - 1;
+  row.innerHTML = isLast
+    ? `<button class="act-btn primary" onclick="endGame()">See Results →</button>`
+    : `<button class="act-btn primary" onclick="nextQuestion()">Next Question →</button>
+       <button class="act-btn secondary" onclick="endGame()">End Game</button>`;
+}
+
+// ── Picking ─────────────────────────────────────────────────────────────────
+gs.cardOwner = [];   // team name that wrongly picked each card
+
+function pickCard(i) {
+  if (gs.resolved || gs.cardState[i] !== 'open') return;
+  const team = gs.guessQueue[0];
+
+  if (gs.question.cards[i].isOdd) {
+    gs.cardState[i] = 'correct';
+    gs.scores[team] += gs.stealMode ? STEAL_PTS : CORRECT_PTS;
+    gs.resolved = true;
+  } else {
+    gs.cardState[i] = 'wrong';
+    gs.cardOwner[i] = gs.names[team];
+    gs.guessQueue.shift();         // this team is out for the round
+    gs.stealMode = true;
+    if (gs.guessQueue.length === 0) {
+      // Everyone missed — reveal the odd one, no points.
+      const oddCard = gs.question.cards.findIndex(c => c.isOdd);
+      gs.cardState[oddCard] = 'reveal';
+      gs.resolved = true;
+    }
+  }
+  render();
+}
+
+function nextQuestion() {
+  if (gs.qIndex >= gs.order.length - 1) { endGame(); return; }
+  gs.qIndex++;
+  beginRound();
+}
+
+// ── Game over ─────────────────────────────────────────────────────────────────
+function endGame() {
+  const ranked = [...gs.teams].sort((a, b) => gs.scores[b] - gs.scores[a]);
+  const max = Math.max(...gs.teams.map(k => gs.scores[k]));
+  const winners = gs.teams.filter(k => gs.scores[k] === max);
+  const tie = winners.length > 1 && max > 0;
+
+  document.getElementById('go-emoji').textContent = max === 0 ? '🤝' : (tie ? '🤝' : '🏆');
+  if (max === 0) {
+    document.getElementById('go-title').textContent = 'Game Over!';
+    document.getElementById('go-sub').textContent = 'No points scored.';
+  } else if (tie) {
+    document.getElementById('go-title').textContent = "It's a tie!";
+    document.getElementById('go-sub').textContent = winners.map(k => gs.names[k]).join(' & ') + ' share the win.';
+  } else {
+    document.getElementById('go-title').textContent = gs.names[winners[0]] + ' wins!';
+    document.getElementById('go-sub').textContent = `${max} points`;
+  }
+
+  document.getElementById('go-scores').innerHTML = ranked.map((key, idx) => {
+    const m = TEAM_META[key];
+    const win = gs.scores[key] === max && max > 0 ? ' winner' : '';
+    return `<div class="go-rank${win}">
+      <span class="rk-pos">${idx + 1}.</span>
+      <span class="rk-dot" style="background:${m.color}"></span>
+      <span class="rk-name">${gs.names[key]}</span>
+      <span class="rk-score">${gs.scores[key]}</span>
+    </div>`;
+  }).join('');
+
+  show('game-over');
+}
+
+function goSetup() {
+  hide('game-over'); hide('game-screen');
+  show('setup-screen');
+  updateMatchInfo();
+}
+
+init();
+</script>
+</body>
+</html>

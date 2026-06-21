@@ -5,6 +5,7 @@ import MysterySentence from './mystery-sentence/MysterySentence'
 import NoughtsCrosses from './noughts-crosses/NoughtsCrosses'
 import ThreeInARow from './three-in-a-row/ThreeInARow'
 import FamilyFortunes from './family-fortunes/FamilyFortunes'
+import OddOneOut from './odd-one-out/OddOneOut'
 
 const games: GameDefinition[] = [
   {
@@ -51,6 +52,13 @@ const games: GameDefinition[] = [
     description: 'Guess the top 10 survey answers — teams, steals and a round each to go first.',
     icon: '💯',
     component: FamilyFortunes,
+  },
+  {
+    id: 'odd-one-out',
+    title: 'Odd One Out',
+    description: "Four options, one doesn't belong — spot it and explain why!",
+    icon: '🧩',
+    component: OddOneOut,
   },
   {
     id: 'word-family',
