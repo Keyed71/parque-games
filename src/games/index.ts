@@ -50,7 +50,7 @@ const games: GameDefinition[] = [
     id: 'family-fortunes',
     title: 'Family Fortunes',
     description: 'Guess the top 10 survey answers — teams, steals and a round each to go first.',
-    icon: '💯',
+    icon: '/family_fortunes.png',
     component: FamilyFortunes,
   },
   {
