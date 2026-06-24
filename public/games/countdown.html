@@ -268,18 +268,23 @@
   </div>
 </section>
 
-<!-- ========================= REVEAL / SCORING ========================= -->
+<!-- ========================= REVEAL / SCORING (enter team words) ========================= -->
 <section id="reveal" class="screen">
   <div class="tiles" id="rv-tiles"></div>
   <div class="score-grid" id="score-grid"></div>
-  <div class="best-box hidden" id="best-box">
-    <h3>Best words to learn — Oxford 3000 / 5000</h3>
+  <div class="reveal-actions">
+    <button class="btn big" id="to-suggestions-btn">You could have had… →</button>
+  </div>
+</section>
+
+<!-- ========================= SUGGESTIONS ("you could have had") ========================= -->
+<section id="suggestions" class="screen center-col">
+  <div class="big-title">You could have had…</div>
+  <div class="sub" style="color:#9a7b5e;font-weight:700;margin-top:-8px;">words to learn from the Oxford 3000 &amp; 5000</div>
+  <div class="best-box" id="best-box" style="width:min(820px,94vw);">
     <div class="best-words" id="best-words"><em>Searching…</em></div>
   </div>
-  <div class="reveal-actions">
-    <button class="btn ghost" id="reveal-best-btn">Reveal best words →</button>
-    <button class="btn" id="next-round-btn">Score &amp; Next Round →</button>
-  </div>
+  <button class="btn big" id="next-round-btn">Score &amp; Next Round →</button>
 </section>
 
 <!-- ========================= SCOREBOARD (between rounds) ========================= -->
@@ -600,8 +605,8 @@ function stopClock() { if (STATE.timerId) { clearInterval(STATE.timerId); STATE.
 // ---------- reveal & scoring ----------
 function openReveal() {
   renderTilesInto('rv-tiles');
-  // Compute the suggested words now, but keep them hidden until the teacher has
-  // taken each team's word — so the answer isn't seen too soon.
+  // Compute the suggested words now, but they live on the separate "You could
+  // have had…" screen so the answer isn't seen while teams' words are entered.
   const bw = $('best-words');
   if (!dictReady) { bw.innerHTML = '<em>Dictionary not loaded — teacher adjudicates.</em>'; }
   else {
@@ -611,8 +616,6 @@ function openReveal() {
       `<span class="${w.length===9?'nine':''}">${w.toUpperCase()} <em>(${w.length}${w.length===9?' — 18!':''})</em></span>`
     ).join('');
   }
-  $('best-box').classList.add('hidden');          // hidden until "Reveal best words"
-  $('reveal-best-btn').classList.remove('hidden');
   // per-team scoring rows
   const grid = $('score-grid'); grid.innerHTML = '';
   STATE._roundPts = new Array(STATE.numTeams).fill(0);
@@ -656,11 +659,8 @@ function onWordInput(e) {
   ptsEl.classList.toggle('dbl', pts === 18);
 }
 
-$('reveal-best-btn').onclick = () => {
-  $('best-box').classList.remove('hidden');
-  $('reveal-best-btn').classList.add('hidden');
-  ding();
-};
+// teams' words entered -> show the "You could have had…" suggestions screen
+$('to-suggestions-btn').onclick = () => { show('suggestions'); ding(); };
 
 $('next-round-btn').onclick = () => {
   for (let i=0;i<STATE.numTeams;i++) STATE.scores[i] += (STATE._roundPts[i]||0);
