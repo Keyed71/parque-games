@@ -6,6 +6,7 @@ import NoughtsCrosses from './noughts-crosses/NoughtsCrosses'
 import ThreeInARow from './three-in-a-row/ThreeInARow'
 import FamilyFortunes from './family-fortunes/FamilyFortunes'
 import OddOneOut from './odd-one-out/OddOneOut'
+import Countdown from './countdown/Countdown'
 
 const games: GameDefinition[] = [
   {
@@ -59,6 +60,13 @@ const games: GameDefinition[] = [
     description: "Spot the odd one out — or fill the gap. Four options, one answer.",
     icon: '🧩',
     component: OddOneOut,
+  },
+  {
+    id: 'countdown',
+    title: 'Letters Round',
+    description: 'The Countdown word game — pick 9 letters, 30 seconds, longest word wins.',
+    icon: '🔤',
+    component: Countdown,
   },
   {
     id: 'word-family',

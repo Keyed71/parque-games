@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Letters Round — Parque Games</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: 'Nunito', system-ui, sans-serif;
+    background: #fdf6ec;
+    color: #2a2118;
+    overflow: hidden;
+  }
+
+  .screen { display: none; height: 100vh; width: 100vw; flex-direction: column; }
+  .screen.active { display: flex; }
+
+  /* ---------- shared bits ---------- */
+  .header {
+    background: linear-gradient(150deg, #7a2e1a, #c4592a, #d4845a);
+    color: #fff;
+    padding: 14px 28px;
+    display: flex; align-items: center; gap: 16px;
+    box-shadow: 0 4px 20px rgba(120,46,26,0.25);
+  }
+  .header h1 { font-size: 1.5rem; font-weight: 900; letter-spacing: .5px; }
+  .header .pill {
+    margin-left: auto; background: rgba(255,255,255,0.2);
+    padding: 6px 16px; border-radius: 999px; font-weight: 800; font-size: 1rem;
+  }
+
+  .btn {
+    font-family: inherit; font-weight: 800; cursor: pointer;
+    border: none; border-radius: 14px; padding: 14px 30px; font-size: 1.15rem;
+    background: #c4592a; color: #fff; transition: transform .08s, filter .15s;
+    box-shadow: 0 4px 14px rgba(196,89,42,0.35);
+  }
+  .btn:hover { filter: brightness(1.07); }
+  .btn:active { transform: translateY(2px); }
+  .btn:disabled { opacity: .4; cursor: not-allowed; box-shadow: none; }
+  .btn.ghost { background: #fff; color: #7a2e1a; border: 2px solid #e8d0b0; box-shadow: none; }
+  .btn.big { font-size: 1.5rem; padding: 18px 48px; border-radius: 18px; }
+  .btn.vowel { background: #0e7c86; box-shadow: 0 4px 14px rgba(14,124,134,0.35); }
+  .btn.cons  { background: #1f3a93; box-shadow: 0 4px 14px rgba(31,58,147,0.35); }
+
+  /* ---------- setup ---------- */
+  #setup { align-items: center; justify-content: center; overflow-y: auto; padding: 30px; }
+  .card {
+    background: #fff; border: 1px solid #e8d0b0; border-radius: 24px;
+    padding: 34px 40px; width: min(760px, 94vw);
+    box-shadow: 0 12px 40px rgba(120,46,26,0.12);
+  }
+  .card h2 { color: #7a2e1a; font-size: 2rem; font-weight: 900; text-align: center; margin-bottom: 4px; }
+  .card .sub { text-align: center; color: #9a7b5e; font-weight: 700; margin-bottom: 24px; }
+  .field { margin-bottom: 22px; }
+  .field > label.lab { display: block; font-weight: 800; color: #7a2e1a; margin-bottom: 10px; font-size: 1.05rem; }
+  .seg { display: flex; gap: 10px; flex-wrap: wrap; }
+  .seg button {
+    flex: 1; min-width: 80px; font-family: inherit; font-weight: 800; font-size: 1.05rem;
+    padding: 12px 8px; border-radius: 12px; cursor: pointer;
+    background: #f6ece0; border: 2px solid #e8d0b0; color: #7a2e1a; transition: .12s;
+  }
+  .seg button.on { background: #c4592a; color: #fff; border-color: #c4592a; }
+  .teamnames { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .teamnames input {
+    font-family: inherit; font-weight: 700; font-size: 1rem; padding: 10px 14px;
+    border: 2px solid #e8d0b0; border-radius: 10px; background: #fff;
+  }
+  .toggle-row { display: flex; align-items: center; gap: 12px; font-weight: 700; color: #7a2e1a; }
+  .toggle-row input { width: 22px; height: 22px; accent-color: #c4592a; }
+  .start-row { text-align: center; margin-top: 8px; }
+
+  /* ---------- picking ---------- */
+  #picking { align-items: center; justify-content: center; gap: 26px; }
+  .pick-instr { font-size: 1.3rem; font-weight: 800; color: #7a2e1a; text-align: center; }
+  .pick-instr span { color: #c4592a; }
+  .pick-buttons { display: flex; gap: 22px; }
+  .pick-buttons .btn { font-size: 1.6rem; padding: 20px 46px; }
+  .counts { display: flex; gap: 30px; font-weight: 800; color: #9a7b5e; font-size: 1.05rem; }
+  .counts b { color: #7a2e1a; }
+
+  /* ---------- letter tiles ---------- */
+  .tiles { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
+  .tile {
+    width: 96px; height: 112px; border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 4rem; font-weight: 900; color: #fff;
+    background: #1f3a93; box-shadow: 0 6px 16px rgba(0,0,0,0.18);
+    animation: pop .25s ease;
+  }
+  .tile.v { background: #0e7c86; }
+  .tile.empty { background: #efe3d4; box-shadow: inset 0 2px 8px rgba(0,0,0,0.08); }
+  @keyframes pop { from { transform: scale(.4); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+  /* ---------- countdown ---------- */
+  #countdown { align-items: center; justify-content: center; gap: 30px; }
+  #countdown .tiles .tile { width: 120px; height: 140px; font-size: 5rem; }
+  .clock-wrap { position: relative; width: 220px; height: 220px; }
+  .clock-num {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    font-size: 5rem; font-weight: 900; color: #7a2e1a;
+  }
+  .clock-wrap.low .clock-num { color: #c4592a; }
+  .ring-bg { fill: none; stroke: #efe3d4; stroke-width: 16; }
+  .ring-fg { fill: none; stroke: #0e7c86; stroke-width: 16; stroke-linecap: round;
+    transform: rotate(-90deg); transform-origin: 50% 50%; transition: stroke-dashoffset 1s linear, stroke .3s; }
+  .clock-wrap.low .ring-fg { stroke: #c4592a; }
+  .cd-controls { display: flex; gap: 16px; }
+
+  /* ---------- reveal / scoring ---------- */
+  #reveal { padding: 22px 28px; gap: 16px; overflow-y: auto; }
+  #reveal .tiles .tile { width: 70px; height: 84px; font-size: 3rem; }
+  .best-box {
+    background: #fff; border: 1px solid #e8d0b0; border-radius: 18px; padding: 18px 24px;
+    text-align: center; box-shadow: 0 8px 24px rgba(120,46,26,0.1);
+  }
+  .best-box h3 { color: #7a2e1a; font-size: 1.1rem; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
+  .best-words { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+  .best-words span {
+    background: #f0fdf4; border: 1px solid #bbe9c9; color: #14532d;
+    padding: 8px 16px; border-radius: 10px; font-weight: 800; font-size: 1.25rem;
+  }
+  .best-words span.nine { background: #fff4e6; border-color: #f0c89a; color: #9a4a16; }
+  .best-words em { color: #9a7b5e; font-style: normal; font-weight: 700; }
+
+  .score-grid { display: grid; gap: 12px; width: min(900px, 96vw); margin: 0 auto; }
+  .team-row {
+    display: grid; grid-template-columns: 1.4fr 2fr auto; gap: 14px; align-items: center;
+    background: #fff; border: 1px solid #e8d0b0; border-radius: 16px; padding: 12px 18px;
+  }
+  .team-row .tname { font-weight: 900; font-size: 1.2rem; color: #7a2e1a; }
+  .team-row .tname small { display:block; font-size: .8rem; color: #9a7b5e; font-weight: 700; }
+  .word-in { display: flex; flex-direction: column; gap: 4px; }
+  .word-in input {
+    font-family: inherit; font-weight: 800; font-size: 1.15rem; text-transform: uppercase;
+    letter-spacing: 1px; padding: 10px 14px; border: 2px solid #e8d0b0; border-radius: 10px;
+  }
+  .word-in .badge { font-size: .82rem; font-weight: 800; min-height: 1em; }
+  .badge.ok { color: #14803a; }
+  .badge.warn { color: #c4592a; }
+  .badge.bad { color: #b32d2d; }
+  .pts { font-size: 2rem; font-weight: 900; color: #0e7c86; min-width: 70px; text-align: center; }
+  .pts.dbl { color: #c4592a; }
+
+  .reveal-actions { display: flex; gap: 14px; justify-content: center; margin-top: 6px; }
+
+  /* ---------- scoreboard / final ---------- */
+  .scoreboard { display: flex; gap: 18px; justify-content: center; flex-wrap: wrap; }
+  .sb-team {
+    background: #fff; border: 1px solid #e8d0b0; border-radius: 18px; padding: 16px 28px; text-align: center;
+    min-width: 150px;
+  }
+  .sb-team .n { font-weight: 900; font-size: 1.2rem; color: #7a2e1a; }
+  .sb-team .s { font-weight: 900; font-size: 3rem; color: #0e7c86; line-height: 1.1; }
+  .sb-team.lead { background: linear-gradient(150deg,#7a2e1a,#c4592a); border: none; }
+  .sb-team.lead .n, .sb-team.lead .s { color: #fff; }
+
+  .center-col { align-items: center; justify-content: center; gap: 26px; text-align: center; }
+  .big-title { font-size: 2.6rem; font-weight: 900; color: #7a2e1a; }
+  .winner { font-size: 2rem; font-weight: 900; color: #c4592a; }
+
+  /* conundrum */
+  .conundrum-letters { display: flex; gap: 12px; }
+  .conundrum-letters .tile { width: 88px; height: 100px; font-size: 3.6rem; cursor: default; }
+  .loading { color: #9a7b5e; font-weight: 800; font-size: 1.1rem; }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<!-- ========================= SETUP ========================= -->
+<section id="setup" class="screen active">
+  <div class="card">
+    <h2>Letters Round</h2>
+    <div class="sub">The Countdown word game — for the classroom</div>
+
+    <div class="field">
+      <label class="lab">Number of teams</label>
+      <div class="seg" id="seg-teams">
+        <button data-v="2" class="on">2</button>
+        <button data-v="3">3</button>
+        <button data-v="4">4</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="lab">Team names (optional)</label>
+      <div class="teamnames" id="team-names"></div>
+    </div>
+
+    <div class="field">
+      <label class="lab">Time per round</label>
+      <div class="seg" id="seg-time">
+        <button data-v="30" class="on">30 sec</button>
+        <button data-v="45">45 sec</button>
+        <button data-v="60">60 sec</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="lab">How are letters chosen?</label>
+      <div class="seg" id="seg-mode">
+        <button data-v="manual" class="on">A student calls “vowel / consonant”</button>
+        <button data-v="auto">Auto-deal 9 letters</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="lab">Number of rounds</label>
+      <div class="seg" id="seg-rounds">
+        <button data-v="3">3</button>
+        <button data-v="5" class="on">5</button>
+        <button data-v="7">7</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="toggle-row" style="margin-bottom:12px;">
+        <input type="checkbox" id="opt-conundrum" checked />
+        <label for="opt-conundrum">Finish with a Conundrum (9-letter anagram, +10)</label>
+      </div>
+      <div class="toggle-row">
+        <input type="checkbox" id="opt-sound" checked />
+        <label for="opt-sound">Clock ticks &amp; buzzer</label>
+      </div>
+    </div>
+
+    <div class="start-row">
+      <button class="btn big" id="start-btn">Start Game →</button>
+      <div class="loading" id="dict-status" style="margin-top:14px;">Loading dictionary…</div>
+    </div>
+  </div>
+</section>
+
+<!-- ========================= PICKING ========================= -->
+<section id="picking" class="screen">
+  <div class="pick-instr" id="pick-team"></div>
+  <div class="tiles" id="pick-tiles"></div>
+  <div class="pick-buttons">
+    <button class="btn vowel" id="btn-vowel">Vowel</button>
+    <button class="btn cons" id="btn-cons">Consonant</button>
+  </div>
+  <div class="counts">
+    <div>Vowels: <b id="c-vowels">0</b></div>
+    <div>Consonants: <b id="c-cons">0</b></div>
+    <div>Picked: <b id="c-total">0</b> / 9</div>
+  </div>
+  <button class="btn ghost hidden" id="to-clock-btn">Start the clock →</button>
+</section>
+
+<!-- ========================= COUNTDOWN ========================= -->
+<section id="countdown" class="screen">
+  <div class="tiles" id="cd-tiles"></div>
+  <div class="clock-wrap" id="clock-wrap">
+    <svg viewBox="0 0 220 220" width="220" height="220">
+      <circle class="ring-bg" cx="110" cy="110" r="92" />
+      <circle class="ring-fg" id="ring-fg" cx="110" cy="110" r="92" />
+    </svg>
+    <div class="clock-num" id="clock-num">30</div>
+  </div>
+  <div class="cd-controls">
+    <button class="btn big" id="cd-start">Start Clock</button>
+    <button class="btn ghost" id="cd-skip">Reveal answers →</button>
+  </div>
+</section>
+
+<!-- ========================= REVEAL / SCORING ========================= -->
+<section id="reveal" class="screen">
+  <div class="tiles" id="rv-tiles"></div>
+  <div class="best-box">
+    <h3>Best words in the dictionary</h3>
+    <div class="best-words" id="best-words"><em>Searching…</em></div>
+  </div>
+  <div class="score-grid" id="score-grid"></div>
+  <div class="reveal-actions">
+    <button class="btn" id="next-round-btn">Score &amp; Next Round →</button>
+  </div>
+</section>
+
+<!-- ========================= SCOREBOARD (between rounds) ========================= -->
+<section id="scoreboard" class="screen center-col">
+  <div class="big-title" id="sb-title">Scores after Round 1</div>
+  <div class="scoreboard" id="sb-grid"></div>
+  <button class="btn big" id="sb-continue">Next Round →</button>
+</section>
+
+<!-- ========================= CONUNDRUM ========================= -->
+<section id="conundrum" class="screen center-col">
+  <div class="big-title">Conundrum!</div>
+  <div class="sub" style="color:#9a7b5e;font-weight:700;">Unscramble the 9-letter word — first team to shout it scores 10</div>
+  <div class="conundrum-letters tiles" id="con-letters"></div>
+  <div class="clock-wrap" id="con-clock-wrap" style="width:160px;height:160px;">
+    <svg viewBox="0 0 220 220" width="160" height="160">
+      <circle class="ring-bg" cx="110" cy="110" r="92" />
+      <circle class="ring-fg" id="con-ring" cx="110" cy="110" r="92" />
+    </svg>
+    <div class="clock-num" id="con-num" style="font-size:3.4rem;">30</div>
+  </div>
+  <div id="con-answer" class="winner hidden"></div>
+  <div class="cd-controls" id="con-controls">
+    <button class="btn big" id="con-start">Start Clock</button>
+    <button class="btn ghost" id="con-reveal">Reveal word</button>
+  </div>
+  <div class="scoreboard hidden" id="con-award" style="margin-top:6px;"></div>
+  <button class="btn ghost hidden" id="con-to-final">See final scores →</button>
+</section>
+
+<!-- ========================= FINAL ========================= -->
+<section id="final" class="screen center-col">
+  <div class="big-title">🏆 Final Scores</div>
+  <div class="winner" id="final-winner"></div>
+  <div class="scoreboard" id="final-grid"></div>
+  <button class="btn big" id="play-again">Play Again</button>
+</section>
+
+<!-- Curated common 9-letter words for the Conundrum -->
+<script>
+window.CONUNDRUMS = [
+  "ADVENTURE","ADJECTIVE","ADVERTISE","BEAUTIFUL","BIRTHDAYS","BREAKFAST","CHALLENGE",
+  "CHARACTER","CHOCOLATE","CHRISTMAS","CLASSROOM","COMPUTERS","DANGEROUS","DIFFERENT",
+  "DISCOVERY","EDUCATION","ELEPHANTS","EVERYBODY","EXCELLENT","FANTASTIC","FAVOURITE",
+  "FOOTBALLS","FURNITURE","GEOGRAPHY","IMPORTANT","KNOWLEDGE","NEWSPAPER","NIGHTMARE",
+  "ORCHESTRA","PINEAPPLE","SCIENTIST","SOMETHING","TELEPHONE","VEGETABLE","WONDERFUL",
+  "YESTERDAY"
+].filter(w => /^[A-Z]{9}$/.test(w));
+</script>
+
+<script>
+/* =================================================================
+   Letters Round — game logic
+   ================================================================= */
+
+// ---- official Countdown letter frequencies ----
+const VOWEL_FREQ = { A:15, E:21, I:13, O:13, U:5 };
+const CONS_FREQ  = { B:2,C:3,D:6,F:2,G:3,H:2,J:1,K:1,L:5,M:4,N:8,P:4,Q:1,R:9,S:9,T:9,V:1,W:1,X:1,Y:1,Z:1 };
+const VOWELS = new Set(['A','E','I','O','U']);
+
+function buildPile(freq) {
+  const pile = [];
+  for (const [ltr, n] of Object.entries(freq)) for (let i=0;i<n;i++) pile.push(ltr);
+  return pile;
+}
+function drawFrom(pile) {
+  // draw a random tile without replacement
+  const idx = Math.floor(Math.random() * pile.length);
+  return pile.splice(idx, 1)[0];
+}
+
+// ---- dictionary ----
+let DICT = null;            // Set of valid words (lowercase)
+let DICT_LIST = null;       // Array, for solving
+let dictReady = false;
+
+async function loadDict() {
+  try {
+    const res = await fetch('/games/countdown-words.txt');
+    const text = await res.text();
+    DICT_LIST = text.split('\n').map(w => w.trim()).filter(Boolean);
+    DICT = new Set(DICT_LIST);
+    dictReady = true;
+    document.getElementById('dict-status').textContent =
+      DICT_LIST.length.toLocaleString() + ' words loaded ✓';
+  } catch (e) {
+    document.getElementById('dict-status').textContent =
+      'Dictionary failed to load — teacher will adjudicate by hand.';
+    DICT = new Set(); DICT_LIST = []; dictReady = true;
+  }
+}
+loadDict();
+
+function letterCount(str) {
+  const m = {};
+  for (const c of str) m[c] = (m[c]||0) + 1;
+  return m;
+}
+function canMake(word, poolCounts) {
+  const need = {};
+  for (const c of word) { need[c] = (need[c]||0)+1; if (need[c] > (poolCounts[c]||0)) return false; }
+  return true;
+}
+// Find the best (longest) words formable from the 9 letters.
+function solve(letters) {
+  if (!DICT_LIST || !DICT_LIST.length) return [];
+  const pool = letterCount(letters.join('').toLowerCase());
+  const found = [];
+  for (const w of DICT_LIST) {
+    if (w.length < 3) continue;
+    if (canMake(w, pool)) found.push(w);
+  }
+  found.sort((a,b) => b.length - a.length || a.localeCompare(b));
+  // keep words from the top two lengths, capped
+  if (!found.length) return [];
+  const top = found[0].length;
+  const keep = found.filter(w => w.length >= top - 1).slice(0, 8);
+  return keep;
+}
+
+// ---- sound (Web Audio, no copyrighted music) ----
+let actx = null;
+function beep(freq, dur, type='sine', vol=0.15) {
+  if (!STATE.sound) return;
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    const o = actx.createOscillator(), g = actx.createGain();
+    o.type = type; o.frequency.value = freq;
+    g.gain.value = vol; o.connect(g); g.connect(actx.destination);
+    o.start(); g.gain.exponentialRampToValueAtTime(0.0001, actx.currentTime + dur);
+    o.stop(actx.currentTime + dur);
+  } catch(e){}
+}
+const tick   = () => beep(880, 0.05, 'square', 0.06);
+const buzzer = () => { beep(160,0.5,'sawtooth',0.2); setTimeout(()=>beep(120,0.6,'sawtooth',0.2),120); };
+const ding   = () => { beep(660,0.12,'sine',0.18); setTimeout(()=>beep(990,0.18,'sine',0.18),120); };
+
+// ---- state ----
+const STATE = {
+  numTeams: 2,
+  teamNames: [],
+  scores: [],
+  time: 30,
+  mode: 'manual',
+  rounds: 5,
+  conundrum: true,
+  sound: true,
+  round: 1,
+  starter: 0,        // which team calls the letters this round
+  letters: [],
+  timerId: null,
+};
+
+const $ = id => document.getElementById(id);
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  $(id).classList.add('active');
+}
+function teamName(i){ return (STATE.teamNames[i] && STATE.teamNames[i].trim()) || ('Team ' + (i+1)); }
+
+// ---------- setup wiring ----------
+function wireSeg(segId, cb) {
+  const seg = $(segId);
+  seg.querySelectorAll('button').forEach(b => b.onclick = () => {
+    seg.querySelectorAll('button').forEach(x => x.classList.remove('on'));
+    b.classList.add('on'); cb(b.dataset.v);
+  });
+}
+function renderTeamNameInputs() {
+  const box = $('team-names'); box.innerHTML = '';
+  for (let i=0;i<STATE.numTeams;i++) {
+    const inp = document.createElement('input');
+    inp.placeholder = 'Team ' + (i+1);
+    inp.value = STATE.teamNames[i] || '';
+    inp.oninput = () => STATE.teamNames[i] = inp.value;
+    box.appendChild(inp);
+  }
+}
+wireSeg('seg-teams', v => { STATE.numTeams = +v; renderTeamNameInputs(); });
+wireSeg('seg-time',  v => STATE.time = +v);
+wireSeg('seg-mode',  v => STATE.mode = v);
+wireSeg('seg-rounds',v => STATE.rounds = +v);
+$('opt-conundrum').onchange = e => STATE.conundrum = e.target.checked;
+$('opt-sound').onchange     = e => STATE.sound = e.target.checked;
+renderTeamNameInputs();
+
+$('start-btn').onclick = () => {
+  STATE.scores = new Array(STATE.numTeams).fill(0);
+  STATE.round = 1; STATE.starter = 0;
+  beginRound();
+};
+
+// ---------- a round: pick letters ----------
+function beginRound() {
+  STATE.letters = [];
+  if (STATE.mode === 'manual') startManualPick();
+  else startAutoDeal();
+}
+
+function renderPickTiles() {
+  const box = $('pick-tiles'); box.innerHTML = '';
+  for (let i=0;i<9;i++) {
+    const t = document.createElement('div');
+    const L = STATE.letters[i];
+    t.className = 'tile' + (L ? (VOWELS.has(L)?' v':'') : ' empty');
+    t.textContent = L || '';
+    box.appendChild(t);
+  }
+}
+function updatePickCounts() {
+  const v = STATE.letters.filter(l => VOWELS.has(l)).length;
+  const c = STATE.letters.length - v;
+  $('c-vowels').textContent = v;
+  $('c-cons').textContent = c;
+  $('c-total').textContent = STATE.letters.length;
+  // enforce 3-6 vowels (=> 4-6 consonants)
+  const total = STATE.letters.length;
+  $('btn-vowel').disabled = (total >= 9) || (v >= 5);
+  $('btn-cons').disabled  = (total >= 9) || (c >= 6);
+  const done = total === 9;
+  $('to-clock-btn').classList.toggle('hidden', !done);
+  $('btn-vowel').classList.toggle('hidden', done);
+  $('btn-cons').classList.toggle('hidden', done);
+}
+
+let vowelPile = [], consPile = [];
+function startManualPick() {
+  vowelPile = buildPile(VOWEL_FREQ);
+  consPile  = buildPile(CONS_FREQ);
+  $('pick-team').innerHTML = teamName(STATE.starter) +
+    ' — call <span>“vowel”</span> or <span>“consonant”</span>';
+  renderPickTiles(); updatePickCounts();
+  show('picking');
+}
+$('btn-vowel').onclick = () => { STATE.letters.push(drawFrom(vowelPile)); ding(); renderPickTiles(); updatePickCounts(); };
+$('btn-cons').onclick  = () => { STATE.letters.push(drawFrom(consPile));  ding(); renderPickTiles(); updatePickCounts(); };
+$('to-clock-btn').onclick = () => goToClock();
+
+function startAutoDeal() {
+  // pick a vowel count of 3, 4 or 5 (4 most common), re-deal if best word is weak
+  let best = [];
+  for (let attempt=0; attempt<6; attempt++) {
+    const vCount = [3,4,4,4,5][Math.floor(Math.random()*5)];
+    const vp = buildPile(VOWEL_FREQ), cp = buildPile(CONS_FREQ);
+    const letters = [];
+    for (let i=0;i<vCount;i++) letters.push(drawFrom(vp));
+    for (let i=0;i<9-vCount;i++) letters.push(drawFrom(cp));
+    // shuffle display order
+    for (let i=letters.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [letters[i],letters[j]]=[letters[j],letters[i]]; }
+    STATE.letters = letters;
+    best = dictReady ? solve(letters) : ['ok'];
+    if (!dictReady || (best.length && best[0].length >= 5)) break;
+  }
+  $('pick-team').innerHTML = teamName(STATE.starter) + ' — here are your letters';
+  renderPickTiles(); updatePickCounts();
+  show('picking');
+  // auto-continue button only
+  $('btn-vowel').classList.add('hidden'); $('btn-cons').classList.add('hidden');
+  $('to-clock-btn').classList.remove('hidden');
+}
+
+// ---------- the clock ----------
+const RING_LEN = 2 * Math.PI * 92;
+function setRing(el, frac) { el.style.strokeDasharray = RING_LEN; el.style.strokeDashoffset = RING_LEN * (1 - frac); }
+
+function goToClock() {
+  // restore pick buttons for next manual round
+  $('btn-vowel').classList.remove('hidden'); $('btn-cons').classList.remove('hidden');
+  renderTilesInto('cd-tiles');
+  $('clock-num').textContent = STATE.time;
+  $('clock-wrap').classList.remove('low');
+  setRing($('ring-fg'), 1);
+  $('cd-start').disabled = false;
+  show('countdown');
+}
+function renderTilesInto(boxId) {
+  const box = $(boxId); box.innerHTML = '';
+  STATE.letters.forEach(L => {
+    const t = document.createElement('div');
+    t.className = 'tile' + (VOWELS.has(L) ? ' v' : '');
+    t.textContent = L; box.appendChild(t);
+  });
+}
+
+$('cd-start').onclick = () => runClock();
+$('cd-skip').onclick  = () => { stopClock(); openReveal(); };
+
+function runClock() {
+  $('cd-start').disabled = true;
+  let remaining = STATE.time;
+  $('clock-num').textContent = remaining;
+  setRing($('ring-fg'), 1);
+  STATE.timerId = setInterval(() => {
+    remaining--;
+    $('clock-num').textContent = remaining;
+    setRing($('ring-fg'), remaining / STATE.time);
+    $('clock-wrap').classList.toggle('low', remaining <= 5);
+    if (remaining <= 5 && remaining > 0) tick();
+    if (remaining <= 0) { stopClock(); buzzer(); setTimeout(openReveal, 600); }
+  }, 1000);
+}
+function stopClock() { if (STATE.timerId) { clearInterval(STATE.timerId); STATE.timerId = null; } }
+
+// ---------- reveal & scoring ----------
+function openReveal() {
+  renderTilesInto('rv-tiles');
+  // best words
+  const bw = $('best-words');
+  if (!dictReady) { bw.innerHTML = '<em>Dictionary not loaded — teacher adjudicates.</em>'; }
+  else {
+    const best = solve(STATE.letters);
+    if (!best.length) bw.innerHTML = '<em>No dictionary words found — well done if you found one!</em>';
+    else bw.innerHTML = best.map(w =>
+      `<span class="${w.length===9?'nine':''}">${w.toUpperCase()} <em>(${w.length}${w.length===9?' — 18!':''})</em></span>`
+    ).join('');
+  }
+  // per-team scoring rows
+  const grid = $('score-grid'); grid.innerHTML = '';
+  STATE._roundPts = new Array(STATE.numTeams).fill(0);
+  for (let i=0;i<STATE.numTeams;i++) {
+    const row = document.createElement('div');
+    row.className = 'team-row';
+    row.innerHTML =
+      `<div class="tname">${teamName(i)}<small>total: ${STATE.scores[i]}</small></div>
+       <div class="word-in">
+         <input type="text" maxlength="9" placeholder="type the team's word…" data-i="${i}" />
+         <div class="badge" data-badge="${i}"></div>
+       </div>
+       <div class="pts" data-pts="${i}">0</div>`;
+    grid.appendChild(row);
+  }
+  grid.querySelectorAll('input').forEach(inp => inp.oninput = onWordInput);
+  show('reveal');
+}
+
+function onWordInput(e) {
+  const i = +e.target.dataset.i;
+  let w = e.target.value.toLowerCase().replace(/[^a-z]/g,'');
+  const badge = document.querySelector(`[data-badge="${i}"]`);
+  const ptsEl = document.querySelector(`[data-pts="${i}"]`);
+  const pool = letterCount(STATE.letters.join('').toLowerCase());
+
+  let pts = 0;
+  if (!w) { badge.textContent=''; badge.className='badge'; }
+  else if (!canMake(w, pool)) {
+    badge.textContent = '✗ uses letters not in the selection'; badge.className = 'badge bad';
+  } else {
+    const len = w.length;
+    const valid = DICT && DICT.has(w);
+    pts = len === 9 ? 18 : len;
+    if (!dictReady) { badge.textContent = `${len} letters`; badge.className='badge'; }
+    else if (valid) { badge.textContent = `✓ in dictionary — ${len} letter${len>1?'s':''}${len===9?' (doubled!)':''}`; badge.className='badge ok'; }
+    else { badge.textContent = `not in word list — teacher's call (${len})`; badge.className='badge warn'; }
+  }
+  STATE._roundPts[i] = pts;
+  ptsEl.textContent = pts;
+  ptsEl.classList.toggle('dbl', pts === 18);
+}
+
+$('next-round-btn').onclick = () => {
+  for (let i=0;i<STATE.numTeams;i++) STATE.scores[i] += (STATE._roundPts[i]||0);
+  if (STATE.round >= STATE.rounds) {
+    if (STATE.conundrum && window.CONUNDRUMS && CONUNDRUMS.length) startConundrum();
+    else showFinal();
+  } else {
+    showScoreboard();
+  }
+};
+
+// ---------- scoreboard between rounds ----------
+function renderScoreList(boxId) {
+  const max = Math.max(...STATE.scores);
+  const box = $(boxId); box.innerHTML = '';
+  STATE.scores.map((s,i)=>({s,i})).sort((a,b)=>b.s-a.s).forEach(({s,i}) => {
+    const d = document.createElement('div');
+    d.className = 'sb-team' + (s===max && max>0 ? ' lead' : '');
+    d.innerHTML = `<div class="n">${teamName(i)}</div><div class="s">${s}</div>`;
+    box.appendChild(d);
+  });
+}
+function showScoreboard() {
+  $('sb-title').textContent = `Scores after Round ${STATE.round}`;
+  renderScoreList('sb-grid');
+  show('scoreboard');
+}
+$('sb-continue').onclick = () => {
+  STATE.round++;
+  STATE.starter = (STATE.starter + 1) % STATE.numTeams;  // rotate who calls
+  beginRound();
+};
+
+// ---------- conundrum ----------
+let conTimerId = null;
+function startConundrum() {
+  const word = CONUNDRUMS[Math.floor(Math.random()*CONUNDRUMS.length)];
+  STATE._conWord = word;
+  // scramble (ensure it's different from the answer)
+  let scram = word.split('');
+  do { for (let i=scram.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[scram[i],scram[j]]=[scram[j],scram[i]];} }
+  while (scram.join('') === word);
+  const box = $('con-letters'); box.innerHTML = '';
+  scram.forEach(L => { const t=document.createElement('div'); t.className='tile'; t.textContent=L; box.appendChild(t); });
+  $('con-num').textContent = 30;
+  setRing($('con-ring'), 1);
+  $('con-answer').classList.add('hidden');
+  $('con-controls').classList.remove('hidden');
+  $('con-award').classList.add('hidden');
+  $('con-to-final').classList.add('hidden');
+  $('con-start').disabled = false;
+  show('conundrum');
+}
+$('con-start').onclick = () => {
+  $('con-start').disabled = true;
+  let r = 30; $('con-num').textContent = r; setRing($('con-ring'),1);
+  conTimerId = setInterval(() => {
+    r--; $('con-num').textContent = r; setRing($('con-ring'), r/30);
+    $('con-clock-wrap').classList.toggle('low', r<=5);
+    if (r<=5 && r>0) tick();
+    if (r<=0) { clearInterval(conTimerId); buzzer(); revealConundrum(); }
+  }, 1000);
+};
+$('con-reveal').onclick = () => { if (conTimerId) clearInterval(conTimerId); revealConundrum(); };
+function revealConundrum() {
+  const a = $('con-answer');
+  a.textContent = STATE._conWord; a.classList.remove('hidden');
+  ding();
+  $('con-controls').classList.add('hidden');
+  // award buttons
+  const aw = $('con-award'); aw.innerHTML = '';
+  for (let i=0;i<STATE.numTeams;i++) {
+    const b = document.createElement('button');
+    b.className = 'btn'; b.textContent = '+10 ' + teamName(i);
+    b.onclick = () => { STATE.scores[i]+=10; b.disabled=true; b.style.opacity=.5; ding(); };
+    aw.appendChild(b);
+  }
+  const none = document.createElement('button');
+  none.className='btn ghost'; none.textContent='No one got it';
+  none.onclick = () => { aw.querySelectorAll('button').forEach(x=>x.disabled=true); none.style.opacity=.5; };
+  aw.appendChild(none);
+  aw.classList.remove('hidden');
+  $('con-to-final').classList.remove('hidden');
+}
+$('con-to-final').onclick = () => showFinal();
+
+// ---------- final ----------
+function showFinal() {
+  const max = Math.max(...STATE.scores);
+  const winners = STATE.scores.map((s,i)=>({s,i})).filter(o=>o.s===max);
+  $('final-winner').textContent = max===0 ? '' :
+    (winners.length>1 ? 'It\'s a tie!' : teamName(winners[0].i) + ' win! 🎉');
+  renderScoreList('final-grid');
+  show('final');
+}
+$('play-again').onclick = () => { show('setup'); };
+</script>
+</body>
+</html>
