@@ -7,6 +7,7 @@ import ThreeInARow from './three-in-a-row/ThreeInARow'
 import FamilyFortunes from './family-fortunes/FamilyFortunes'
 import OddOneOut from './odd-one-out/OddOneOut'
 import Countdown from './countdown/Countdown'
+import Battleships from './battleships/Battleships'
 
 const games: GameDefinition[] = [
   {
@@ -67,6 +68,13 @@ const games: GameDefinition[] = [
     description: 'The Countdown word game — pick 9 letters, 30 seconds, longest word wins.',
     icon: '/classroom_countdown.png',
     component: Countdown,
+  },
+  {
+    id: 'battleships',
+    title: 'Word Battleships',
+    description: 'Hide four words, hunt the other team\'s — guess the words to win, no sinking needed.',
+    icon: '⚓',
+    component: Battleships,
   },
   {
     id: 'word-family',

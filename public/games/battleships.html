@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Word Battleships — Parque Games</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: 'Nunito', system-ui, sans-serif;
+    background: #fdf6ec;
+    color: #2a2118;
+    overflow-x: hidden;
+  }
+
+  /* ---------- PROTOTYPE-ONLY role switcher ---------- */
+  #protobar {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 10000;
+    background: #2a2118; color: #fff;
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 12px; font-size: .8rem; font-weight: 800;
+    box-shadow: 0 -4px 18px rgba(0,0,0,.25);
+  }
+  #protobar .tag { background:#c4592a; padding:3px 9px; border-radius:6px; letter-spacing:.5px; }
+  #protobar button {
+    font-family: inherit; font-weight: 800; font-size:.8rem; cursor: pointer;
+    border: none; border-radius: 8px; padding: 6px 12px;
+    background: #5a4a3a; color: #fff;
+  }
+  #protobar button.on { background: #f0a500; color:#2a2118; }
+  #protobar .spacer { margin-left:auto; opacity:.7; font-weight:700; }
+  #protobar a { color:#f0a500; }
+
+  .view { display: none; min-height: 100vh; padding-bottom: 52px; }
+  .view.active { display: block; }
+
+  /* ---------- shared bits ---------- */
+  .header {
+    background: linear-gradient(150deg, #7a2e1a, #c4592a, #d4845a);
+    color: #fff; padding: 14px 28px;
+    display: flex; align-items: center; gap: 16px;
+    box-shadow: 0 4px 20px rgba(120,46,26,0.25);
+  }
+  .header h1 { font-size: 1.4rem; font-weight: 900; letter-spacing: .5px; }
+  .header .pill {
+    margin-left: auto; background: rgba(255,255,255,0.2);
+    padding: 6px 16px; border-radius: 999px; font-weight: 800; font-size: .95rem;
+  }
+  .btn {
+    font-family: inherit; font-weight: 800; cursor: pointer;
+    border: none; border-radius: 14px; padding: 13px 26px; font-size: 1.05rem;
+    background: #c4592a; color: #fff; transition: transform .08s, filter .15s;
+    box-shadow: 0 4px 14px rgba(196,89,42,0.35);
+  }
+  .btn:hover { transform: translateY(-1px); filter: brightness(1.05); }
+  .btn:disabled { background:#cbb89f; cursor:not-allowed; box-shadow:none; transform:none; }
+  .btn.ghost { background:#fff; color:#7a2e1a; border:2px solid #e8d0b0; box-shadow:none; }
+
+  /* ============ PROJECTOR ============ */
+  #projector { background:#eef4fb; }
+  .proj-wrap { max-width: 1600px; margin: 0 auto; padding: 14px 18px; }
+
+  .setup-card {
+    background:#fff; border:1px solid #e8d0b0; border-radius:20px;
+    padding:34px; max-width:560px; margin:6vh auto; text-align:center;
+    box-shadow:0 10px 40px rgba(120,46,26,.10);
+  }
+  .setup-card h2 { font-size:1.6rem; color:#7a2e1a; margin-bottom:6px; }
+  .setup-card p.sub { color:#8a7a68; margin-bottom:22px; }
+  .levelrow { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-bottom:24px; }
+  .levelrow button {
+    font-family:inherit; font-weight:900; font-size:1rem; cursor:pointer;
+    border:2px solid #e8d0b0; background:#fff; color:#7a2e1a;
+    border-radius:12px; padding:10px 16px; min-width:54px;
+  }
+  .levelrow button.on { background:#c4592a; color:#fff; border-color:#c4592a; }
+
+  .roomcode {
+    font-size:3rem; font-weight:900; letter-spacing:.5rem; color:#1d4ed8;
+    background:#fff; border:3px dashed #93b4f5; border-radius:18px;
+    padding:14px 10px; margin:14px auto; max-width:360px;
+  }
+  .readyrow { display:flex; gap:18px; justify-content:center; margin:20px 0; flex-wrap:wrap; }
+  .readychip {
+    background:#fff; border:1px solid #e8d0b0; border-radius:16px;
+    padding:16px 26px; min-width:190px; font-weight:800;
+  }
+  .readychip .dot { font-size:1.4rem; }
+  .readychip.waiting { opacity:.65; }
+  .qrrow { display:flex; gap:34px; justify-content:center; margin:20px 0 24px; flex-wrap:wrap; }
+  .qrbox { display:flex; flex-direction:column; align-items:center; }
+  .qrlabel { font-weight:900; color:#7a2e1a; margin-bottom:8px; font-size:1.15rem; }
+  .qrbox [data-qr] { padding:8px; border:1px solid #e8d0b0; border-radius:12px; background:#fff; line-height:0; }
+  .qrbox [data-qr] img, .qrbox [data-qr] canvas { display:block; }
+
+  /* projector boards sit SIDE BY SIDE and never wrap — the game lives on a
+     wide projected screen, so everything must stay visible at once */
+  .boards { display:flex; gap:clamp(12px,2.5vw,40px); justify-content:center; align-items:flex-start; flex-wrap:nowrap; margin-top:6px; }
+  .boardbox { background:#fff; border:1px solid #e8d0b0; border-radius:18px; padding:clamp(8px,1vw,16px); }
+  .boardbox h3 { text-align:center; color:#7a2e1a; margin-bottom:8px; font-size:clamp(.85rem,1.4vw,1.15rem); }
+  .turnflag { text-align:center; font-weight:900; color:#1d4ed8; margin:8px 0; font-size:clamp(1rem,1.6vw,1.3rem); }
+
+  /* grid */
+  .grid { display:grid; gap:3px; }
+  .cell {
+    width:42px; height:42px; border-radius:7px;
+    display:flex; align-items:center; justify-content:center;
+    font-weight:900; font-size:1.05rem; user-select:none;
+  }
+  .cell.label { background:transparent; color:#8a7a68; font-size:.85rem; font-weight:800; }
+  .cell.water { background:#dbeafe; color:#1d4ed8; cursor:pointer; }
+  .cell.water:hover { background:#bfdbfe; }
+  .cell.miss  { background:#cbd5e1; color:#fff; }
+  .cell.hit   { background:#f0a500; color:#2a2118; }        /* a single FOUND letter — orange */
+  .cell.complete { background:#16a34a; color:#fff; }        /* whole word COMPLETE — green */
+  .cell.reveal{ background:#fbe3c8; color:#7a2e1a; }        /* shown only at game end (not found in play) */
+  .cell.ship  { background:#1d4ed8; color:#fff; }           /* own view: placed */
+
+  /* projector boards auto-size so two full grids + the guess panel always fit */
+  .proj-wrap { --pc: clamp(20px, min( calc((100vw - 160px)/24), calc((100vh - 300px)/12) ), 46px); }
+  .proj-wrap .cell { width:var(--pc); height:var(--pc); font-size:calc(var(--pc)*.5); border-radius:calc(var(--pc)*.16); }
+  .proj-wrap .cell.label { font-size:calc(var(--pc)*.36); }
+
+  .guesspanel {
+    background:#fff; border:1px solid #e8d0b0; border-radius:16px;
+    padding:16px 18px; margin:18px auto 0; max-width:560px;
+  }
+  .guesspanel h4 { color:#7a2e1a; margin-bottom:10px; }
+  .wordslots { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px; }
+  .wordslots input {
+    font-family:inherit; font-weight:800; font-size:1rem; text-transform:lowercase;
+    border:2px solid #e8d0b0; border-radius:10px; padding:9px 12px; width:120px;
+  }
+  .wordslots input.ok { border-color:#16a34a; background:#f0fdf4; }
+
+  .banner {
+    text-align:center; font-size:1.8rem; font-weight:900; color:#16a34a;
+    background:#f0fdf4; border:2px solid #bbf7d0; border-radius:16px;
+    padding:20px; margin:20px auto; max-width:560px;
+  }
+
+  /* ============ PHONE ============ */
+  #phoneA, #phoneB { background:#fdf6ec; }
+  .phone-wrap { max-width: 460px; margin: 0 auto; padding: 16px; }
+  .phone-head {
+    background: linear-gradient(150deg, #7a2e1a, #c4592a, #d4845a);
+    color:#fff; border-radius:0 0 18px 18px; padding:16px 18px; margin-bottom:14px;
+  }
+  .phone-head h2 { font-size:1.3rem; font-weight:900; }
+  .phone-head p { font-size:.85rem; opacity:.92; }
+  .stepnote { font-size:.85rem; color:#8a7a68; margin:10px 2px; font-weight:700; }
+
+  .wordlist { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px; }
+  .wordchip {
+    font-family:inherit; font-weight:800; font-size:1rem; cursor:pointer;
+    border:2px solid #e8d0b0; background:#fff; color:#2a2118;
+    border-radius:12px; padding:9px 14px; position:relative;
+  }
+  .wordchip .len { font-size:.65rem; color:#b08; margin-left:5px; opacity:.6; }
+  .wordchip.picked { background:#16a34a; color:#fff; border-color:#16a34a; }
+  .wordchip.disabled { opacity:.4; cursor:not-allowed; }
+
+  .pickbar { display:flex; gap:6px; flex-wrap:wrap; margin:6px 0 14px; }
+  .pickbar .need {
+    background:#fff; border:1px dashed #cbb89f; border-radius:10px;
+    padding:6px 12px; font-weight:800; font-size:.85rem; color:#8a7a68;
+  }
+  .pickbar .need.met { border-style:solid; border-color:#16a34a; color:#16a34a; }
+
+  .place-controls { display:flex; gap:6px; flex-wrap:wrap; align-items:center; margin-bottom:10px; }
+  .place-controls .tochip {
+    font-family:inherit; font-weight:800; font-size:.9rem; cursor:pointer;
+    border:2px solid #e8d0b0; background:#fff; border-radius:10px; padding:7px 11px;
+  }
+  .place-controls .tochip.on { background:#c4592a; color:#fff; border-color:#c4592a; }
+  .place-controls .tochip.done { background:#16a34a; color:#fff; border-color:#16a34a; }
+  .orient { margin-left:auto; }
+
+  .phonegrid-wrap { display:flex; justify-content:center; margin:6px 0 14px; }
+  .cell.sm { width:30px; height:30px; font-size:.8rem; border-radius:5px; }
+  .phonegrid { width:100%; }
+  .phonegrid .cell.sm { width:auto; height:auto; aspect-ratio:1; min-width:0; }
+  .phonegrid-wrap { width:100%; }
+  .cell.place { background:#dbeafe; cursor:pointer; }
+  .cell.place:hover { background:#bfdbfe; }
+  .cell.preview { background:#fbcfa0; }
+
+  .center { text-align:center; }
+  .mt { margin-top:14px; }
+</style>
+</head>
+<body>
+
+<!-- ============================= PROJECTOR ============================= -->
+<div id="projector" class="view active">
+  <div class="header">
+    <h1>⚓ Word Battleships</h1>
+    <span class="pill" id="projPill">Setup</span>
+  </div>
+  <div class="proj-wrap" id="projBody"></div>
+</div>
+
+<!-- ============================= PHONE A ============================= -->
+<div id="phoneA" class="view">
+  <div class="phone-wrap"><div id="phoneABody"></div></div>
+</div>
+
+<!-- ============================= PHONE B ============================= -->
+<div id="phoneB" class="view">
+  <div class="phone-wrap"><div id="phoneBBody"></div></div>
+</div>
+
+<!-- ============================= PROTOTYPE BAR ============================= -->
+<div id="protobar">
+  <span class="tag">PROTOTYPE</span>
+  <span>Simulate device:</span>
+  <button data-view="projector" class="on">📺 Projector</button>
+  <button data-view="phoneA">📱 Team A phone</button>
+  <button data-view="phoneB">📱 Team B phone</button>
+  <span class="spacer" id="protoState">no game yet</span>
+</div>
+
+<!-- Firebase (compat build → global `firebase`) + QR code generator -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs@master/qrcode.min.js"></script>
+
+<script>
+/* =====================================================================
+   WORD BATTLESHIPS — layout prototype
+   Mock shared state stands in for the future Firebase room document.
+   Flipping "device" with the bottom bar reads/writes the SAME state,
+   exactly as three real devices will once Firebase is wired in.
+   ===================================================================== */
+
+const GRID = 10;                 // 10x10, columns A–J, rows 1–10
+const COLS = 'ABCDEFGHIJ'.split('');
+const SHIP_LENS = [3, 4, 4, 5];  // the fleet: one 3, two 4s, one 5
+
+// ---- Firebase + run mode ----
+const firebaseConfig = {
+  apiKey: "AIzaSyDelMoXQd3vkR-6DjX8nmI8nR1rKpiEGEc",
+  authDomain: "parque-battleships.firebaseapp.com",
+  databaseURL: "https://parque-battleships-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "parque-battleships",
+  storageBucket: "parque-battleships.firebasestorage.app",
+  messagingSenderId: "1077221791605",
+  appId: "1:1077221791605:web:934d89888b3067ca63253c",
+};
+const PARAMS  = new URLSearchParams(location.search);
+const DEMO    = PARAMS.has('demo');          // ?demo=1 → offline single-screen testing (the old prototype)
+const MY_TEAM = PARAMS.get('team');          // 'A' | 'B' | null
+const ROLE    = MY_TEAM ? 'phone' : 'projector';
+let roomCode  = PARAMS.get('room') || null;  // set when joining a room or creating one
+let db = null;
+if (!DEMO) { firebase.initializeApp(firebaseConfig); db = firebase.database(); }
+
+// ---- mock "room document" (this is what Firebase will hold) ----
+let room = null;
+/* shape:
+room = {
+  code, level, status: 'setup'|'active'|'over',
+  turn: 'A'|'B', winner: null,
+  teams: {
+    A: { pool:[10 words], words:[chosen 4], ready:false, placements:{word:[{c,r,letter}]}, board:{} },
+    B: { ... }
+  },
+  shots: { A:{coord:true}, B:{} },   // shots a team has FIRED (onto opponent)
+  solved:{ A:[words B has solved... ] }  // tracked per attacker below instead
+}
+*/
+
+let WORDS = null; // loaded oxford-words.json
+
+// ---------------- view setup by role ----------------
+let activeView = 'projector';
+if (DEMO) {
+  // single-screen testing: the bottom bar flips between the three devices
+  document.querySelectorAll('#protobar button').forEach(b => {
+    b.addEventListener('click', () => {
+      activeView = b.dataset.view;
+      document.querySelectorAll('#protobar button').forEach(x => x.classList.toggle('on', x === b));
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      document.getElementById(activeView).classList.add('active');
+      render();
+    });
+  });
+} else {
+  // real game: this device is ONE role — hide the switcher, show only its screen
+  document.getElementById('protobar').style.display = 'none';
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById(ROLE === 'phone' ? 'phone'+MY_TEAM : 'projector').classList.add('active');
+}
+
+function render() {
+  if (DEMO) { renderProjector(); renderPhone('A'); renderPhone('B'); }
+  else if (ROLE === 'phone') { renderPhone(MY_TEAM); }
+  else { renderProjector(); }
+  const ps = document.getElementById('protoState');
+  if (ps) ps.textContent = room ? `room ${room.code} · ${room.status}` : 'no game yet';
+}
+
+// ---------------- Firebase sync ----------------
+// Empty objects/arrays vanish in Realtime DB, so restore the shape on every read.
+function normalizeRoom(raw) {
+  if (!raw) return null;
+  raw.teams = raw.teams || {};
+  ['A','B'].forEach(t => {
+    const tm = raw.teams[t] = raw.teams[t] || {};
+    tm.pool = tm.pool || []; tm.words = tm.words || [];
+    tm.placements = tm.placements || {}; tm.ready = !!tm.ready;
+  });
+  raw.shots = raw.shots || {}; raw.shots.A = raw.shots.A || {}; raw.shots.B = raw.shots.B || {};
+  raw.solvedWords = raw.solvedWords || {}; raw.solvedWords.A = raw.solvedWords.A || []; raw.solvedWords.B = raw.solvedWords.B || [];
+  return raw;
+}
+function subscribe(code) {
+  roomCode = code;
+  db.ref('rooms/'+code).on('value', snap => { room = normalizeRoom(snap.val()); render(); });
+}
+// Each device only writes the slice it owns: phones write their team, the projector writes combat.
+function persistTeam(team)  { if (db && roomCode) db.ref('rooms/'+roomCode+'/teams/'+team).set(room.teams[team]); }
+function persistRoom(fields){ if (db && roomCode) db.ref('rooms/'+roomCode).update(fields); }
+
+// ---------------- helpers ----------------
+function coord(c, r) { return COLS[c] + (r + 1); }
+function pickN(arr, n) {
+  const a = arr.slice(); const out = [];
+  while (out.length < n && a.length) out.push(a.splice(Math.floor(Math.random()*a.length),1)[0]);
+  return out;
+}
+function makeTeamPool(level) {
+  const L = WORDS[level] || WORDS['A1'];
+  // ten words spanning the shapes students need (3,4,5) with a little spare choice
+  return [
+    ...pickN(L['3'], 3),
+    ...pickN(L['4'], 4),
+    ...pickN(L['5'], 3),
+  ];
+}
+
+// ---------------- create game (projector) ----------------
+let chosenLevel = 'A2';
+function createGame() {
+  if (!WORDS) return; // word lists not loaded yet
+  const code = Array.from({length:4}, () => 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'[Math.floor(Math.random()*30)]).join('');
+  const newRoom = {
+    code, level: chosenLevel, status: 'setup', turn: 'A', winner: null,
+    teams: {
+      A: { pool: makeTeamPool(chosenLevel), words: [], ready:false, placements:{} },
+      B: { pool: makeTeamPool(chosenLevel), words: [], ready:false, placements:{} },
+    },
+    shots: { A:{}, B:{} },        // A's shots land on B's board, etc.
+    solvedWords: { A:[], B:[] },  // words the attacker has correctly guessed
+  };
+  if (DEMO) { room = newRoom; render(); return; }
+  db.ref('rooms/'+code).set(newRoom).then(() => {
+    history.replaceState(null, '', '?room='+code); // so an accidental refresh reconnects as host
+    subscribe(code);
+  });
+}
+
+function bothReady() { return room && room.teams.A.ready && room.teams.B.ready; }
+function startPlay() { room.status = 'active'; render(); persistRoom({ status:'active' }); }
+function newGame() {
+  if (db && roomCode) db.ref('rooms/'+roomCode).off();
+  roomCode = null; room = null;
+  if (!DEMO) history.replaceState(null, '', location.pathname);
+  render();
+}
+
+// =====================================================================
+//  PROJECTOR RENDER
+// =====================================================================
+function renderProjector() {
+  const pill = document.getElementById('projPill');
+  const body = document.getElementById('projBody');
+  if (!room) {
+    pill.textContent = 'Setup';
+    body.innerHTML = `
+      <div class="setup-card">
+        <h2>Word Battleships</h2>
+        <p class="sub">Two teams hide four words. Guess the words to win — no need to sink them.</p>
+        <p style="font-weight:800;color:#7a2e1a;margin-bottom:8px;">Choose the level</p>
+        <div class="levelrow" id="levelrow">
+          ${['A1','A2','B1','B2','C1'].map(l=>`<button data-l="${l}" class="${l===chosenLevel?'on':''}">${l}</button>`).join('')}
+        </div>
+        <button class="btn" id="createBtn" ${WORDS?'':'disabled'}>${WORDS?'Create game →':'Loading word lists…'}</button>
+      </div>`;
+    body.querySelectorAll('#levelrow button').forEach(b=>b.onclick=()=>{chosenLevel=b.dataset.l;renderProjector();});
+    body.querySelector('#createBtn').onclick = createGame;
+    return;
+  }
+
+  if (room.status === 'setup') {
+    pill.textContent = room.level + ' · Lobby';
+    const joinBase = location.origin + location.pathname;
+    body.innerHTML = `
+      <div class="setup-card" style="max-width:680px;">
+        <h2>Teams: join the game</h2>
+        <p class="sub">Each team scans <b>their own</b> QR code on one phone. Room code <b>${room.code}</b>.</p>
+        <div class="qrrow">
+          ${['A','B'].map(t=>`
+            <div class="qrbox">
+              <div class="qrlabel">Team ${t}</div>
+              <div data-qr="${t}"></div>
+              <div class="readychip ${room.teams[t].ready?'':'waiting'}" style="margin-top:10px;min-width:160px;">
+                <span class="dot">${room.teams[t].ready?'✅':'⏳'}</span>
+                ${room.teams[t].ready?' ready' : ' choosing & placing…'}
+              </div>
+            </div>`).join('')}
+        </div>
+        <button class="btn" id="startBtn" ${bothReady()?'':'disabled'}>
+          ${bothReady()?'Start the battle →':'Waiting for both teams…'}</button>
+      </div>`;
+    const sb = body.querySelector('#startBtn'); if (sb && bothReady()) sb.onclick = startPlay;
+    if (window.QRCode) ['A','B'].forEach(t => {
+      const el = body.querySelector(`[data-qr="${t}"]`);
+      if (el) new QRCode(el, { text:`${joinBase}?room=${room.code}&team=${t}`, width:170, height:170, correctLevel: QRCode.CorrectLevel.M });
+    });
+    return;
+  }
+
+  // ---- ACTIVE / OVER ----
+  pill.textContent = room.level + (room.status==='over' ? ' · Finished' : ' · In play');
+  const attacker = room.turn, defender = attacker==='A'?'B':'A';
+  let html = '';
+
+  if (room.status === 'over') {
+    html += `<div class="banner">🏆 Team ${room.winner} wins — all four of Team ${room.winner==='A'?'B':'A'}'s words found!
+      <div style="margin-top:14px;"><button class="btn" id="newGameBtn">New game →</button></div></div>`;
+  } else {
+    html += `<div class="turnflag">Team ${attacker}'s turn — fire a shot, or sacrifice it to guess words</div>`;
+  }
+  if (room.guessMsg) {
+    html += `<div style="text-align:center;font-weight:900;margin:-4px 0 8px;color:${room.guessMsg.ok?'#16a34a':'#b91c1c'};">${room.guessMsg.text}</div>`;
+  }
+
+  html += `<div class="boards">
+      ${boardHtml('A', attacker)}
+      ${boardHtml('B', attacker)}
+    </div>`;
+
+  if (room.status === 'active') {
+    const defShots = room.shots[attacker];
+    const defSolved = new Set(room.solvedWords[attacker] || []);
+    html += `<div class="guesspanel">
+      <h4>Team ${attacker}: guess 1–4 of Team ${defender}'s words — but every word you type must be right, or none count (uses your turn)</h4>
+      <div class="wordslots" id="slots">
+        ${room.teams[defender].words.map((w,i)=>{
+          const done = isWordComplete(defender, w, defShots, defSolved);
+          return `<input data-i="${i}" placeholder="word ${i+1}" ${done?`value="${w}" disabled class="ok"`:''}/>`;
+        }).join('')}
+      </div>
+      <button class="btn" id="guessBtn">Submit word guesses</button>
+      <span style="margin-left:10px;color:#8a7a68;font-weight:700;">${completeCount(defender)}/4 of Team ${defender}'s words found</span>
+    </div>`;
+  }
+
+  body.innerHTML = html;
+
+  if (room.status === 'active') {
+    body.querySelector('#guessBtn').onclick = submitWordGuess;
+    body.querySelectorAll('[data-fire]').forEach(el => el.onclick = () => fireShot(el.dataset.fire));
+  }
+  if (room.status === 'over') {
+    body.querySelector('#newGameBtn').onclick = newGame;
+  }
+}
+
+// Each board is a team's "sea" as seen on the PUBLIC projector: only
+// discovered information is ever shown — a hit reveals that one letter, a
+// fully-guessed word reveals the whole word. Unhit ship cells look like water,
+// so neither team's hidden words leak to the class.
+function boardHtml(team, attacker) {
+  const defender = attacker==='A'?'B':'A';
+  const isTarget = team === defender;          // the current attacker fires on this sea
+  const t = room.teams[team];
+  const opponent = team==='A'?'B':'A';          // whoever fires AT this team
+  const shots = room.shots[opponent];           // shots that have landed on this team's sea
+  const solvedSet = new Set(room.solvedWords[opponent] || []); // words guessed against this team
+
+  // letter map of this team's (secret) placements
+  const letterAt = {};
+  Object.entries(t.placements).forEach(([w, cells]) => cells.forEach(c => letterAt[coord(c.c,c.r)] = {l:c.letter, w}));
+  const gameOver = room.status === 'over';
+  const completeSet = new Set(t.words.filter(w => isWordComplete(team, w, shots, solvedSet)));
+
+  let cells = `<div class="cell label sm"></div>`;
+  COLS.forEach(c => cells += `<div class="cell label">${c}</div>`);
+  for (let r=0;r<GRID;r++){
+    cells += `<div class="cell label">${r+1}</div>`;
+    for (let c=0;c<GRID;c++){
+      const co = coord(c,r); const here = letterAt[co];
+      let cls='cell water', txt='', click='';
+      if (here && completeSet.has(here.w)) { cls='cell complete'; txt=here.l; }   // whole word complete → GREEN
+      else if (shots[co]) { cls = here ? 'cell hit' : 'cell miss'; txt = here ? here.l : '·'; } // found letter → ORANGE / miss
+      else if (gameOver && here) { cls='cell reveal'; txt=here.l; }               // reveal the rest at game end
+      else { cls='cell water'; if (isTarget) click=`data-fire="${co}"`; }         // hidden water (clickable only on target)
+      cells += `<div class="${cls}" ${click}>${txt}</div>`;
+    }
+  }
+  const foundCount = completeSet.size;
+  const role = isTarget
+    ? `🎯 Team ${team}'s sea — Team ${attacker} is firing`
+    : `Team ${team}'s sea`;
+  return `<div class="boardbox" style="${isTarget?'outline:3px solid #1d4ed8;outline-offset:3px;':''}">
+    <h3>${role}</h3>
+    <div class="grid" style="grid-template-columns:repeat(${GRID+1},auto)">${cells}</div>
+    <div style="text-align:center;margin-top:8px;color:#16a34a;font-weight:900;font-size:clamp(.8rem,1.2vw,1rem);">${foundCount}/4 words found</div>
+  </div>`;
+}
+
+// A word is COMPLETE (green) when it has been fully revealed — either every one
+// of its squares has been hit, or the team guessed it outright.
+function isWordComplete(team, w, shots, solvedSet) {
+  if (solvedSet.has(w)) return true;
+  const cells = room.teams[team].placements[w] || [];
+  return cells.length > 0 && cells.every(c => shots[coord(c.c, c.r)]);
+}
+// How many of `team`'s words have been completed by its opponent.
+function completeCount(team) {
+  const opp = team==='A'?'B':'A';
+  const shots = room.shots[opp];
+  const solvedSet = new Set(room.solvedWords[opp] || []);
+  return room.teams[team].words.filter(w => isWordComplete(team, w, shots, solvedSet)).length;
+}
+
+function fireShot(co) {
+  if (room.status!=='active') return;
+  const attacker = room.turn, defender = attacker==='A'?'B':'A';
+  if (room.shots[attacker][co]) return;
+  room.guessMsg = null;       // clear any stale word-guess feedback
+  room.shots[attacker][co] = true;
+  if (completeCount(defender) === 4) { room.status='over'; room.winner=attacker; } // all words found → win
+  else { room.turn = defender; } // otherwise turn passes after a shot
+  render();
+  persistRoom({ shots: room.shots, turn: room.turn, status: room.status, winner: room.winner, guessMsg: null });
+}
+
+function submitWordGuess() {
+  const attacker = room.turn, defender = attacker==='A'?'B':'A';
+  const inputs = [...document.querySelectorAll('#slots input:not([disabled])')];
+  const guesses = inputs.map(i=>i.value.trim().toLowerCase()).filter(Boolean);
+  const target = room.teams[defender].words;
+  if (!guesses.length) return;
+  // HYBRID rule: a team may guess 1–4 words, but EVERY word they submit must be
+  // correct — if even one is wrong, none of that batch is revealed.
+  const allCorrect = guesses.every(g => target.includes(g));
+  if (allCorrect) {
+    guesses.forEach(g => { if (!room.solvedWords[attacker].includes(g)) room.solvedWords[attacker].push(g); });
+    room.guessMsg = { ok:true, text:`✅ ${guesses.length} correct — word${guesses.length>1?'s':''} revealed!` };
+  } else {
+    room.guessMsg = { ok:false, text:`❌ One or more wrong — nothing revealed. Turn passes.` };
+  }
+  if (completeCount(defender) === 4) { room.status='over'; room.winner=attacker; } // all words found → win
+  else { room.turn = defender; } // sacrificed the shot → turn passes
+  render();
+  persistRoom({ solvedWords: room.solvedWords, turn: room.turn, status: room.status, winner: room.winner, guessMsg: room.guessMsg });
+}
+
+// =====================================================================
+//  PHONE RENDER  (word choice + placement)
+// =====================================================================
+function renderPhone(team) {
+  const body = document.getElementById('phone'+team+'Body');
+  if (!room) {
+    body.innerHTML = phoneShell(team, `<p class="stepnote">Waiting for the teacher to create a game on the projector…</p>`);
+    return;
+  }
+  const t = room.teams[team];
+  if (t.ready) {
+    body.innerHTML = phoneShell(team, `
+      <div class="center mt">
+        <div style="font-size:3rem;">✅</div>
+        <h2 style="color:#16a34a;">Ready!</h2>
+        <p class="stepnote">Your fleet is hidden. Watch the projector — the battle is about to begin.</p>
+        <div style="margin-top:14px;">${t.words.map(w=>`<span class="wordchip picked" style="margin:3px;">${w}</span>`).join('')}</div>
+        <button class="btn ghost mt" data-edit>Edit my fleet</button>
+      </div>`);
+    body.querySelector('[data-edit]').onclick=()=>{ t.ready=false; render(); persistTeam(team); };
+    return;
+  }
+
+  // -------- selection + placement on one screen --------
+  const counts = {3:0,4:0,5:0}; t.words.forEach(w=>counts[w.length]++);
+  const need = {3:1,4:2,5:1};
+  const allChosen = t.words.length===4 && counts[3]===1 && counts[4]===2 && counts[5]===1;
+  const placedCount = Object.keys(t.placements).length;
+  const allPlaced = allChosen && placedCount===4;
+
+  let html = `<p class="stepnote">Step 1 — pick <b>four</b> words to hide: one 3-letter, two 4-letter, one 5-letter.</p>`;
+  html += `<div class="pickbar">
+    ${[3,4,5].map(n=>`<span class="need ${counts[n]>=need[n]?'met':''}">${counts[n]}/${need[n]} &middot; ${n}-letter</span>`).join('')}
+  </div>`;
+  html += `<div class="wordlist">${t.pool.map(w=>{
+    const picked = t.words.includes(w);
+    const full = !picked && counts[w.length] >= need[w.length];
+    return `<button class="wordchip ${picked?'picked':''} ${full?'disabled':''}" data-word="${w}" ${full?'disabled':''}>${w}<span class="len">${w.length}</span></button>`;
+  }).join('')}</div>`;
+
+  if (allChosen) {
+    const sel = phoneSel[team];
+    html += `<p class="stepnote">Step 2 — pick a word, then tap its <b>start</b> square and its <b>end</b> square. Words can go across, down or diagonally.</p>`;
+    html += `<div class="place-controls">
+      ${t.words.map(w=>{
+        const done = !!t.placements[w];
+        const on = sel.word===w;
+        return `<button class="tochip ${done?'done':''} ${on?'on':''}" data-pw="${w}">${done?'✓ ':''}${w}</button>`;
+      }).join('')}
+    </div>`;
+    const status = sel.error
+      ? `<span style="color:#b91c1c;">${sel.error}</span>`
+      : !sel.word ? 'Pick a word above to place.'
+      : sel.anchor ? `Placing <b>${sel.word}</b> — now tap the END square.`
+      : `Placing <b>${sel.word}</b> — tap its START square.`;
+    html += `<p class="stepnote" style="min-height:1.2em;">${status}</p>`;
+    html += `<div class="phonegrid-wrap">${phoneGrid(team)}</div>`;
+  }
+
+  html += `<div class="center">
+    <button class="btn" data-ready ${allPlaced?'':'disabled'}>
+      ${allPlaced?'Ready →':(allChosen?'Place all 4 words first':'Pick your 4 words first')}</button>
+  </div>`;
+
+  body.innerHTML = phoneShell(team, html);
+
+  body.querySelectorAll('[data-word]').forEach(b=>b.onclick=()=>toggleWord(team,b.dataset.word));
+  body.querySelectorAll('[data-pw]').forEach(b=>b.onclick=()=>{ const s=phoneSel[team]; s.word=b.dataset.pw; s.anchor=null; s.error=null; render(); });
+  body.querySelectorAll('[data-cell]').forEach(b=>b.onclick=()=>tapCell(team,+b.dataset.c,+b.dataset.r));
+  const rb=body.querySelector('[data-ready]'); if(rb&&allPlaced) rb.onclick=()=>{ room.teams[team].ready=true; render(); persistTeam(team); };
+}
+
+const phoneSel = { A:{word:null,anchor:null,error:null}, B:{word:null,anchor:null,error:null} };
+
+function phoneShell(team, inner) {
+  return `<div class="phone-head"><h2>Team ${team}</h2>
+    <p>${room?('Game '+room.code+' · level '+room.level):'Word Battleships'}</p></div>${inner}`;
+}
+
+function toggleWord(team, w) {
+  const t = room.teams[team];
+  const i = t.words.indexOf(w);
+  if (i>=0){ t.words.splice(i,1); delete t.placements[w]; if(phoneSel[team].word===w) phoneSel[team].word=null; }
+  else {
+    const counts={3:0,4:0,5:0}; t.words.forEach(x=>counts[x.length]++);
+    const need={3:1,4:2,5:1};
+    if (counts[w.length] < need[w.length]) t.words.push(w);
+  }
+  render();
+  persistTeam(team);
+}
+
+function phoneGrid(team) {
+  const t = room.teams[team];
+  const sel = phoneSel[team];
+  // occupied map
+  const occ = {};
+  Object.values(t.placements).forEach(cells=>cells.forEach(c=>occ[coord(c.c,c.r)]=c.letter));
+  let cells = `<div class="cell label sm"></div>`;
+  COLS.forEach(c=>cells+=`<div class="cell label sm">${c}</div>`);
+  for(let r=0;r<GRID;r++){
+    cells+=`<div class="cell label sm">${r+1}</div>`;
+    for(let c=0;c<GRID;c++){
+      const co=coord(c,r); const occLetter=occ[co];
+      let cls='cell sm place', txt='', attr=`data-cell data-c="${c}" data-r="${r}"`;
+      if (occLetter){ cls='cell sm ship'; txt=occLetter; }
+      if (sel.anchor && sel.anchor.c===c && sel.anchor.r===r){ cls='cell sm preview'; txt='◎'; } // start square chosen
+      cells+=`<div class="${cls}" ${attr}>${txt}</div>`;
+    }
+  }
+  return `<div class="grid phonegrid" style="grid-template-columns:repeat(${GRID+1},1fr)">${cells}</div>`;
+}
+
+// Two-tap placement: 1st tap = start square, 2nd tap = end square.
+// The two squares must form a straight line (across, down, or diagonal)
+// exactly as long as the word.
+function tapCell(team,c,r){
+  const t=room.teams[team]; const sel=phoneSel[team];
+  if(!sel.word){ sel.error='Pick a word above first.'; render(); return; }
+  const w=sel.word;
+  if(!sel.anchor){ sel.anchor={c,r}; sel.error=null; render(); return; }
+
+  const a=sel.anchor; const dx=c-a.c, dy=r-a.r;
+  const straight = (dx===0 || dy===0 || Math.abs(dx)===Math.abs(dy));
+  const len = Math.max(Math.abs(dx),Math.abs(dy)) + 1;
+  if(!straight || len!==w.length){
+    sel.error=`“${w}” needs ${w.length} squares in a straight line (across, down or diagonal). Tap a new start square.`;
+    sel.anchor=null; render(); return;
+  }
+  const sx=Math.sign(dx), sy=Math.sign(dy);
+  const cells=[];
+  for(let i=0;i<w.length;i++) cells.push({c:a.c+sx*i, r:a.r+sy*i, letter:w[i]});
+
+  // overlap check against OTHER words (re-placing the same word is fine)
+  const occ={};
+  Object.entries(t.placements).forEach(([ww,cs])=>{ if(ww!==w) cs.forEach(x=>occ[coord(x.c,x.r)]=true); });
+  if(cells.some(x=>occ[coord(x.c,x.r)])){
+    sel.error='That would cross another word. Tap a new start square.';
+    sel.anchor=null; render(); return;
+  }
+
+  t.placements[w]=cells;
+  sel.anchor=null; sel.error=null;
+  sel.word = t.words.find(x=>!t.placements[x]) || null; // auto-advance to next unplaced word
+  render();
+  persistTeam(team);
+}
+
+// ---------------- boot ----------------
+// Projector only needs the word lists (to build pools); phones read their pool
+// from the room. Either way, subscribe if we arrived with a room code (phone
+// join, or projector reconnect after a refresh).
+fetch('/games/oxford-words.json')
+  .then(r=>r.json())
+  .then(j=>{ WORDS=j; render(); })
+  .catch(()=>{ // fallback so the projector still works offline
+    WORDS={A2:{'3':['cat','dog','sun','bus','egg'],'4':['fish','blue','jump','ring','milk','wind'],'5':['horse','beach','plant','table']}};
+    render();
+  });
+if (!DEMO && roomCode) subscribe(roomCode);
+render();
+</script>
+</body>
+</html>
