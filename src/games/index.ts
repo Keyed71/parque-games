@@ -65,7 +65,7 @@ const games: GameDefinition[] = [
     id: 'countdown',
     title: 'Letters Round',
     description: 'The Countdown word game — pick 9 letters, 30 seconds, longest word wins.',
-    icon: '🔤',
+    icon: '/classroom_countdown.png',
     component: Countdown,
   },
   {

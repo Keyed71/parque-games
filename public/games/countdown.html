@@ -272,7 +272,7 @@
 <section id="reveal" class="screen">
   <div class="tiles" id="rv-tiles"></div>
   <div class="best-box">
-    <h3>Best words in the dictionary</h3>
+    <h3>Best words to learn — Oxford 3000 / 5000</h3>
     <div class="best-words" id="best-words"><em>Searching…</em></div>
   </div>
   <div class="score-grid" id="score-grid"></div>
@@ -350,24 +350,37 @@ function drawFrom(pile) {
   return pile.splice(idx, 1)[0];
 }
 
-// ---- dictionary ----
-let DICT = null;            // Set of valid words (lowercase)
-let DICT_LIST = null;       // Array, for solving
+// ---- dictionaries ----
+// Two lists, by design:
+//  • DICT (full SOWPODS, UK-inclusive) — used to *validate* a word the teacher types,
+//    so unusual but real words a student finds are still accepted.
+//  • SUGGEST (the Oxford 3000/5000 + their regular inflections, intersected with SOWPODS)
+//    — used for the *suggested best words*, so the reveal is a teaching moment of words
+//    students are likely to recognise or usefully learn, not obscure dictionary entries.
+let DICT = null;            // Set of all valid words (for validation)
+let SUGGEST_LIST = null;    // Array of Oxford-recognisable words (for the best-word reveal)
 let dictReady = false;
 
+async function fetchList(url) {
+  const res = await fetch(url);
+  const text = await res.text();
+  return text.split('\n').map(w => w.trim()).filter(Boolean);
+}
 async function loadDict() {
   try {
-    const res = await fetch('/games/countdown-words.txt');
-    const text = await res.text();
-    DICT_LIST = text.split('\n').map(w => w.trim()).filter(Boolean);
-    DICT = new Set(DICT_LIST);
+    const [full, suggest] = await Promise.all([
+      fetchList('/games/countdown-words.txt'),
+      fetchList('/games/countdown-suggest.txt').catch(() => null),
+    ]);
+    DICT = new Set(full);
+    SUGGEST_LIST = (suggest && suggest.length) ? suggest : full;  // fall back to full list
     dictReady = true;
     document.getElementById('dict-status').textContent =
-      DICT_LIST.length.toLocaleString() + ' words loaded ✓';
+      DICT.size.toLocaleString() + ' words loaded ✓';
   } catch (e) {
     document.getElementById('dict-status').textContent =
       'Dictionary failed to load — teacher will adjudicate by hand.';
-    DICT = new Set(); DICT_LIST = []; dictReady = true;
+    DICT = new Set(); SUGGEST_LIST = []; dictReady = true;
   }
 }
 loadDict();
@@ -382,12 +395,13 @@ function canMake(word, poolCounts) {
   for (const c of word) { need[c] = (need[c]||0)+1; if (need[c] > (poolCounts[c]||0)) return false; }
   return true;
 }
-// Find the best (longest) words formable from the 9 letters.
+// Find the best (longest) *recognisable* words formable from the 9 letters.
+// Drawn from SUGGEST_LIST (Oxford-based) so the reveal stays pedagogical.
 function solve(letters) {
-  if (!DICT_LIST || !DICT_LIST.length) return [];
+  if (!SUGGEST_LIST || !SUGGEST_LIST.length) return [];
   const pool = letterCount(letters.join('').toLowerCase());
   const found = [];
-  for (const w of DICT_LIST) {
+  for (const w of SUGGEST_LIST) {
     if (w.length < 3) continue;
     if (canMake(w, pool)) found.push(w);
   }
@@ -590,7 +604,7 @@ function openReveal() {
   if (!dictReady) { bw.innerHTML = '<em>Dictionary not loaded — teacher adjudicates.</em>'; }
   else {
     const best = solve(STATE.letters);
-    if (!best.length) bw.innerHTML = '<em>No dictionary words found — well done if you found one!</em>';
+    if (!best.length) bw.innerHTML = '<em>No common words here — well done if your team found one!</em>';
     else bw.innerHTML = best.map(w =>
       `<span class="${w.length===9?'nine':''}">${w.toUpperCase()} <em>(${w.length}${w.length===9?' — 18!':''})</em></span>`
     ).join('');
