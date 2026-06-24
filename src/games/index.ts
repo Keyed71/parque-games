@@ -73,7 +73,7 @@ const games: GameDefinition[] = [
     id: 'battleships',
     title: 'Word Battleships',
     description: 'Hide four words, hunt the other team\'s — guess the words to win, no sinking needed.',
-    icon: '⚓',
+    icon: '/word_battleships.png',
     component: Battleships,
   },
   {
