@@ -91,6 +91,14 @@
       padding: 0.45rem 0; border-bottom: 1px solid #f8fafc;
     }
     .struct-item:last-child { border-bottom: none; }
+    .hint-toggle {
+      display: flex; align-items: center; gap: 0.65rem; cursor: pointer;
+      background: white; border: 2px solid #e8d0b0; border-radius: 14px;
+      padding: 0.7rem 1rem; margin-bottom: 1.5rem;
+    }
+    .hint-toggle input[type="checkbox"] { width: 18px; height: 18px; accent-color: #c4592a; cursor: pointer; flex-shrink: 0; }
+    .hint-toggle .ht-text { font-size: 0.95rem; font-weight: 700; color: #1e293b; }
+    .hint-toggle .ht-note { font-size: 0.8rem; font-weight: 600; color: #94a3b8; }
     .struct-item input[type="checkbox"] { width: 18px; height: 18px; accent-color: #c4592a; cursor: pointer; flex-shrink: 0; }
     .struct-item label { cursor: pointer; font-size: 0.95rem; font-weight: 700; color: #1e293b; flex: 1; }
     .lvl-badge {
@@ -444,6 +452,12 @@
       <span class="section-note">— check the ones to include in the grid</span>
     </div>
     <div class="structures-panel" id="structures-panel"></div>
+    <div class="section-label">Grammar hints</div>
+    <label class="hint-toggle">
+      <input type="checkbox" id="show-hints" checked>
+      <span class="ht-text">Show the grammar structure on squares &amp; questions
+        <span class="ht-note">— uncheck to hide it from students</span></span>
+    </label>
     <div class="section-label">Teams</div>
     <div class="team-row">
       <div class="team-card cx">
@@ -575,6 +589,7 @@ const gs = {
   winLine:            [],
   winMid:             { x: 0, y: 0 },
   selectedStructures: [],
+  showHints:          true,
 };
 
 // ── Background music ────────────────────────────────────────────────────────
@@ -783,6 +798,7 @@ function startGame() {
     O: document.getElementById('name-o').value.trim() || 'Team O',
   };
   gs.selectedStructures = sel;
+  gs.showHints = document.getElementById('show-hints').checked;
   gs.grid    = buildGrid(sel);
   gs.turn    = 'X';
   gs.winner  = null;
@@ -826,12 +842,12 @@ function renderGrid() {
       el.className = `cell claimed ${cell.owner.toLowerCase()}${winClass}`;
       el.innerHTML = `
         <div class="mark-wrap">${markHTML(cell.owner)}</div>
-        <div class="cell-struct-small">${cell.structure}</div>`;
+        ${gs.showHints ? `<div class="cell-struct-small">${cell.structure}</div>` : ''}`;
     } else {
       el.className = `cell${winClass}`;
       el.innerHTML = `
         <div class="cell-number">${i + 1}</div>
-        <div class="cell-struct-name">${cell.structure}</div>`;
+        ${gs.showHints ? `<div class="cell-struct-name">${cell.structure}</div>` : ''}`;
       if (gs.playing && !gs.winner) el.addEventListener('click', () => openQuestion(i));
     }
     gridEl.appendChild(el);
@@ -965,7 +981,9 @@ function openQuestion(idx) {
     ? (q['target verb'] ? `Target verb: ${q['target verb']}` : '')
     : (q['error type / description'] || '');
 
-  document.getElementById('m-struct').textContent   = structure;
+  const structTag = document.getElementById('m-struct');
+  structTag.textContent = gs.showHints ? structure : '';
+  structTag.style.display = gs.showHints ? '' : 'none';
   document.getElementById('m-question').textContent = text;
   document.getElementById('m-answer').textContent   = q['full correct sentence'];
   document.getElementById('m-answer').classList.add('blurred');

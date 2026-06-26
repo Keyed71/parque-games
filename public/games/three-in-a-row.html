@@ -84,6 +84,15 @@
 
     .opt-row { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
 
+    .hint-toggle {
+      display: flex; align-items: center; gap: 0.65rem; cursor: pointer;
+      background: white; border: 2px solid #e8d0b0; border-radius: 14px;
+      padding: 0.7rem 1rem; margin-bottom: 1.5rem;
+    }
+    .hint-toggle input[type="checkbox"] { width: 18px; height: 18px; accent-color: #c4592a; cursor: pointer; flex-shrink: 0; }
+    .hint-toggle .ht-text { font-size: 0.95rem; font-weight: 700; color: #1e293b; }
+    .hint-toggle .ht-note { font-size: 0.8rem; font-weight: 600; color: #94a3b8; }
+
     .team-inputs { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
     .team-card {
       background: white; border: 2px solid var(--ts); border-radius: 14px;
@@ -299,6 +308,13 @@
       <button class="pill" data-teams="4">4 teams</button>
     </div>
 
+    <div class="section-label">Grammar hints</div>
+    <label class="hint-toggle">
+      <input type="checkbox" id="show-hints" checked>
+      <span class="ht-text">Show the grammar structure on squares &amp; questions
+        <span class="ht-note">— uncheck to hide it from students</span></span>
+    </label>
+
     <div class="section-label">Team names</div>
     <div class="team-inputs" id="team-inputs"></div>
 
@@ -401,6 +417,7 @@ const gs = {
   playing:            false,
   ended:              false,
   selectedStructures: [],
+  showHints:          true,
 };
 
 function currentTeam() { return gs.teams[gs.turnIndex]; }
@@ -632,6 +649,7 @@ function startGame() {
     gs.names[inp.dataset.key] = inp.value.trim() || TEAM_META[inp.dataset.key].name;
   });
   gs.selectedStructures = sel;
+  gs.showHints = document.getElementById('show-hints').checked;
   gs.allLines  = buildLines(gs.size);
   gs.grid      = buildGrid(sel);
   gs.scores    = Object.fromEntries(gs.teams.map(k => [k, 0]));
@@ -683,11 +701,11 @@ function renderBoard(animateLines = []) {
     if (cell.owner) {
       el.className = `cell claimed ${TEAM_META[cell.owner].cls}`;
       el.innerHTML = `<div class="mark-wrap">${markHTML(cell.owner)}</div>
-        <div class="cell-struct-small">${cell.structure}</div>`;
+        ${gs.showHints ? `<div class="cell-struct-small">${cell.structure}</div>` : ''}`;
     } else {
       el.className = 'cell';
       el.innerHTML = `<div class="cell-number">${i + 1}</div>
-        <div class="cell-struct-name">${cell.structure}</div>`;
+        ${gs.showHints ? `<div class="cell-struct-name">${cell.structure}</div>` : ''}`;
       if (gs.playing && !gs.ended) el.addEventListener('click', () => openQuestion(i));
     }
     gridEl.appendChild(el);
@@ -785,7 +803,9 @@ function openQuestion(idx) {
     ? (q['target verb'] ? `Target verb: ${q['target verb']}` : '')
     : (q['error type / description'] || '');
 
-  document.getElementById('m-struct').textContent   = structure;
+  const structTag = document.getElementById('m-struct');
+  structTag.textContent = gs.showHints ? structure : '';
+  structTag.style.display = gs.showHints ? '' : 'none';
   document.getElementById('m-question').textContent = text;
   document.getElementById('m-answer').textContent   = q['full correct sentence'];
   document.getElementById('m-answer').classList.add('blurred');
