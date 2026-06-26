@@ -493,6 +493,7 @@ const gs = {
   scores: {},
   order: [],         // shuffled questions for this session
   qIndex: 0,
+  turn: 0,           // questions played so far (drives team rotation; survives looping)
   question: null,    // { cards:[{text,isOdd}], explanation, level, theme }
   guessQueue: [],    // team keys still allowed to guess this round
   stealMode: false,
@@ -661,6 +662,7 @@ function startGame() {
   gs.scores = Object.fromEntries(gs.teams.map(k => [k, 0]));
   gs.order  = shuffle([...pool]);
   gs.qIndex = 0;
+  gs.turn   = 0;
   if (gs.mode === 'unfair') buildGrid();
 
   hide('setup-screen'); show('game-screen');
@@ -679,8 +681,8 @@ function beginRound() {
   gs.lastSquare = -1;
   gs.gridResult = '';
 
-  // A different team leads each question.
-  const startIdx = gs.qIndex % gs.teamCount;
+  // A different team leads each question (rotation uses gs.turn so it stays fair when questions loop).
+  const startIdx = gs.turn % gs.teamCount;
   gs.activeTeam = gs.teams[startIdx];
   if (gs.mode === 'unfair') {
     gs.guessQueue = [gs.activeTeam];           // no steal chain in unfair mode
@@ -695,8 +697,12 @@ function beginRound() {
 // ── Render ────────────────────────────────────────────────────────────────────
 function render() {
   const meta = [gs.question.level, gs.question.theme].filter(Boolean).join(' · ');
+  // Unfair mode ends when the grid is full, so show grid progress; quick mode counts questions.
+  const progress = gs.mode === 'unfair'
+    ? `Grid ${gs.gridRevealed.filter(Boolean).length} / ${gs.grid.length}`
+    : `Q ${gs.qIndex + 1} / ${gs.order.length}`;
   document.getElementById('g-meta').textContent =
-    `Q ${gs.qIndex + 1} / ${gs.order.length}${meta ? '  —  ' + meta : ''}`;
+    `${progress}${meta ? '  —  ' + meta : ''}`;
 
   // Use the row's own question when present (e.g. a cloze sentence), else the classic prompt.
   document.getElementById('prompt-text').textContent =
@@ -743,7 +749,7 @@ function renderBanner() {
   if (gs.mode === 'unfair') {
     const active = gs.names[gs.activeTeam];
     if (gs.phase === 'grid') { b.textContent = `${active} — pick a mystery square!`; return; }
-    if (gs.phase === 'gridDone') { b.classList.add('done'); b.textContent = 'Reward revealed'; return; }
+    if (gs.phase === 'gridDone') { b.classList.add('done'); b.textContent = gridComplete() ? '🏆 Grid complete!' : 'Reward revealed'; return; }
     if (gs.resolved) {
       if (gs.lastResult === 'correct') { b.textContent = '✓ Correct — choose your reward!'; }
       else { b.classList.add('steal'); b.textContent = `✗ Wrong — ${active} −${WRONG_PENALTY}`; }
@@ -813,12 +819,22 @@ function renderActions() {
       return;
     }
     if (gs.phase === 'grid') { row.innerHTML = ''; return; }   // waiting for a square / target pick
-    nextOrResults(row);                                        // wrong answer, or reward applied
+    // Reward applied — if the whole grid is now revealed, the game is over.
+    if (gridComplete()) {
+      row.innerHTML = `<button class="act-btn primary" onclick="endGame()">🏆 See Final Results →</button>`;
+      return;
+    }
+    row.innerHTML = `<button class="act-btn primary" onclick="nextQuestion()">Next Question →</button>
+       <button class="act-btn secondary" onclick="endGame()">End Game</button>`;
     return;
   }
 
   if (!gs.resolved) { row.innerHTML = ''; return; }
   nextOrResults(row);
+}
+
+function gridComplete() {
+  return gs.mode === 'unfair' && gs.gridRevealed.length > 0 && gs.gridRevealed.every(Boolean);
 }
 
 function nextOrResults(row) {
@@ -876,14 +892,19 @@ function pickCard(i) {
 }
 
 function nextQuestion() {
-  if (gs.qIndex >= gs.order.length - 1) { endGame(); return; }
+  gs.turn++;
+  if (gs.qIndex >= gs.order.length - 1) {
+    // Unfair mode ends on a full grid, not on running out of questions — recycle the pool.
+    if (gs.mode === 'unfair') { gs.order = shuffle([...gs.order]); gs.qIndex = 0; beginRound(); return; }
+    endGame();
+    return;
+  }
   gs.qIndex++;
   beginRound();
 }
 
 // ── Unfair mystery grid ───────────────────────────────────────────────────────
 function goToGrid() {
-  if (gs.gridRevealed.every(Boolean)) buildGrid();   // board full → reshuffle a fresh one
   gs.phase = 'grid';
   gs.lastSquare = -1;
   render();
@@ -892,7 +913,7 @@ function goToGrid() {
 function renderGrid() {
   document.getElementById('grid-heading').textContent = gs.phase === 'grid'
     ? `${gs.names[gs.activeTeam]}, choose a square`
-    : 'Reward revealed!';
+    : (gridComplete() ? 'Every square revealed — game over!' : 'Reward revealed!');
 
   document.getElementById('mystery-grid').innerHTML = gs.grid.map((key, idx) => {
     const rev = gs.gridRevealed[idx];
