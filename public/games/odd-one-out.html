@@ -236,6 +236,65 @@
     .go-rank .rk-name { font-size: 1.05rem; font-weight: 900; color: #1e293b; flex: 1; text-align: left; }
     .go-rank .rk-score { font-size: 1.4rem; font-weight: 900; color: #c4592a; }
     .go-actions { display: flex; gap: 0.6rem; justify-content: center; flex-wrap: wrap; }
+
+    /* ── UNFAIR-GAME: symbol legend (setup) ───────────── */
+    .symbol-legend {
+      background: white; border: 2px solid #e8d0b0; border-radius: 14px;
+      padding: 0.9rem 1.25rem; margin-bottom: 1.5rem;
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 0.5rem 1rem;
+    }
+    .sl-item { display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; font-weight: 700; color: #334155; }
+    .sl-item .sl-emoji { font-size: 1.3rem; line-height: 1; }
+    .sl-item .sl-pts { font-weight: 900; color: #c4592a; }
+
+    /* ── UNFAIR-GAME: mystery grid (game screen) ──────── */
+    #grid-area { display: flex; flex-direction: column; align-items: center; gap: 1rem; width: 100%; }
+    .grid-heading { font-size: 1.35rem; font-weight: 900; color: #334155; text-align: center; }
+    .mystery-grid {
+      display: grid; grid-template-columns: repeat(5, 1fr);
+      gap: 0.6rem; width: min(92vw, 560px);
+    }
+    .mg-cell {
+      aspect-ratio: 1; border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: clamp(1.4rem, 4.5vw, 2.3rem); font-weight: 900;
+      background: linear-gradient(150deg, #6366f1, #4f46e5); color: white;
+      border: 3px solid #4338ca; user-select: none;
+      transition: transform 0.12s, box-shadow 0.12s;
+    }
+    .mg-cell.pickable { cursor: pointer; }
+    .mg-cell.pickable:hover { transform: translateY(-3px) scale(1.04); box-shadow: 0 10px 22px rgba(79,70,229,0.4); }
+    .mg-cell.revealed { background: #fff; border-color: #e2e8f0; box-shadow: 0 4px 12px rgba(15,23,42,0.08); cursor: default; }
+    .mg-cell.revealed.crown  { background: #fef9c3; border-color: #facc15; }
+    .mg-cell.revealed.smiley { background: #dcfce7; border-color: #4ade80; }
+    .mg-cell.revealed.heart  { background: #fce7f3; border-color: #f472b6; }
+    .mg-cell.revealed.gun    { background: #e0e7ff; border-color: #818cf8; }
+    .mg-cell.revealed.sad    { background: #fee2e2; border-color: #f87171; }
+    .mg-cell.revealed.bomb   { background: #1e293b; border-color: #0f172a; }
+    .mg-cell.just-picked { animation: mgpop 0.4s ease; }
+    @keyframes mgpop { 0% { transform: scale(0.5); } 60% { transform: scale(1.18); } 100% { transform: scale(1); } }
+    .grid-result {
+      font-size: 1.2rem; font-weight: 900; color: #1e293b; text-align: center;
+      background: #fff8f0; border: 2px solid #e8d0b0; border-radius: 12px;
+      padding: 0.7rem 1.25rem; max-width: 92vw;
+    }
+
+    /* ── UNFAIR-GAME: target chooser modal ────────────── */
+    #target-modal {
+      position: fixed; inset: 0; background: rgba(15,23,42,0.7);
+      display: flex; align-items: center; justify-content: center; z-index: 250; padding: 1rem;
+    }
+    .tm-box { background: white; border-radius: 20px; padding: 1.75rem 2rem; max-width: 420px; width: 100%; text-align: center; }
+    .tm-title { font-size: 1.25rem; font-weight: 900; color: #1e293b; margin-bottom: 1rem; }
+    .tm-teams { display: flex; flex-direction: column; gap: 0.6rem; }
+    .tm-team-btn {
+      padding: 0.7rem 1rem; border: 2px solid #e2e8f0; border-radius: 12px; background: #f8fafc;
+      font-family: 'Nunito', sans-serif; font-size: 1.05rem; font-weight: 900; color: #1e293b;
+      cursor: pointer; display: flex; align-items: center; gap: 0.6rem; justify-content: center;
+      transition: border-color 0.12s, transform 0.12s;
+    }
+    .tm-team-btn:hover { border-color: var(--tc); transform: translateY(-2px); }
+    .tm-dot { width: 14px; height: 14px; border-radius: 50%; }
   </style>
 </head>
 <body>
@@ -278,7 +337,17 @@
 
     <div class="team-row" id="team-inputs"></div>
 
-    <div class="points-legend">
+    <div class="setup-row">
+      <div class="field-group">
+        <label>Play style</label>
+        <div class="pill-row" id="style-row">
+          <button class="pill active" data-style="quick">⚡ Quick game</button>
+          <button class="pill" data-style="unfair">🎲 Unfair game</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="points-legend" id="quick-legend">
       <div class="pts-item">
         <div class="pts-val">+10</div>
         <div class="pts-lbl">Spot it first</div>
@@ -287,6 +356,16 @@
         <div class="pts-val">+5</div>
         <div class="pts-lbl">Steal after a miss</div>
       </div>
+    </div>
+
+    <div class="symbol-legend hidden" id="unfair-legend">
+      <div class="sl-item"><span class="sl-emoji">👑</span><span>Crown <span class="sl-pts">+20</span></span></div>
+      <div class="sl-item"><span class="sl-emoji">😀</span><span>Smiley <span class="sl-pts">+10</span></span></div>
+      <div class="sl-item"><span class="sl-emoji">❤️</span><span>Heart <span class="sl-pts">+10</span> &amp; gift +10</span></div>
+      <div class="sl-item"><span class="sl-emoji">🔫</span><span>Steal <span class="sl-pts">10</span> from a team</span></div>
+      <div class="sl-item"><span class="sl-emoji">😢</span><span>Sad face <span class="sl-pts">−10</span></span></div>
+      <div class="sl-item"><span class="sl-emoji">💣</span><span>Bomb <span class="sl-pts">−20</span></span></div>
+      <div class="sl-item"><span class="sl-emoji">❌</span><span>Wrong answer <span class="sl-pts">−5</span></span></div>
     </div>
 
     <div class="match-info" id="match-info"></div>
@@ -315,9 +394,23 @@
       <div class="ex-head" id="explain-head">Why it's the odd one out</div>
       <div class="ex-body" id="explain-body"></div>
     </div>
+
+    <div class="hidden" id="grid-area">
+      <div class="grid-heading" id="grid-heading"></div>
+      <div class="mystery-grid" id="mystery-grid"></div>
+      <div class="grid-result hidden" id="grid-result"></div>
+    </div>
   </div>
 
   <div class="action-row" id="action-row"></div>
+</div>
+
+<!-- Unfair-game target chooser -->
+<div id="target-modal" class="hidden">
+  <div class="tm-box">
+    <div class="tm-title" id="tm-title"></div>
+    <div class="tm-teams" id="tm-teams"></div>
+  </div>
 </div>
 
 <!-- Game over -->
@@ -363,8 +456,32 @@ const TEAM_META = {
   D: { name: 'Team D', color: '#d97706' },
 };
 
-const CORRECT_PTS = 10;
-const STEAL_PTS   = 5;
+const CORRECT_PTS   = 10;
+const STEAL_PTS     = 5;
+const WRONG_PENALTY = 5;   // unfair mode: lose 5 for a wrong answer
+
+// Unfair-game mystery symbols. type: 'self' (only your team), 'gift' (you +, a chosen team +),
+// 'steal' (you +, a chosen team −).
+const SYMBOL_DEFS = {
+  crown:  { emoji: '👑', name: 'Crown',  type: 'self',  value:  20 },
+  smiley: { emoji: '😀', name: 'Smiley', type: 'self',  value:  10 },
+  heart:  { emoji: '❤️', name: 'Heart',  type: 'gift',  value:  10 },
+  gun:    { emoji: '🔫', name: 'Steal',  type: 'steal', value:  10 },
+  sad:    { emoji: '😢', name: 'Sad face',type: 'self',  value: -10 },
+  bomb:   { emoji: '💣', name: 'Bomb',   type: 'self',  value: -20 },
+};
+// 25 squares, randomised each game.
+const GRID_MIX = { crown: 2, smiley: 7, heart: 4, gun: 4, sad: 5, bomb: 3 };
+
+function buildGrid() {
+  const cells = [];
+  for (const key in GRID_MIX) for (let n = 0; n < GRID_MIX[key]; n++) cells.push(key);
+  shuffle(cells);
+  gs.grid = cells;
+  gs.gridRevealed = cells.map(() => false);
+}
+
+const fmtPts = v => (v >= 0 ? `+${v}` : `−${Math.abs(v)}`);
 
 // ── State ─────────────────────────────────────────────────────────────────────
 let allRows = [];
@@ -381,6 +498,17 @@ const gs = {
   stealMode: false,
   resolved: false,
   cardState: [],     // per card: 'open' | 'correct' | 'wrong' | 'reveal'
+
+  // Unfair-game state
+  mode: 'quick',     // 'quick' | 'unfair'
+  phase: 'question', // 'question' | 'grid' | 'gridDone'
+  activeTeam: null,  // the team answering this question
+  lastResult: null,  // 'correct' | 'wrong' (last answer outcome)
+  grid: [],          // 25 symbol keys
+  gridRevealed: [],  // 25 booleans
+  lastSquare: -1,    // index just revealed (for the pop animation)
+  gridResult: '',    // text describing the reward that was applied
+  pendingEffect: null, // { kind:'gift'|'steal', value, emoji } awaiting a target choice
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -483,6 +611,14 @@ document.getElementById('teams-row').addEventListener('click', e => {
   renderTeamInputs();
 });
 
+document.getElementById('style-row').addEventListener('click', e => {
+  const btn = e.target.closest('.pill'); if (!btn) return;
+  gs.mode = btn.dataset.style;
+  [...e.currentTarget.children].forEach(b => b.classList.toggle('active', b.dataset.style === gs.mode));
+  document.getElementById('quick-legend').classList.toggle('hidden', gs.mode !== 'quick');
+  document.getElementById('unfair-legend').classList.toggle('hidden', gs.mode !== 'unfair');
+});
+
 function renderTeamInputs() {
   document.getElementById('team-inputs').innerHTML = gs.teams.map(key => {
     const m = TEAM_META[key];
@@ -525,6 +661,7 @@ function startGame() {
   gs.scores = Object.fromEntries(gs.teams.map(k => [k, 0]));
   gs.order  = shuffle([...pool]);
   gs.qIndex = 0;
+  if (gs.mode === 'unfair') buildGrid();
 
   hide('setup-screen'); show('game-screen');
   beginRound();
@@ -537,11 +674,20 @@ function beginRound() {
   gs.cardState  = cards.map(() => 'open');
   gs.resolved   = false;
   gs.stealMode  = false;
+  gs.phase      = 'question';
+  gs.lastResult = null;
+  gs.lastSquare = -1;
+  gs.gridResult = '';
 
-  // Active team rotates each question; steal order follows after it.
+  // A different team leads each question.
   const startIdx = gs.qIndex % gs.teamCount;
-  gs.guessQueue = [];
-  for (let k = 0; k < gs.teamCount; k++) gs.guessQueue.push(gs.teams[(startIdx + k) % gs.teamCount]);
+  gs.activeTeam = gs.teams[startIdx];
+  if (gs.mode === 'unfair') {
+    gs.guessQueue = [gs.activeTeam];           // no steal chain in unfair mode
+  } else {
+    gs.guessQueue = [];                        // active team first, then steal order
+    for (let k = 0; k < gs.teamCount; k++) gs.guessQueue.push(gs.teams[(startIdx + k) % gs.teamCount]);
+  }
 
   render();
 }
@@ -558,13 +704,28 @@ function render() {
 
   renderScoreboard();
   renderBanner();
-  renderCards();
-  renderExplain();
+
+  // In unfair mode, the screen swaps between the question and the mystery grid.
+  const inGrid = gs.mode === 'unfair' && (gs.phase === 'grid' || gs.phase === 'gridDone');
+  document.getElementById('prompt-text').classList.toggle('hidden', inGrid);
+  document.getElementById('cards-grid').classList.toggle('hidden', inGrid);
+  if (inGrid) {
+    hide('explain');
+    show('grid-area');
+    renderGrid();
+  } else {
+    hide('grid-area');
+    renderCards();
+    renderExplain();
+  }
+
   renderActions();
 }
 
 function renderScoreboard() {
-  const current = gs.resolved ? null : gs.guessQueue[0];
+  const current = gs.mode === 'unfair'
+    ? (gs.phase === 'gridDone' ? null : gs.activeTeam)
+    : (gs.resolved ? null : gs.guessQueue[0]);
   document.getElementById('scoreboard').innerHTML = gs.teams.map(key => {
     const m = TEAM_META[key];
     const cur = key === current ? ' current' : '';
@@ -578,6 +739,20 @@ function renderScoreboard() {
 function renderBanner() {
   const b = document.getElementById('turn-banner');
   b.className = 'turn-banner';
+
+  if (gs.mode === 'unfair') {
+    const active = gs.names[gs.activeTeam];
+    if (gs.phase === 'grid') { b.textContent = `${active} — pick a mystery square!`; return; }
+    if (gs.phase === 'gridDone') { b.classList.add('done'); b.textContent = 'Reward revealed'; return; }
+    if (gs.resolved) {
+      if (gs.lastResult === 'correct') { b.textContent = '✓ Correct — choose your reward!'; }
+      else { b.classList.add('steal'); b.textContent = `✗ Wrong — ${active} −${WRONG_PENALTY}`; }
+      return;
+    }
+    b.textContent = `${active}'s turn`;
+    return;
+  }
+
   if (gs.resolved) {
     b.classList.add('done');
     b.textContent = 'Answer revealed';
@@ -629,7 +804,24 @@ function renderExplain() {
 
 function renderActions() {
   const row = document.getElementById('action-row');
+
+  if (gs.mode === 'unfair') {
+    if (!gs.resolved) { row.innerHTML = ''; return; }
+    // Correct answer, reward not yet chosen → go to the grid.
+    if (gs.lastResult === 'correct' && gs.phase === 'question') {
+      row.innerHTML = `<button class="act-btn primary" onclick="goToGrid()">🎁 Pick a mystery square →</button>`;
+      return;
+    }
+    if (gs.phase === 'grid') { row.innerHTML = ''; return; }   // waiting for a square / target pick
+    nextOrResults(row);                                        // wrong answer, or reward applied
+    return;
+  }
+
   if (!gs.resolved) { row.innerHTML = ''; return; }
+  nextOrResults(row);
+}
+
+function nextOrResults(row) {
   const isLast = gs.qIndex >= gs.order.length - 1;
   row.innerHTML = isLast
     ? `<button class="act-btn primary" onclick="endGame()">See Results →</button>`
@@ -644,6 +836,26 @@ function pickCard(i) {
   if (gs.resolved || gs.cardState[i] !== 'open') return;
   const team = gs.guessQueue[0];
 
+  // ── Unfair mode: one team answers; correct → mystery grid, wrong → −5. ──
+  if (gs.mode === 'unfair') {
+    if (gs.question.cards[i].isOdd) {
+      gs.cardState[i] = 'correct';
+      gs.lastResult = 'correct';
+      gs.resolved = true;                          // award happens at the grid
+    } else {
+      gs.cardState[i] = 'wrong';
+      gs.cardOwner[i] = gs.names[team];
+      gs.scores[team] -= WRONG_PENALTY;
+      const oddCard = gs.question.cards.findIndex(c => c.isOdd);
+      gs.cardState[oddCard] = 'reveal';
+      gs.lastResult = 'wrong';
+      gs.resolved = true;
+    }
+    render();
+    return;
+  }
+
+  // ── Quick mode: spot-it-first + steal chain. ──
   if (gs.question.cards[i].isOdd) {
     gs.cardState[i] = 'correct';
     gs.scores[team] += gs.stealMode ? STEAL_PTS : CORRECT_PTS;
@@ -669,28 +881,117 @@ function nextQuestion() {
   beginRound();
 }
 
+// ── Unfair mystery grid ───────────────────────────────────────────────────────
+function goToGrid() {
+  if (gs.gridRevealed.every(Boolean)) buildGrid();   // board full → reshuffle a fresh one
+  gs.phase = 'grid';
+  gs.lastSquare = -1;
+  render();
+}
+
+function renderGrid() {
+  document.getElementById('grid-heading').textContent = gs.phase === 'grid'
+    ? `${gs.names[gs.activeTeam]}, choose a square`
+    : 'Reward revealed!';
+
+  document.getElementById('mystery-grid').innerHTML = gs.grid.map((key, idx) => {
+    const rev = gs.gridRevealed[idx];
+    const pickable = gs.phase === 'grid' && !rev;
+    let cls = 'mg-cell';
+    if (rev) cls += ' revealed ' + key;
+    if (pickable) cls += ' pickable';
+    if (idx === gs.lastSquare) cls += ' just-picked';
+    const content = rev ? SYMBOL_DEFS[key].emoji : '?';
+    return `<div class="${cls}"${pickable ? ` onclick="pickSquare(${idx})"` : ''}>${content}</div>`;
+  }).join('');
+
+  const res = document.getElementById('grid-result');
+  if (gs.phase === 'gridDone' && gs.gridResult) {
+    res.textContent = gs.gridResult;
+    res.classList.remove('hidden');
+  } else {
+    res.classList.add('hidden');
+  }
+}
+
+function pickSquare(idx) {
+  if (gs.phase !== 'grid' || gs.gridRevealed[idx]) return;
+  gs.gridRevealed[idx] = true;
+  gs.lastSquare = idx;
+
+  const key = gs.grid[idx];
+  const def = SYMBOL_DEFS[key];
+  const active = gs.activeTeam;
+
+  if (def.type === 'self') {
+    gs.scores[active] += def.value;
+    gs.gridResult = `${def.emoji} ${def.name} — ${gs.names[active]} ${fmtPts(def.value)}`;
+    gs.phase = 'gridDone';
+    render();
+  } else {
+    // Heart (gift) and Gun (steal) both give the active team +value, then need a target.
+    gs.scores[active] += def.value;
+    gs.pendingEffect = { kind: def.type === 'gift' ? 'gift' : 'steal', value: def.value, emoji: def.emoji };
+    render();                               // show the revealed square behind the chooser
+    promptTargetOrAuto();
+  }
+}
+
+function promptTargetOrAuto() {
+  const others = gs.teams.filter(k => k !== gs.activeTeam);
+  if (others.length === 1) { applyTarget(others[0]); return; }   // only one possible target → auto
+  const e = gs.pendingEffect;
+  document.getElementById('tm-title').textContent = e.kind === 'gift'
+    ? `❤️ Gift +${e.value} to which team?`
+    : `🔫 Steal ${e.value} from which team?`;
+  document.getElementById('tm-teams').innerHTML = others.map(k => {
+    const m = TEAM_META[k];
+    return `<button class="tm-team-btn" style="--tc:${m.color}" onclick="applyTarget('${k}')">
+      <span class="tm-dot" style="background:${m.color}"></span>${gs.names[k]}</button>`;
+  }).join('');
+  show('target-modal');
+}
+
+function applyTarget(targetKey) {
+  const e = gs.pendingEffect;
+  const active = gs.activeTeam;
+  if (e.kind === 'gift') {
+    gs.scores[targetKey] += e.value;
+    gs.gridResult = `${e.emoji} Heart — ${gs.names[active]} +${e.value}, gifts ${gs.names[targetKey]} +${e.value}`;
+  } else {
+    gs.scores[targetKey] -= e.value;
+    gs.gridResult = `${e.emoji} Steal — ${gs.names[active]} +${e.value}, ${gs.names[targetKey]} −${e.value}`;
+  }
+  gs.pendingEffect = null;
+  hide('target-modal');
+  gs.phase = 'gridDone';
+  render();
+}
+
 // ── Game over ─────────────────────────────────────────────────────────────────
 function endGame() {
   const ranked = [...gs.teams].sort((a, b) => gs.scores[b] - gs.scores[a]);
-  const max = Math.max(...gs.teams.map(k => gs.scores[k]));
+  const vals = gs.teams.map(k => gs.scores[k]);
+  const max = Math.max(...vals);
+  const allEqual = vals.every(v => v === vals[0]);   // covers 0–0 and any level scores
   const winners = gs.teams.filter(k => gs.scores[k] === max);
-  const tie = winners.length > 1 && max > 0;
+  const tie = !allEqual && winners.length > 1;
 
-  document.getElementById('go-emoji').textContent = max === 0 ? '🤝' : (tie ? '🤝' : '🏆');
-  if (max === 0) {
-    document.getElementById('go-title').textContent = 'Game Over!';
-    document.getElementById('go-sub').textContent = 'No points scored.';
+  document.getElementById('go-emoji').textContent = (allEqual || tie) ? '🤝' : '🏆';
+  if (allEqual) {
+    document.getElementById('go-title').textContent = "It's a draw!";
+    document.getElementById('go-sub').textContent = `Everyone on ${max} point${max === 1 ? '' : 's'}.`;
   } else if (tie) {
     document.getElementById('go-title').textContent = "It's a tie!";
-    document.getElementById('go-sub').textContent = winners.map(k => gs.names[k]).join(' & ') + ' share the win.';
+    document.getElementById('go-sub').textContent = winners.map(k => gs.names[k]).join(' & ') + ` share the win on ${max}.`;
   } else {
     document.getElementById('go-title').textContent = gs.names[winners[0]] + ' wins!';
-    document.getElementById('go-sub').textContent = `${max} points`;
+    document.getElementById('go-sub').textContent = `${max} point${max === 1 ? '' : 's'}`;
   }
 
   document.getElementById('go-scores').innerHTML = ranked.map((key, idx) => {
     const m = TEAM_META[key];
-    const win = gs.scores[key] === max && max > 0 ? ' winner' : '';
+    const win = gs.scores[key] === max && !allEqual ? ' winner' : '';
     return `<div class="go-rank${win}">
       <span class="rk-pos">${idx + 1}.</span>
       <span class="rk-dot" style="background:${m.color}"></span>
