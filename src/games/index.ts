@@ -88,7 +88,7 @@ const games: GameDefinition[] = [
     id: 'sentence-scramble',
     title: 'Sentence Scramble',
     description: 'Unscramble the words into correct sentences — teacher-marked, A1 to C1.',
-    icon: '🧩',
+    icon: '/sentence_scramble.png',
     component: SentenceScramble,
   },
 ]

@@ -1,0 +1,81 @@
+id,level,structure,sentence,active
+A1-01,A1,present simple (have),"I have a black cat.",TRUE
+A1-02,A1,present simple (be),"She is my best friend.",TRUE
+A1-03,A1,present simple,"We go to school every day.",TRUE
+A1-04,A1,prepositions of place,"The book is on the table.",TRUE
+A1-05,A1,can (ability),"He can play the guitar.",TRUE
+A1-06,A1,present simple (be),"They are very happy today.",TRUE
+A1-07,A1,present simple (3rd person),"My mother makes good food.",TRUE
+A1-08,A1,present simple (like),"I like coffee in the morning.",TRUE
+A1-09,A1,prepositions of place,"The dog is in the garden.",TRUE
+A1-10,A1,have got,"You have got a nice car.",TRUE
+A1-11,A1,present continuous,"We are watching TV now.",TRUE
+A1-12,A1,there are,"There are four people in my family.",TRUE
+A1-13,A1,present continuous,"The children are playing in the park.",TRUE
+A1-14,A1,have got,"I have got two brothers.",TRUE
+A1-15,A1,can (ability),"She can speak three languages.",TRUE
+A1-16,A1,there is,"There is a big tree in the garden.",TRUE
+A1-17,A1,present continuous,"He is reading a book.",TRUE
+A1-18,A1,have got,"We have got a small house.",TRUE
+A1-19,A1,present simple (3rd person),"My father works in a bank.",TRUE
+A1-20,A1,present continuous,"The cat is sleeping on the bed.",TRUE
+A2-01,A2,present simple + frequency,"She always drinks tea in the morning.",TRUE
+A2-02,A2,past simple,"We went to the beach last summer.",TRUE
+A2-03,A2,comparative,"She is taller than her brother.",TRUE
+A2-04,A2,past simple question,"Did you watch the film last night?",TRUE
+A2-05,A2,going to (future),"I am going to visit my grandmother tomorrow.",TRUE
+A2-06,A2,past continuous,"They were playing football in the rain.",TRUE
+A2-07,A2,present simple negative (3rd person),"He doesn't like getting up early.",TRUE
+A2-08,A2,present simple question (3rd person),"What time does the shop open?",TRUE
+A2-09,A2,superlative,"This is the biggest cake in the shop.",TRUE
+A2-10,A2,past simple (3rd person),"My sister bought a new phone yesterday.",TRUE
+A2-11,A2,past simple question,"Where did you go on holiday?",TRUE
+A2-12,A2,comparative (irregular),"She is better at maths than me.",TRUE
+A2-13,A2,frequency adverbs,"We usually go swimming on Sundays.",TRUE
+A2-14,A2,past continuous / past simple,"He was watching TV when I arrived.",TRUE
+A2-15,A2,there was/were (negative),"There weren't any apples in the kitchen.",TRUE
+A2-16,A2,present continuous (future),"Are you coming to the party tonight?",TRUE
+A2-17,A2,comparative,"The blue car is faster than the red one.",TRUE
+A2-18,A2,past simple negative,"My brother didn't do his homework.",TRUE
+A2-19,A2,frequency question (3rd person),"How often does she visit her cousins?",TRUE
+A2-20,A2,comparative,"I think Spanish is easier than German.",TRUE
+B1-01,B1,present perfect + for,"I have lived in this city for ten years.",TRUE
+B1-02,B1,first conditional,"If it rains tomorrow, we will stay at home.",TRUE
+B1-03,B1,present perfect (just),"She has just finished her homework.",TRUE
+B1-04,B1,past passive,"This bridge was built a hundred years ago.",TRUE
+B1-05,B1,relative clause (who),"The woman who lives next door is a doctor.",TRUE
+B1-06,B1,used to,"I used to play football when I was younger.",TRUE
+B1-07,B1,second conditional,"If I had more money, I would travel the world.",TRUE
+B1-08,B1,present perfect continuous,"He has been working here since last year.",TRUE
+B1-09,B1,should have (past advice),"You should have told me about the problem.",TRUE
+B1-10,B1,going to (future plan),"They are going to build a new school.",TRUE
+B1-11,B1,reported speech,"She told me that she was tired.",TRUE
+B1-12,B1,present perfect (never),"I have never eaten Japanese food.",TRUE
+B1-13,B1,so ... that,"The film was so boring that I fell asleep.",TRUE
+B1-14,B1,present continuous passive,"My car is being repaired at the moment.",TRUE
+B1-15,B1,present perfect (negative),"We haven't seen each other for months.",TRUE
+B1-16,B1,zero conditional,"If you heat ice, it melts.",TRUE
+B1-17,B1,reported question,"He asked me where I lived.",TRUE
+B1-18,B1,wish (present),"I wish I could speak French.",TRUE
+B1-19,B1,modal passive,"The homework must be finished by Friday.",TRUE
+B1-20,B1,present perfect (already),"She has already booked the tickets.",TRUE
+B2-01,B2,third conditional (inversion),"Had I known about the traffic, I would have left earlier.",TRUE
+B2-02,B2,cleft sentence (it was),"It was in Paris that they first met.",TRUE
+B2-03,B2,inversion (not only),"Not only did she pass, but she also came first.",TRUE
+B2-04,B2,gerund after verb,"He denied taking the money from the drawer.",TRUE
+B2-05,B2,would rather + past,"I would rather you didn't smoke in here.",TRUE
+B2-06,B2,concession (despite),"Despite the rain, they reached the top of the mountain.",TRUE
+B2-07,B2,inversion (no sooner),"No sooner had we sat down than the phone rang.",TRUE
+B2-08,B2,mixed conditional,"If I had studied medicine, I would be a doctor now.",TRUE
+B2-09,B2,cleft sentence (what),"What I really need is a long holiday.",TRUE
+B2-10,B2,modal perfect (deduction),"You must have been exhausted after the journey.",TRUE
+C1-01,C1,inversion (rarely),"Rarely have I come across such a compelling book.",TRUE
+C1-02,C1,inversion (were it not),"Were it not for your help, the project would have failed.",TRUE
+C1-03,C1,inversion (only after),"Only after the meeting did the truth become clear.",TRUE
+C1-04,C1,inversion (such),"Such was the storm that the whole town lost power.",TRUE
+C1-05,C1,inversion (negative adverbial),"Under no circumstances should the door be left open.",TRUE
+C1-06,C1,subjunctive,"It is essential that every student be on time.",TRUE
+C1-07,C1,inversion (scarcely),"Scarcely had the show begun when the lights went out.",TRUE
+C1-08,C1,concession (however),"However hard he tried, he could not solve the puzzle.",TRUE
+C1-09,C1,inversion (seldom),"Seldom does such an opportunity present itself.",TRUE
+C1-10,C1,inversion (negative adverbial),"Not for a moment did they consider giving up.",TRUE

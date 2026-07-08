@@ -212,8 +212,10 @@
   </div>
 
   <script>
-    /* ── SENTENCE BANK (15 per level) ───────────────────── */
-    const BANK = {
+    /* ── OFFLINE FALLBACK BANK ──────────────────────────────
+       Used only if the Google Sheet can't be fetched, so a lesson
+       never breaks. The live bank comes from the published CSV below. */
+    const FALLBACK_BANK = {
       A1: [
         "I have a black cat.",
         "She is my best friend.",
@@ -301,6 +303,86 @@
       ]
     };
 
+    /* ── LIVE BANK (from the published Google Sheet) ────────
+       Columns: id, level, structure, sentence, active
+       Optional advanced columns:
+         tiles       — pipe-separated tile override, e.g. New York|is|a|big|city
+         distractors — pipe-separated extra "trap" words added to the pool */
+    const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQQOA7JYpQHJPodeWxaoJzUqT1L6vftHr-jjo7Y7Y06lHAecXsk6aw5jFPeQhJgKMro7Wu1vzW5E7PS/pub?gid=1966794631&single=true&output=csv';
+
+    let BANK = FALLBACK_BANK;   // replaced by the sheet once it loads
+
+    // Minimal RFC-4180 CSV parser (handles quoted fields, embedded commas,
+    // "" escapes and CRLF/LF line endings).
+    function parseCsv(text) {
+      const rows = [];
+      let row = [], field = '', inQuotes = false;
+      for (let i = 0; i < text.length; i++) {
+        const c = text[i];
+        if (inQuotes) {
+          if (c === '"') {
+            if (text[i + 1] === '"') { field += '"'; i++; }
+            else inQuotes = false;
+          } else field += c;
+        } else if (c === '"') {
+          inQuotes = true;
+        } else if (c === ',') {
+          row.push(field); field = '';
+        } else if (c === '\n' || c === '\r') {
+          if (c === '\r' && text[i + 1] === '\n') i++;
+          row.push(field); field = '';
+          if (row.length > 1 || row[0] !== '') rows.push(row);
+          row = [];
+        } else field += c;
+      }
+      if (field !== '' || row.length) { row.push(field); rows.push(row); }
+      return rows;
+    }
+
+    function isActive(v) {
+      const s = (v || '').trim().toLowerCase();
+      return !(s === 'false' || s === 'no' || s === '0' || s === 'n');
+    }
+
+    // Turn parsed rows into { level: [ {sentence, tiles?, distractors?}, ... ] }
+    function bankFromRows(rows) {
+      if (!rows.length) return null;
+      const head = rows[0].map(h => h.trim().toLowerCase());
+      const col = name => head.indexOf(name);
+      const iLevel = col('level'), iSent = col('sentence');
+      const iActive = col('active'), iTiles = col('tiles'), iDist = col('distractors');
+      if (iLevel < 0 || iSent < 0) return null;   // wrong sheet — keep fallback
+      const bank = {};
+      for (let r = 1; r < rows.length; r++) {
+        const cells = rows[r];
+        const level = (cells[iLevel] || '').trim().toUpperCase();
+        const sentence = (cells[iSent] || '').trim();
+        if (!level || !sentence) continue;
+        if (iActive >= 0 && !isActive(cells[iActive])) continue;
+        const entry = { sentence };
+        if (iTiles >= 0 && (cells[iTiles] || '').trim()) {
+          entry.tiles = cells[iTiles].split('|').map(t => t.trim()).filter(Boolean);
+        }
+        if (iDist >= 0 && (cells[iDist] || '').trim()) {
+          entry.distractors = cells[iDist].split('|').map(t => t.trim()).filter(Boolean);
+        }
+        (bank[level] = bank[level] || []).push(entry);
+      }
+      return Object.keys(bank).length ? bank : null;
+    }
+
+    async function loadBank() {
+      try {
+        const res = await fetch(CSV_URL, { cache: 'no-store' });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const bank = bankFromRows(parseCsv(await res.text()));
+        if (bank) BANK = bank;
+      } catch (e) {
+        console.warn('Sentence Scramble: sheet unavailable, using offline bank —', e);
+      }
+    }
+    loadBank();   // fire on load; ready long before the teacher clicks Start
+
     /* ── STATE ──────────────────────────────────────────── */
     let selLevel = 'A1';
     let selCount = 1;
@@ -323,7 +405,8 @@
     }
 
     function pickSentences(level, n) {
-      return shuffle(BANK[level]).slice(0, n);
+      const pool = (BANK[level] && BANK[level].length) ? BANK[level] : (FALLBACK_BANK[level] || []);
+      return shuffle(pool).slice(0, n);
     }
 
     // "I" and its contractions stay capital anywhere; otherwise the very first
@@ -332,28 +415,29 @@
       return token === 'I' || /^I['’](m|ve|d|ll|re)$/.test(token);
     }
 
+    function caseFirst(words) {
+      return words.map((w, i) =>
+        (i === 0 && !isAlwaysCapital(w)) ? w.charAt(0).toLowerCase() + w.slice(1) : w
+      );
+    }
+
     function tileWords(sentence) {
       const clean = sentence.replace(/[.?!]+$/,'').trim();
-      const words = clean.split(/\s+/);
-      return words.map((w, i) => {
-        if (i === 0 && !isAlwaysCapital(w)) {
-          return w.charAt(0).toLowerCase() + w.slice(1);
-        }
-        return w;
-      });
+      return caseFirst(clean.split(/\s+/));
     }
 
     /* ── BUILD A ROUND ──────────────────────────────────── */
     function buildRound() {
-      const sentences = pickSentences(selLevel, selCount);
+      const entries = pickSentences(selLevel, selCount);
       tiles = [];
       lines = [];
       let tid = 0;
-      sentences.forEach(sentence => {
-        lines.push({ canonical: sentence, order: [], status: null });
-        tileWords(sentence).forEach(text => {
-          tiles.push({ id: tid++, text });
-        });
+      entries.forEach(entry => {
+        const e = (typeof entry === 'string') ? { sentence: entry } : entry;
+        const words = (e.tiles && e.tiles.length) ? caseFirst(e.tiles) : tileWords(e.sentence);
+        lines.push({ canonical: e.sentence, order: [], status: null });
+        words.forEach(text => { tiles.push({ id: tid++, text }); });
+        (e.distractors || []).forEach(text => { tiles.push({ id: tid++, text }); });
       });
       poolOrder = shuffle(tiles.map(t => t.id));
       activeLine = 0;
