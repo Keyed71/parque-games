@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>What Is This? — Scene Tagger</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Nunito', sans-serif; background: #fdf6ec; color: #1e293b; }
+
+    header {
+      background: linear-gradient(150deg, #7a2e1a, #c4592a, #d4845a);
+      color: white; padding: 0.9rem 1.5rem;
+    }
+    header h1 { font-size: 1.4rem; font-weight: 900; }
+    header p { font-size: 0.85rem; opacity: 0.9; margin-top: 0.1rem; }
+
+    .wrap { display: flex; gap: 1.25rem; padding: 1.25rem 1.5rem; align-items: flex-start; flex-wrap: wrap; }
+    .left { flex: 1 1 560px; min-width: 340px; }
+    .right { flex: 0 0 320px; }
+
+    .toolbar {
+      display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center; margin-bottom: 0.9rem;
+    }
+    .btn {
+      padding: 0.5rem 0.95rem; border: 2px solid #e8d0b0; border-radius: 10px; background: white;
+      font-family: 'Nunito', sans-serif; font-weight: 900; font-size: 0.85rem; color: #7a2e1a; cursor: pointer;
+    }
+    .btn:hover { border-color: #c4592a; }
+    .btn.primary { background: linear-gradient(135deg, #c4592a, #d4845a); color: white; border-color: #c4592a; }
+    .btn.on { background: #7a2e1a; color: white; border-color: #7a2e1a; }
+    .btn.danger { color: #b91c1c; }
+    input[type=file] { display: none; }
+
+    .meta-row { display: flex; gap: 0.6rem; flex-wrap: wrap; margin-bottom: 0.9rem; }
+    .meta-row label { display: flex; flex-direction: column; gap: 0.2rem; font-size: 0.7rem; font-weight: 900;
+      color: #94734f; text-transform: uppercase; letter-spacing: 0.05em; }
+    .meta-row input {
+      padding: 0.4rem 0.6rem; border: 2px solid #e8d0b0; border-radius: 8px; font-family: 'Nunito', sans-serif;
+      font-weight: 700; font-size: 0.9rem; min-width: 150px;
+    }
+    .meta-row input:focus { outline: none; border-color: #c4592a; }
+
+    .stage { position: relative; display: inline-block; line-height: 0; border-radius: 12px; overflow: hidden;
+      border: 2px solid #e8d0b0; background: #fff; max-width: 100%; }
+    .stage img { display: block; max-width: 100%; height: auto; user-select: none; -webkit-user-drag: none; }
+    .stage svg { position: absolute; inset: 0; width: 100%; height: 100%; cursor: crosshair; touch-action: none; }
+    .stage .chip {
+      position: absolute; transform: translate(-50%, -50%); background: rgba(122,46,26,0.92); color: white;
+      font-size: 0.72rem; font-weight: 900; padding: 0.1rem 0.4rem; border-radius: 6px; white-space: nowrap;
+      pointer-events: none; box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+    }
+    .empty-stage {
+      display: flex; align-items: center; justify-content: center; min-height: 320px; color: #b89a72;
+      font-weight: 800; border: 2px dashed #d8b88a; border-radius: 12px; background: #fffaf2; text-align: center; padding: 2rem;
+    }
+
+    .shape { fill: rgba(196,89,42,0.18); stroke: #c4592a; stroke-width: 2; vector-effect: non-scaling-stroke; }
+    .shape.hi { fill: rgba(196,89,42,0.38); stroke: #7a2e1a; stroke-width: 3; }
+    .shape.draft { fill: rgba(37,99,235,0.15); stroke: #2563eb; stroke-dasharray: 4 3; stroke-width: 2; vector-effect: non-scaling-stroke; }
+    .vtx { fill: #2563eb; }
+
+    .panel { background: white; border: 2px solid #e8d0b0; border-radius: 14px; padding: 0.9rem; }
+    .panel h2 { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: #94734f; margin-bottom: 0.6rem; }
+    .taglist { display: flex; flex-direction: column; gap: 0.4rem; max-height: 46vh; overflow-y: auto; }
+    .tagrow { display: flex; align-items: center; gap: 0.4rem; border: 1px solid #eaddc7; border-radius: 8px; padding: 0.3rem 0.4rem; }
+    .tagrow:hover { border-color: #c4592a; background: #fffaf2; }
+    .tagrow .idx { font-size: 0.7rem; font-weight: 900; color: #b89a72; width: 1.4rem; text-align: center; flex-shrink: 0; }
+    .tagrow input { flex: 1; border: none; font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 0.9rem; color: #1e293b; background: transparent; min-width: 0; }
+    .tagrow input:focus { outline: none; }
+    .tagrow .kind { font-size: 0.62rem; font-weight: 900; color: #94734f; text-transform: uppercase; flex-shrink: 0; }
+    .tagrow .del { border: none; background: none; color: #dc2626; font-weight: 900; cursor: pointer; font-size: 1rem; flex-shrink: 0; }
+    .hint2 { font-size: 0.78rem; color: #94734f; margin-top: 0.6rem; line-height: 1.4; }
+    .status { font-size: 0.8rem; font-weight: 800; color: #2563eb; min-height: 1.2em; margin-top: 0.5rem; }
+
+    dialog { border: none; border-radius: 14px; padding: 0; max-width: 640px; width: 92%; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+    dialog::backdrop { background: rgba(0,0,0,0.45); }
+    .dlg-body { padding: 1.1rem 1.25rem; }
+    .dlg-body h3 { font-size: 1rem; font-weight: 900; color: #7a2e1a; margin-bottom: 0.6rem; }
+    textarea { width: 100%; height: 260px; border: 2px solid #e8d0b0; border-radius: 10px; padding: 0.6rem;
+      font-family: ui-monospace, monospace; font-size: 0.8rem; resize: vertical; }
+    .dlg-actions { display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 0.7rem; flex-wrap: wrap; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>What Is This? — Scene Tagger</h1>
+    <p>Load an image, draw a hotspot over each object, type its word, then export the scene JSON.</p>
+  </header>
+
+  <div class="wrap">
+    <div class="left">
+      <div class="toolbar">
+        <button class="btn primary" id="load-btn">📷 Load image</button>
+        <input type="file" id="file-input" accept="image/*">
+        <button class="btn on" id="mode-box">▭ Box</button>
+        <button class="btn" id="mode-poly">⬠ Polygon</button>
+        <span id="poly-tools" style="display:none">
+          <button class="btn" id="poly-undo">↶ Undo point</button>
+          <button class="btn primary" id="poly-finish">✓ Finish shape</button>
+          <button class="btn danger" id="poly-cancel">✕ Cancel</button>
+        </span>
+      </div>
+
+      <div class="meta-row">
+        <label>Scene id <input id="scene-id" placeholder="restaurant"></label>
+        <label>Title <input id="scene-title" placeholder="At the Restaurant"></label>
+        <label>Image file <input id="scene-image" placeholder="what-is-this-restaurant.png"></label>
+      </div>
+
+      <div id="stage-host">
+        <div class="empty-stage" id="empty-stage">Click “Load image” to begin. Box mode: click-drag over an object. Polygon mode: click points around a shape, then Finish.</div>
+      </div>
+      <div class="status" id="status"></div>
+    </div>
+
+    <div class="right">
+      <div class="panel">
+        <h2>Tags (<span id="tag-count">0</span>)</h2>
+        <div class="taglist" id="taglist"></div>
+        <div class="toolbar" style="margin: 0.8rem 0 0;">
+          <button class="btn primary" id="export-btn">⤓ Export JSON</button>
+          <button class="btn" id="import-btn">⤒ Import JSON</button>
+          <button class="btn danger" id="clear-btn">Clear all</button>
+        </div>
+        <div class="hint2">
+          Store just the answer as you want it revealed — e.g. <b>a plate</b>, <b>an umbrella</b>,
+          <b>some water</b>, <b>chopsticks</b>. Export often; the tool doesn't auto-save.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <dialog id="json-dialog">
+    <div class="dlg-body">
+      <h3 id="dlg-title">Scene JSON</h3>
+      <textarea id="json-text" spellcheck="false"></textarea>
+      <div class="dlg-actions">
+        <button class="btn" id="json-copy">Copy</button>
+        <button class="btn" id="json-download">Download .json</button>
+        <button class="btn" id="json-apply" style="display:none">Load into editor</button>
+        <button class="btn primary" id="json-close">Close</button>
+      </div>
+    </div>
+  </dialog>
+
+  <script>
+    const $ = id => document.getElementById(id);
+
+    let img = null;                 // { name, w, h }
+    let tags = [];                  // { answer, shape:'rect'|'poly', x,y,w,h | points:[[x,y],...] }
+    let mode = 'box';
+    let hovered = -1;
+
+    // draw state
+    let boxStart = null;            // {x,y}
+    let boxDraft = null;            // {x,y,w,h}
+    let polyPts = [];               // [[x,y],...]
+    let cursor = null;              // {x,y}
+
+    const stageHost = $('stage-host');
+    let stage, svg, chipLayer, imgEl;
+
+    /* ── image loading ─────────────────────────────── */
+    $('load-btn').onclick = () => $('file-input').click();
+    $('file-input').onchange = e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const url = URL.createObjectURL(file);
+      const im = new Image();
+      im.onload = () => {
+        img = { name: file.name, w: im.naturalWidth, h: im.naturalHeight };
+        if (!$('scene-image').value) $('scene-image').value = file.name;
+        if (!$('scene-id').value) $('scene-id').value = file.name.replace(/\.[^.]+$/, '').replace(/[^a-z0-9]+/gi, '-').toLowerCase();
+        buildStage(url);
+        setStatus('Loaded ' + img.w + '×' + img.h + '. Draw your first hotspot.');
+      };
+      im.src = url;
+    };
+
+    function buildStage(url) {
+      stageHost.innerHTML = '';
+      stage = document.createElement('div');
+      stage.className = 'stage';
+      imgEl = document.createElement('img');
+      imgEl.src = url;
+      svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('viewBox', '0 0 1 1');
+      svg.setAttribute('preserveAspectRatio', 'none');
+      chipLayer = document.createElement('div');
+      stage.append(imgEl, svg, chipLayer);
+      stageHost.appendChild(stage);
+      attachDrawing();
+      render();
+    }
+
+    /* ── coordinate helpers ────────────────────────── */
+    const clamp = v => Math.max(0, Math.min(1, v));
+    function norm(e) {
+      const r = svg.getBoundingClientRect();
+      return { x: clamp((e.clientX - r.left) / r.width), y: clamp((e.clientY - r.top) / r.height) };
+    }
+    const r4 = n => Math.round(n * 1e4) / 1e4;
+
+    /* ── drawing interactions ──────────────────────── */
+    function attachDrawing() {
+      svg.addEventListener('pointerdown', onDown);
+      svg.addEventListener('pointermove', onMove);
+      window.addEventListener('pointerup', onUp);
+    }
+    function onDown(e) {
+      const p = norm(e);
+      if (mode === 'box') { boxStart = p; boxDraft = { x: p.x, y: p.y, w: 0, h: 0 }; svg.setPointerCapture(e.pointerId); }
+      else { polyPts.push([p.x, p.y]); render(); }
+    }
+    function onMove(e) {
+      cursor = norm(e);
+      if (mode === 'box' && boxStart) {
+        boxDraft = {
+          x: Math.min(boxStart.x, cursor.x), y: Math.min(boxStart.y, cursor.y),
+          w: Math.abs(cursor.x - boxStart.x), h: Math.abs(cursor.y - boxStart.y)
+        };
+        render();
+      } else if (mode === 'poly' && polyPts.length) {
+        render();
+      }
+    }
+    function onUp() {
+      if (mode === 'box' && boxDraft) {
+        if (boxDraft.w > 0.012 && boxDraft.h > 0.012) {
+          tags.push({ answer: '', shape: 'rect', x: r4(boxDraft.x), y: r4(boxDraft.y), w: r4(boxDraft.w), h: r4(boxDraft.h) });
+          render(); focusNewTag();
+        }
+        boxStart = null; boxDraft = null; render();
+      }
+    }
+
+    function finishPoly() {
+      if (polyPts.length >= 3) {
+        tags.push({ answer: '', shape: 'poly', points: polyPts.map(p => [r4(p[0]), r4(p[1])]) });
+        polyPts = []; render(); focusNewTag();
+      } else setStatus('A polygon needs at least 3 points.');
+    }
+    $('poly-finish').onclick = finishPoly;
+    $('poly-undo').onclick = () => { polyPts.pop(); render(); };
+    $('poly-cancel').onclick = () => { polyPts = []; render(); };
+    document.addEventListener('keydown', e => {
+      if (mode !== 'poly') return;
+      if (e.key === 'Enter') { e.preventDefault(); finishPoly(); }
+      else if (e.key === 'Escape') { polyPts = []; render(); }
+      else if (e.key === 'Backspace' && document.activeElement.tagName !== 'INPUT') { e.preventDefault(); polyPts.pop(); render(); }
+    });
+
+    /* ── mode switch ───────────────────────────────── */
+    $('mode-box').onclick = () => setMode('box');
+    $('mode-poly').onclick = () => setMode('poly');
+    function setMode(m) {
+      mode = m; polyPts = []; boxStart = null; boxDraft = null;
+      $('mode-box').classList.toggle('on', m === 'box');
+      $('mode-poly').classList.toggle('on', m === 'poly');
+      $('poly-tools').style.display = m === 'poly' ? 'inline' : 'none';
+      render();
+    }
+
+    /* ── render ────────────────────────────────────── */
+    function centroid(t) {
+      if (t.shape === 'rect') return [t.x + t.w / 2, t.y + t.h / 2];
+      const n = t.points.length;
+      return [t.points.reduce((s, p) => s + p[0], 0) / n, t.points.reduce((s, p) => s + p[1], 0) / n];
+    }
+    function shapeEl(t, cls) {
+      let el;
+      if (t.shape === 'rect') {
+        el = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        el.setAttribute('x', t.x); el.setAttribute('y', t.y); el.setAttribute('width', t.w); el.setAttribute('height', t.h);
+      } else {
+        el = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+        el.setAttribute('points', t.points.map(p => p.join(',')).join(' '));
+      }
+      el.setAttribute('class', cls);
+      return el;
+    }
+    function render() {
+      if (!svg) return;
+      svg.innerHTML = '';
+      chipLayer.innerHTML = '';
+      tags.forEach((t, i) => {
+        svg.appendChild(shapeEl(t, 'shape' + (i === hovered ? ' hi' : '')));
+        const c = centroid(t);
+        const chip = document.createElement('div');
+        chip.className = 'chip';
+        chip.style.left = (c[0] * 100) + '%';
+        chip.style.top = (c[1] * 100) + '%';
+        chip.textContent = t.answer || ('#' + (i + 1));
+        chipLayer.appendChild(chip);
+      });
+      // drafts
+      if (boxDraft) svg.appendChild(shapeEl({ shape: 'rect', ...boxDraft }, 'shape draft'));
+      if (mode === 'poly' && polyPts.length) {
+        const pl = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+        const pts = cursor ? [...polyPts, [cursor.x, cursor.y]] : polyPts;
+        pl.setAttribute('points', pts.map(p => p.join(',')).join(' '));
+        pl.setAttribute('class', 'shape draft'); pl.setAttribute('fill', 'none');
+        svg.appendChild(pl);
+        polyPts.forEach(p => {
+          const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+          c.setAttribute('cx', p[0]); c.setAttribute('cy', p[1]); c.setAttribute('r', 0.006);
+          c.setAttribute('class', 'vtx'); svg.appendChild(c);
+        });
+      }
+      renderList();
+    }
+
+    function renderList() {
+      const list = $('taglist');
+      list.innerHTML = '';
+      $('tag-count').textContent = tags.length;
+      tags.forEach((t, i) => {
+        const row = document.createElement('div');
+        row.className = 'tagrow';
+        row.onmouseenter = () => { hovered = i; render(); };
+        row.onmouseleave = () => { hovered = -1; render(); };
+        row.innerHTML = `<span class="idx">${i + 1}</span>`;
+        const inp = document.createElement('input');
+        inp.value = t.answer; inp.placeholder = 'a plate';
+        inp.dataset.idx = i;
+        inp.oninput = () => { t.answer = inp.value; updateChip(i); };
+        const kind = document.createElement('span');
+        kind.className = 'kind'; kind.textContent = t.shape;
+        const del = document.createElement('button');
+        del.className = 'del'; del.textContent = '✕';
+        del.onclick = () => { tags.splice(i, 1); hovered = -1; render(); };
+        row.append(inp, kind, del);
+        list.appendChild(row);
+      });
+    }
+    function updateChip(i) {
+      const chip = chipLayer.children[i];
+      if (chip) chip.textContent = tags[i].answer || ('#' + (i + 1));
+    }
+    function focusNewTag() {
+      const inputs = $('taglist').querySelectorAll('input');
+      const last = inputs[inputs.length - 1];
+      if (last) last.focus();
+    }
+    function setStatus(msg) { $('status').textContent = msg; }
+
+    /* ── export / import ───────────────────────────── */
+    function sceneObject() {
+      return {
+        id: $('scene-id').value.trim() || 'scene',
+        title: $('scene-title').value.trim() || 'Scene',
+        image: $('scene-image').value.trim() || (img && img.name) || 'scene.png',
+        width: img ? img.w : null,
+        height: img ? img.h : null,
+        items: tags.map(t => t.shape === 'rect'
+          ? { answer: t.answer.trim(), shape: 'rect', x: t.x, y: t.y, w: t.w, h: t.h }
+          : { answer: t.answer.trim(), shape: 'poly', points: t.points })
+      };
+    }
+    $('export-btn').onclick = () => {
+      const missing = tags.filter(t => !t.answer.trim()).length;
+      openDialog('Export scene JSON', JSON.stringify(sceneObject(), null, 2), false);
+      setStatus(missing ? (missing + ' tag(s) still have no word.') : 'Ready to export.');
+    };
+    $('import-btn').onclick = () => openDialog('Paste scene JSON to edit', '', true);
+
+    function openDialog(title, text, forImport) {
+      $('dlg-title').textContent = title;
+      $('json-text').value = text;
+      $('json-apply').style.display = forImport ? 'inline-block' : 'none';
+      $('json-download').style.display = forImport ? 'none' : 'inline-block';
+      $('json-copy').style.display = forImport ? 'none' : 'inline-block';
+      $('json-dialog').showModal();
+    }
+    $('json-close').onclick = () => $('json-dialog').close();
+    $('json-copy').onclick = () => { navigator.clipboard.writeText($('json-text').value); setStatus('Copied to clipboard.'); };
+    $('json-download').onclick = () => {
+      const blob = new Blob([$('json-text').value], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = ($('scene-id').value.trim() || 'scene') + '.json';
+      a.click();
+    };
+    $('json-apply').onclick = () => {
+      try {
+        const obj = JSON.parse($('json-text').value);
+        $('scene-id').value = obj.id || '';
+        $('scene-title').value = obj.title || '';
+        $('scene-image').value = obj.image || '';
+        tags = (obj.items || []).map(it => it.shape === 'poly'
+          ? { answer: it.answer || '', shape: 'poly', points: it.points }
+          : { answer: it.answer || '', shape: 'rect', x: it.x, y: it.y, w: it.w, h: it.h });
+        if (svg) render(); else renderList();
+        $('json-dialog').close();
+        setStatus('Loaded ' + tags.length + ' tag(s). Re-load the image to see them positioned.');
+      } catch (err) { setStatus('Invalid JSON: ' + err.message); }
+    };
+    $('clear-btn').onclick = () => { if (confirm('Delete all tags?')) { tags = []; hovered = -1; if (svg) render(); else renderList(); } };
+
+    renderList();
+  </script>
+</body>
+</html>
