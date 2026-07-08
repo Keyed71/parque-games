@@ -1,0 +1,27 @@
+[
+  {
+    "id": "restaurant",
+    "title": "At the Restaurant",
+    "image": "what-is-this-restaurant.jpg",
+    "width": 1448,
+    "height": 1086,
+    "items": [
+      { "answer": "a fork",            "shape": "rect", "x": 0.2429, "y": 0.5823, "w": 0.0507, "h": 0.2884 },
+      { "answer": "a plate",           "shape": "rect", "x": 0.3686, "y": 0.581,  "w": 0.2404, "h": 0.264  },
+      { "answer": "a knife",           "shape": "rect", "x": 0.6712, "y": 0.6084, "w": 0.0451, "h": 0.29   },
+      { "answer": "a spoon",           "shape": "rect", "x": 0.7211, "y": 0.6297, "w": 0.0598, "h": 0.2599 },
+      { "answer": "a bowl of soup",    "shape": "rect", "x": 0.7892, "y": 0.5697, "w": 0.1997, "h": 0.2036 },
+      { "answer": "a cup",             "shape": "rect", "x": 0.7746, "y": 0.3969, "w": 0.1237, "h": 0.0978 },
+      { "answer": "a glass",           "shape": "rect", "x": 0.6385, "y": 0.4304, "w": 0.0992, "h": 0.1447 },
+      { "answer": "a bottle of water", "shape": "rect", "x": 0.6673, "y": 0.1166, "w": 0.0538, "h": 0.287  },
+      { "answer": "a candle",          "shape": "rect", "x": 0.5569, "y": 0.3111, "w": 0.0748, "h": 0.1404 },
+      { "answer": "bread",             "shape": "rect", "x": 0.3431, "y": 0.2618, "w": 0.188,  "h": 0.1608 },
+      { "answer": "a menu",            "shape": "rect", "x": 0.0349, "y": 0.3724, "w": 0.2897, "h": 0.1409 },
+      { "answer": "a chair",           "shape": "rect", "x": 0.2855, "y": 0.0412, "w": 0.0946, "h": 0.1622 },
+      { "answer": "a table",           "shape": "rect", "x": 0.1188, "y": 0.1046, "w": 0.1493, "h": 0.1031 },
+      { "answer": "a plant",           "shape": "rect", "x": 0.5035, "y": 0.022,  "w": 0.1352, "h": 0.1854 },
+      { "answer": "a window",          "shape": "rect", "x": 0.8377, "y": 0.0126, "w": 0.1601, "h": 0.1525 },
+      { "answer": "a napkin",          "shape": "rect", "x": 0.0979, "y": 0.6251, "w": 0.1181, "h": 0.1673 }
+    ]
+  }
+]

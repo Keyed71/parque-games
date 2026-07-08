@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>What Is This?</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Nunito', sans-serif; }
+    .hidden { display: none !important; }
+
+    /* ── SETUP ─────────────────────────────────────────── */
+    #setup-screen { min-height: 100vh; background: #fdf6ec; }
+    .setup-header {
+      background: linear-gradient(150deg, #7a2e1a, #c4592a, #d4845a);
+      color: white; padding: 1.25rem 2rem 1.25rem 7rem;   /* room for the Hub button */
+    }
+    .setup-header h1 { font-size: 1.9rem; font-weight: 900; }
+    .setup-header p  { font-size: 0.95rem; opacity: 0.85; margin-top: 0.1rem; }
+    .setup-body { padding: 1.75rem 2rem; max-width: 960px; margin: 0 auto; }
+    .setup-body h2 { font-size: 0.78rem; font-weight: 900; color: #7a2e1a; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.9rem; }
+
+    .scene-grid { display: flex; gap: 1.25rem; flex-wrap: wrap; }
+    .scene-card {
+      width: 280px; background: white; border: 2px solid #e8d0b0; border-radius: 18px; overflow: hidden;
+      cursor: pointer; transition: transform 0.12s, box-shadow 0.12s;
+    }
+    .scene-card:hover { transform: translateY(-3px); box-shadow: 0 10px 26px rgba(120,46,26,0.18); border-color: #c4592a; }
+    .scene-card .thumb { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; display: block; background: #f4e6d3; }
+    .scene-card .cap { padding: 0.8rem 1rem; }
+    .scene-card .cap .t { font-weight: 900; font-size: 1.1rem; color: #7a2e1a; }
+    .scene-card .cap .n { font-size: 0.82rem; color: #94734f; font-weight: 700; margin-top: 0.15rem; }
+
+    .loading, .load-error { padding: 3rem 2rem; text-align: center; color: #94734f; font-weight: 800; }
+    .load-error { color: #dc2626; }
+
+    /* ── GAME ──────────────────────────────────────────── */
+    #game-screen { min-height: 100vh; background: #26201c; display: flex; flex-direction: column; }
+    .game-topbar {
+      background: linear-gradient(150deg, #7a2e1a, #c4592a);
+      color: white; padding: 0.55rem 1rem 0.55rem 7rem;   /* room for the Hub button */
+      display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap;
+    }
+    .gt-title { font-size: 1.05rem; font-weight: 900; }
+    .gt-right { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+    .tb-btn {
+      background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.35);
+      color: white; border-radius: 8px; padding: 0.35rem 0.8rem; cursor: pointer;
+      font-family: 'Nunito', sans-serif; font-size: 0.82rem; font-weight: 800;
+    }
+    .tb-btn:hover { background: rgba(255,255,255,0.28); }
+    .tb-btn.on { background: white; color: #7a2e1a; border-color: white; }
+    .gt-progress { font-size: 0.82rem; font-weight: 800; opacity: 0.85; min-width: 4.5rem; text-align: right; }
+
+    .stage-host { flex: 1; display: flex; align-items: center; justify-content: center; padding: 1rem; overflow: hidden; }
+    .scene {
+      position: relative; display: inline-block; line-height: 0; border-radius: 12px; overflow: hidden;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.5); max-width: 100%;
+    }
+    .scene img { display: block; max-width: 100%; max-height: calc(100vh - 120px); width: auto; height: auto; }
+    .scene svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+    .scene .labels { position: absolute; inset: 0; pointer-events: none; }
+
+    .hotspot {
+      fill: transparent; stroke: transparent; stroke-width: 3px; vector-effect: non-scaling-stroke;
+      cursor: pointer; transition: fill 0.12s, stroke 0.12s;
+    }
+    .hotspot:hover {
+      fill: rgba(255,205,80,0.30); stroke: #ffcc33;
+      filter: drop-shadow(0 0 5px rgba(255,193,7,0.95));
+    }
+    .hotspot.revealed { fill: rgba(22,163,74,0.20); stroke: #22c55e; }
+    .hotspot.revealed:hover { fill: rgba(22,163,74,0.34); }
+
+    .tag {
+      position: absolute; transform: translate(-50%, -50%) scale(0.9);
+      background: rgba(15,23,42,0.92); color: white; padding: 0.28rem 0.75rem; border-radius: 999px;
+      font-weight: 900; font-size: clamp(0.9rem, 1.9vw, 1.5rem); white-space: nowrap;
+      box-shadow: 0 3px 12px rgba(0,0,0,0.45); opacity: 0; transition: opacity 0.15s, transform 0.15s;
+    }
+    .tag.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    .tag .spk { opacity: 0.6; margin-left: 0.35rem; font-size: 0.85em; }
+
+    .hint-bar { text-align: center; color: rgba(255,255,255,0.5); font-size: 0.82rem; font-weight: 700; padding: 0 1rem 0.9rem; }
+  </style>
+</head>
+<body>
+
+  <!-- ── SETUP ─────────────────────────────────────────── -->
+  <div id="setup-screen">
+    <div class="setup-header">
+      <h1>What Is This?</h1>
+      <p>Hover an object, ask “What is this?”, then click to reveal &amp; hear the word.</p>
+    </div>
+    <div class="setup-body">
+      <h2>Choose a scene</h2>
+      <div class="scene-grid" id="scene-grid">
+        <div class="loading" id="loading">Loading scenes…</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── GAME ──────────────────────────────────────────── -->
+  <div id="game-screen" class="hidden">
+    <div class="game-topbar">
+      <div class="gt-title" id="gt-title">Scene</div>
+      <div class="gt-right">
+        <button class="tb-btn" id="reveal-all">Reveal all</button>
+        <button class="tb-btn" id="hide-all">Hide all</button>
+        <button class="tb-btn on" id="sound-btn">🔊 Sound</button>
+        <button class="tb-btn" id="scenes-btn">⌂ Scenes</button>
+        <span class="gt-progress" id="progress">0 / 0</span>
+      </div>
+    </div>
+    <div class="stage-host" id="stage-host"></div>
+    <div class="hint-bar">Hover to highlight · click an object to reveal &amp; pronounce · click again to hide</div>
+  </div>
+
+  <script>
+    const $ = id => document.getElementById(id);
+    const SCENES_URL = '/games/what-is-this-scenes.json';
+    const IMG_BASE = '/games/';
+
+    let scenes = [];
+    let scene = null;          // active scene
+    let revealed = [];         // bool per item
+    let soundOn = true;
+    let stage, svg, labels;
+
+    /* ── load scenes ───────────────────────────────────── */
+    fetch(SCENES_URL, { cache: 'no-store' })
+      .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(data => { scenes = Array.isArray(data) ? data : (data.scenes || []); renderSceneGrid(); })
+      .catch(err => { $('scene-grid').innerHTML = '<div class="load-error">Could not load scenes: ' + err.message + '</div>'; });
+
+    function renderSceneGrid() {
+      const grid = $('scene-grid');
+      grid.innerHTML = '';
+      if (!scenes.length) { grid.innerHTML = '<div class="load-error">No scenes found.</div>'; return; }
+      scenes.forEach(sc => {
+        const card = document.createElement('div');
+        card.className = 'scene-card';
+        card.innerHTML =
+          '<img class="thumb" src="' + IMG_BASE + sc.image + '" alt="">' +
+          '<div class="cap"><div class="t"></div><div class="n"></div></div>';
+        card.querySelector('.t').textContent = sc.title || 'Scene';
+        card.querySelector('.n').textContent = (sc.items ? sc.items.length : 0) + ' objects';
+        card.onclick = () => startScene(sc);
+        grid.appendChild(card);
+      });
+    }
+
+    /* ── speech ────────────────────────────────────────── */
+    let voice = null;
+    function pickVoice() {
+      const vs = speechSynthesis.getVoices();
+      voice = vs.find(v => /en-GB/i.test(v.lang)) || vs.find(v => /^en/i.test(v.lang)) || vs[0] || null;
+    }
+    if ('speechSynthesis' in window) { pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
+    function speak(text) {
+      if (!soundOn || !('speechSynthesis' in window)) return;
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      if (voice) u.voice = voice;
+      u.rate = 0.95;
+      speechSynthesis.speak(u);
+    }
+
+    /* ── start / render a scene ────────────────────────── */
+    function centroid(t) {
+      if (t.shape === 'poly') {
+        const n = t.points.length;
+        return [t.points.reduce((s, p) => s + p[0], 0) / n, t.points.reduce((s, p) => s + p[1], 0) / n];
+      }
+      return [t.x + t.w / 2, t.y + t.h / 2];
+    }
+    function shapeNode(t) {
+      let el;
+      if (t.shape === 'poly') {
+        el = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+        el.setAttribute('points', t.points.map(p => p.join(',')).join(' '));
+      } else {
+        el = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        el.setAttribute('x', t.x); el.setAttribute('y', t.y);
+        el.setAttribute('width', t.w); el.setAttribute('height', t.h);
+        el.setAttribute('rx', 0.006); el.setAttribute('ry', 0.008);
+      }
+      return el;
+    }
+
+    function startScene(sc) {
+      scene = sc;
+      revealed = sc.items.map(() => false);
+      $('gt-title').textContent = sc.title || 'Scene';
+
+      const host = $('stage-host');
+      host.innerHTML = '';
+      stage = document.createElement('div');
+      stage.className = 'scene';
+      const img = document.createElement('img');
+      img.src = IMG_BASE + sc.image;
+      svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('viewBox', '0 0 1 1');
+      svg.setAttribute('preserveAspectRatio', 'none');
+      labels = document.createElement('div');
+      labels.className = 'labels';
+      stage.append(img, svg, labels);
+      host.appendChild(stage);
+
+      sc.items.forEach((it, i) => {
+        const shape = shapeNode(it);
+        shape.setAttribute('class', 'hotspot');
+        shape.addEventListener('click', () => toggle(i));
+        svg.appendChild(shape);
+
+        const c = centroid(it);
+        const tag = document.createElement('div');
+        tag.className = 'tag';
+        tag.style.left = (c[0] * 100) + '%';
+        tag.style.top = (c[1] * 100) + '%';
+        tag.innerHTML = '<span class="txt"></span><span class="spk">🔊</span>';
+        tag.querySelector('.txt').textContent = it.answer;
+        labels.appendChild(tag);
+      });
+
+      $('setup-screen').classList.add('hidden');
+      $('game-screen').classList.remove('hidden');
+      updateProgress();
+    }
+
+    function toggle(i) {
+      revealed[i] = !revealed[i];
+      applyItem(i);
+      if (revealed[i]) speak(scene.items[i].answer);
+      updateProgress();
+    }
+    function applyItem(i) {
+      svg.children[i].classList.toggle('revealed', revealed[i]);
+      labels.children[i].classList.toggle('show', revealed[i]);
+    }
+    function setAll(v) {
+      revealed = revealed.map(() => v);
+      scene.items.forEach((_, i) => applyItem(i));
+      updateProgress();
+    }
+    function updateProgress() {
+      const n = revealed.filter(Boolean).length;
+      $('progress').textContent = n + ' / ' + revealed.length;
+    }
+
+    /* ── controls ──────────────────────────────────────── */
+    $('reveal-all').onclick = () => setAll(true);
+    $('hide-all').onclick = () => setAll(false);
+    $('sound-btn').onclick = () => {
+      soundOn = !soundOn;
+      $('sound-btn').classList.toggle('on', soundOn);
+      $('sound-btn').textContent = soundOn ? '🔊 Sound' : '🔇 Muted';
+      if (!soundOn && 'speechSynthesis' in window) speechSynthesis.cancel();
+    };
+    $('scenes-btn').onclick = () => {
+      if ('speechSynthesis' in window) speechSynthesis.cancel();
+      $('game-screen').classList.add('hidden');
+      $('setup-screen').classList.remove('hidden');
+    };
+  </script>
+</body>
+</html>

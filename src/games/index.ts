@@ -9,6 +9,7 @@ import OddOneOut from './odd-one-out/OddOneOut'
 import Countdown from './countdown/Countdown'
 import Battleships from './battleships/Battleships'
 import SentenceScramble from './sentence-scramble/SentenceScramble'
+import WhatIsThis from './what-is-this/WhatIsThis'
 
 const games: GameDefinition[] = [
   {
@@ -90,6 +91,13 @@ const games: GameDefinition[] = [
     description: 'Unscramble the words into correct sentences — teacher-marked, A1 to C1.',
     icon: '/sentence_scramble.png',
     component: SentenceScramble,
+  },
+  {
+    id: 'what-is-this',
+    title: 'What Is This?',
+    description: 'Hover an object, ask “What is this?”, click to reveal and hear the word.',
+    icon: '🔍',
+    component: WhatIsThis,
   },
 ]
 
