@@ -192,7 +192,7 @@
       stage.append(imgEl, svg, chipLayer);
       stageHost.appendChild(stage);
       attachDrawing();
-      render();
+      render(); renderList();
     }
 
     /* ── coordinate helpers ────────────────────────── */
@@ -228,18 +228,19 @@
     }
     function onUp() {
       if (mode === 'box' && boxDraft) {
-        if (boxDraft.w > 0.012 && boxDraft.h > 0.012) {
+        const added = boxDraft.w > 0.012 && boxDraft.h > 0.012;
+        if (added) {
           tags.push({ answer: '', shape: 'rect', x: r4(boxDraft.x), y: r4(boxDraft.y), w: r4(boxDraft.w), h: r4(boxDraft.h) });
-          render(); focusNewTag();
         }
         boxStart = null; boxDraft = null; render();
+        if (added) { renderList(); focusNewTag(); }
       }
     }
 
     function finishPoly() {
       if (polyPts.length >= 3) {
         tags.push({ answer: '', shape: 'poly', points: polyPts.map(p => [r4(p[0]), r4(p[1])]) });
-        polyPts = []; render(); focusNewTag();
+        polyPts = []; render(); renderList(); focusNewTag();
       } else setStatus('A polygon needs at least 3 points.');
     }
     $('poly-finish').onclick = finishPoly;
@@ -309,7 +310,6 @@
           c.setAttribute('class', 'vtx'); svg.appendChild(c);
         });
       }
-      renderList();
     }
 
     function renderList() {
@@ -323,14 +323,14 @@
         row.onmouseleave = () => { hovered = -1; render(); };
         row.innerHTML = `<span class="idx">${i + 1}</span>`;
         const inp = document.createElement('input');
-        inp.value = t.answer; inp.placeholder = 'a plate';
+        inp.value = t.answer; inp.placeholder = 'type the word…';
         inp.dataset.idx = i;
         inp.oninput = () => { t.answer = inp.value; updateChip(i); };
         const kind = document.createElement('span');
         kind.className = 'kind'; kind.textContent = t.shape;
         const del = document.createElement('button');
         del.className = 'del'; del.textContent = '✕';
-        del.onclick = () => { tags.splice(i, 1); hovered = -1; render(); };
+        del.onclick = () => { tags.splice(i, 1); hovered = -1; renderList(); render(); };
         row.append(inp, kind, del);
         list.appendChild(row);
       });
@@ -392,12 +392,12 @@
         tags = (obj.items || []).map(it => it.shape === 'poly'
           ? { answer: it.answer || '', shape: 'poly', points: it.points }
           : { answer: it.answer || '', shape: 'rect', x: it.x, y: it.y, w: it.w, h: it.h });
-        if (svg) render(); else renderList();
+        renderList(); if (svg) render();
         $('json-dialog').close();
         setStatus('Loaded ' + tags.length + ' tag(s). Re-load the image to see them positioned.');
       } catch (err) { setStatus('Invalid JSON: ' + err.message); }
     };
-    $('clear-btn').onclick = () => { if (confirm('Delete all tags?')) { tags = []; hovered = -1; if (svg) render(); else renderList(); } };
+    $('clear-btn').onclick = () => { if (confirm('Delete all tags?')) { tags = []; hovered = -1; renderList(); if (svg) render(); } };
 
     renderList();
   </script>
