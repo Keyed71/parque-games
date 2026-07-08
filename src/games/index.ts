@@ -8,6 +8,7 @@ import FamilyFortunes from './family-fortunes/FamilyFortunes'
 import OddOneOut from './odd-one-out/OddOneOut'
 import Countdown from './countdown/Countdown'
 import Battleships from './battleships/Battleships'
+import SentenceScramble from './sentence-scramble/SentenceScramble'
 
 const games: GameDefinition[] = [
   {
@@ -82,6 +83,13 @@ const games: GameDefinition[] = [
     description: 'Group words by the suffix or prefix that connects them.',
     icon: '/affixation.png',
     externalUrl: 'https://word-family-game.vercel.app',
+  },
+  {
+    id: 'sentence-scramble',
+    title: 'Sentence Scramble',
+    description: 'Unscramble the words into correct sentences — teacher-marked, A1 to C1.',
+    icon: '🧩',
+    component: SentenceScramble,
   },
 ]
 

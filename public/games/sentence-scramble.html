@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sentence Scramble</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Nunito', sans-serif; }
+    .hidden { display: none !important; }
+
+    /* ── SETUP SCREEN ─────────────────────────────────── */
+    #setup-screen { min-height: 100vh; background: #fdf6ec; }
+
+    .setup-header {
+      background: linear-gradient(150deg, #7a2e1a, #c4592a, #d4845a);
+      color: white; padding: 1.25rem 2rem 1.25rem 7rem;   /* left room for the Hub button */
+    }
+    .setup-header h1 { font-size: 1.9rem; font-weight: 900; }
+    .setup-header p  { font-size: 0.95rem; opacity: 0.85; margin-top: 0.1rem; }
+
+    .setup-body { padding: 1.75rem 2rem; max-width: 640px; margin: 0 auto; }
+
+    .field-group { display: flex; flex-direction: column; gap: 0.45rem; margin-bottom: 1.5rem; }
+    .field-group > label {
+      font-size: 0.78rem; font-weight: 900; color: #7a2e1a;
+      text-transform: uppercase; letter-spacing: 0.06em;
+    }
+
+    .pill-row { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .pill {
+      padding: 0.5rem 1.1rem; border: 2px solid #e8d0b0; border-radius: 999px;
+      background: white; font-family: 'Nunito', sans-serif; font-weight: 900;
+      font-size: 0.95rem; color: #7a2e1a; cursor: pointer; transition: all 0.12s;
+    }
+    .pill.active { background: linear-gradient(135deg, #c4592a, #d4845a); color: white; border-color: #c4592a; }
+
+    .hint { font-size: 0.85rem; color: #94734f; margin-top: 0.35rem; }
+
+    .btn-start {
+      display: inline-block; padding: 0.875rem 2.5rem;
+      background: linear-gradient(135deg, #c4592a, #d4845a);
+      color: white; border: none; border-radius: 12px;
+      font-family: 'Nunito', sans-serif; font-size: 1.05rem;
+      font-weight: 900; cursor: pointer; margin-top: 0.5rem;
+      transition: transform 0.12s, box-shadow 0.12s;
+    }
+    .btn-start:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(196,89,42,0.35); }
+
+    /* ── GAME SCREEN ──────────────────────────────────── */
+    #game-screen {
+      min-height: 100vh;
+      background: linear-gradient(180deg, #fdf6ec, #f4e6d3);
+      display: flex; flex-direction: column;
+    }
+
+    .game-topbar {
+      background: linear-gradient(150deg, #7a2e1a, #c4592a);
+      color: white;
+      padding: 0.6rem 1.25rem 0.6rem 7rem;   /* left room for the Hub button */
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .game-topbar-title { font-size: 1.05rem; font-weight: 900; }
+    .topbar-right { display: flex; align-items: center; gap: 0.6rem; }
+    .tb-btn {
+      background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.35);
+      color: white; border-radius: 8px; padding: 0.35rem 0.85rem; cursor: pointer;
+      font-family: 'Nunito', sans-serif; font-size: 0.82rem; font-weight: 800;
+    }
+    .tb-btn:hover { background: rgba(255,255,255,0.28); }
+
+    .game-body { flex: 1; padding: 1.5rem 2rem 2rem; max-width: 1000px; margin: 0 auto; width: 100%; }
+
+    /* Sentence lines */
+    .lines { display: flex; flex-direction: column; gap: 0.85rem; margin-bottom: 1.75rem; }
+    .line {
+      display: flex; align-items: stretch; gap: 0.85rem;
+      background: white; border: 2px solid #e8d0b0; border-radius: 16px;
+      padding: 0.7rem 0.9rem; cursor: pointer; transition: border-color 0.12s, box-shadow 0.12s;
+    }
+    .line.active { border-color: #c4592a; box-shadow: 0 0 0 3px rgba(196,89,42,0.15); }
+    .line.correct { border-color: #16a34a; background: #f0fdf4; }
+    .line.incorrect { border-color: #dc2626; background: #fef2f2; }
+
+    .line-num {
+      flex-shrink: 0; width: 2.1rem; height: 2.1rem; border-radius: 50%;
+      background: #7a2e1a; color: white; font-weight: 900; font-size: 1.05rem;
+      display: flex; align-items: center; justify-content: center; align-self: center;
+    }
+    .line.correct .line-num { background: #16a34a; }
+    .line.incorrect .line-num { background: #dc2626; }
+
+    .line-slot {
+      flex: 1; min-height: 2.4rem; display: flex; flex-wrap: wrap; gap: 0.4rem;
+      align-items: center; align-content: center;
+    }
+    .line-slot .placeholder { color: #c9ad86; font-weight: 700; font-style: italic; font-size: 0.95rem; }
+
+    .line-tools { flex-shrink: 0; display: flex; gap: 0.35rem; align-items: center; }
+    .mark-btn {
+      width: 2.1rem; height: 2.1rem; border-radius: 10px; border: 2px solid #e8d0b0;
+      background: white; cursor: pointer; font-size: 1.05rem; font-weight: 900;
+      display: flex; align-items: center; justify-content: center; transition: all 0.1s;
+    }
+    .mark-btn.ok { color: #16a34a; }
+    .mark-btn.no { color: #dc2626; }
+    .mark-btn.ok.on { background: #16a34a; color: white; border-color: #16a34a; }
+    .mark-btn.no.on { background: #dc2626; color: white; border-color: #dc2626; }
+    /* Suggested-answers panel */
+    .answers-wrap {
+      margin-top: 1.5rem; background: #f0fdf4; border: 2px solid #bbf7d0;
+      border-radius: 18px; padding: 1.1rem 1.35rem;
+    }
+    .answers-wrap h3 {
+      font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.07em;
+      color: #15803d; margin-bottom: 0.7rem; font-weight: 900;
+    }
+    .answers-wrap ul { list-style: none; display: flex; flex-direction: column; gap: 0.45rem; }
+    .answers-wrap li { font-size: 1.15rem; font-weight: 800; color: #15803d; }
+    .answers-wrap li::before { content: '•  '; color: #86c99a; }
+    .answers-note { font-size: 0.82rem; color: #64748b; font-weight: 600; margin-top: 0.8rem; font-style: italic; }
+
+    /* Placed word tiles */
+    .word {
+      font-family: 'Nunito', sans-serif; font-weight: 800; cursor: pointer;
+      border-radius: 10px; border: none; transition: transform 0.08s;
+    }
+    .word:active { transform: scale(0.95); }
+
+    .line .word {
+      font-size: 1.35rem; padding: 0.35rem 0.75rem;
+      background: linear-gradient(135deg, #c4592a, #d4845a); color: white;
+    }
+    .line.correct .word { background: #16a34a; }
+    .line.incorrect .word { background: #b91c1c; }
+
+    /* Word pool */
+    .pool-wrap { background: #fffaf2; border: 2px dashed #d8b88a; border-radius: 18px; padding: 1rem 1.1rem; }
+    .pool-label {
+      font-size: 0.75rem; font-weight: 900; color: #94734f; text-transform: uppercase;
+      letter-spacing: 0.07em; margin-bottom: 0.75rem;
+    }
+    .pool { display: flex; flex-wrap: wrap; gap: 0.55rem; min-height: 2.5rem; }
+    .pool .word {
+      font-size: 1.35rem; padding: 0.4rem 0.85rem;
+      background: white; color: #1e293b; border: 2px solid #e8d0b0;
+    }
+    .pool .word:hover { border-color: #c4592a; }
+    .pool-empty { color: #c9ad86; font-weight: 700; font-style: italic; }
+
+    .all-placed-note {
+      text-align: center; color: #16a34a; font-weight: 900; font-size: 1.05rem;
+      padding: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── SETUP ─────────────────────────────────────────── -->
+  <div id="setup-screen">
+    <div class="setup-header">
+      <h1>Sentence Scramble</h1>
+      <p>Unscramble the words into correct sentences. Teacher marks each line.</p>
+    </div>
+    <div class="setup-body">
+      <div class="field-group">
+        <label>Level</label>
+        <div class="pill-row" id="level-row">
+          <button class="pill active" data-level="A1">A1</button>
+          <button class="pill" data-level="A2">A2</button>
+          <button class="pill" data-level="B1">B1</button>
+          <button class="pill" data-level="B2">B2</button>
+          <button class="pill" data-level="C1">C1</button>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label>Number of sentences</label>
+        <div class="pill-row" id="count-row">
+          <button class="pill active" data-count="1">1</button>
+          <button class="pill" data-count="2">2</button>
+          <button class="pill" data-count="3">3</button>
+          <button class="pill" data-count="4">4</button>
+          <button class="pill" data-count="5">5</button>
+        </div>
+        <div class="hint">All the words for every sentence go into one shared pool — more sentences means more sorting.</div>
+      </div>
+
+      <button class="btn-start" id="start-btn">Start →</button>
+    </div>
+  </div>
+
+  <!-- ── GAME ──────────────────────────────────────────── -->
+  <div id="game-screen" class="hidden">
+    <div class="game-topbar">
+      <div class="game-topbar-title" id="game-title">Sentence Scramble</div>
+      <div class="topbar-right">
+        <button class="tb-btn" id="answers-btn">💡 Suggested answers</button>
+        <button class="tb-btn" id="new-round-btn">↻ New sentences</button>
+        <button class="tb-btn" id="settings-btn">⚙ Settings</button>
+      </div>
+    </div>
+    <div class="game-body">
+      <div class="lines" id="lines"></div>
+      <div class="pool-wrap">
+        <div class="pool-label">Word pool — click a word to drop it into the highlighted line</div>
+        <div class="pool" id="pool"></div>
+      </div>
+      <div id="answers"></div>
+    </div>
+  </div>
+
+  <script>
+    /* ── SENTENCE BANK (15 per level) ───────────────────── */
+    const BANK = {
+      A1: [
+        "I have a black cat.",
+        "She is my best friend.",
+        "We go to school every day.",
+        "The dog is in the garden.",
+        "He can play the guitar.",
+        "They are very happy today.",
+        "My mother makes good food.",
+        "I like coffee in the morning.",
+        "The book is on the table.",
+        "You have got a nice car.",
+        "We watch TV in the evening.",
+        "There are four people in my family.",
+        "The children play in the park.",
+        "I do my homework after dinner.",
+        "She works in a big hospital."
+      ],
+      A2: [
+        "We went to the beach last summer.",
+        "She is taller than her brother.",
+        "I am going to visit my grandmother tomorrow.",
+        "They were watching a film last night.",
+        "He always drinks tea before bed.",
+        "The weather was very cold yesterday.",
+        "I have never been to London.",
+        "We are looking for a new house.",
+        "She bought a beautiful dress on Saturday.",
+        "My brother is better at maths than me.",
+        "There weren't any eggs in the fridge.",
+        "He didn't finish his homework last night.",
+        "We usually go swimming on Sundays.",
+        "The train arrived ten minutes late.",
+        "This book is more interesting than that one."
+      ],
+      B1: [
+        "I have lived in this city for ten years.",
+        "If it rains tomorrow, we will stay at home.",
+        "This bridge was built more than a hundred years ago.",
+        "The woman who lives next door is a doctor.",
+        "She has been working here since last year.",
+        "I used to play football when I was younger.",
+        "You should have told me about the meeting.",
+        "They are going to build a new school near the park.",
+        "He asked me where I had put the keys.",
+        "The film was so boring that I fell asleep.",
+        "I wish I could speak three languages.",
+        "By the time we arrived, the show had already started.",
+        "The more you practise, the better you become.",
+        "She promised that she would call me later.",
+        "Somebody has taken my umbrella by mistake."
+      ],
+      B2: [
+        "Had I known about the traffic, I would have left earlier.",
+        "It was in Paris that they first met each other.",
+        "The project should be finished by the end of next month.",
+        "Not only did she pass the exam, but she also came first.",
+        "He denied having taken the money from the drawer.",
+        "I would rather you didn't smoke inside the house.",
+        "Despite the rain, they managed to reach the top of the mountain.",
+        "The company, which was founded years ago, employs thousands of people.",
+        "No sooner had we sat down than the phone rang.",
+        "If I had studied medicine, I would be a doctor now.",
+        "She suggested that we meet again the following week.",
+        "What I really need is a long holiday by the sea.",
+        "The results were far better than we had expected.",
+        "You must have been exhausted after such a long journey.",
+        "Little did he know that his life was about to change."
+      ],
+      C1: [
+        "Rarely have I come across such a compelling piece of writing.",
+        "Were it not for your help, the project would have collapsed entirely.",
+        "Only after the meeting did the true implications become apparent.",
+        "Such was the intensity of the storm that the town lost power.",
+        "Had the negotiations succeeded, the two nations might have avoided conflict.",
+        "Not until she had read the letter twice did she grasp its meaning.",
+        "Under no circumstances should the door be left unlocked overnight.",
+        "It is imperative that every applicant submit the form by Friday.",
+        "Scarcely had the ceremony begun when the lights suddenly went out.",
+        "However hard he tried, he could not shake off the feeling of unease.",
+        "Seldom does an opportunity of this magnitude present itself.",
+        "The report, which had taken months to compile, was dismissed in minutes.",
+        "So absorbed was she in her work that she forgot to eat.",
+        "Given the circumstances, their decision was entirely understandable.",
+        "Not for a moment did they consider giving up on the plan."
+      ]
+    };
+
+    /* ── STATE ──────────────────────────────────────────── */
+    let selLevel = 'A1';
+    let selCount = 1;
+    let tiles = [];        // { id, text }
+    let poolOrder = [];    // tile ids in shuffled display order
+    let lines = [];        // array of { canonical, order:[tileId], status:null|'ok'|'no' }
+    let activeLine = 0;
+    let answersShown = false;
+
+    /* ── HELPERS ────────────────────────────────────────── */
+    const $ = id => document.getElementById(id);
+
+    function shuffle(arr) {
+      const a = arr.slice();
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    function pickSentences(level, n) {
+      return shuffle(BANK[level]).slice(0, n);
+    }
+
+    // "I" and its contractions stay capital anywhere; otherwise the very first
+    // word of a sentence is lower-cased so the capital letter isn't a giveaway.
+    function isAlwaysCapital(token) {
+      return token === 'I' || /^I['’](m|ve|d|ll|re)$/.test(token);
+    }
+
+    function tileWords(sentence) {
+      const clean = sentence.replace(/[.?!]+$/,'').trim();
+      const words = clean.split(/\s+/);
+      return words.map((w, i) => {
+        if (i === 0 && !isAlwaysCapital(w)) {
+          return w.charAt(0).toLowerCase() + w.slice(1);
+        }
+        return w;
+      });
+    }
+
+    /* ── BUILD A ROUND ──────────────────────────────────── */
+    function buildRound() {
+      const sentences = pickSentences(selLevel, selCount);
+      tiles = [];
+      lines = [];
+      let tid = 0;
+      sentences.forEach(sentence => {
+        lines.push({ canonical: sentence, order: [], status: null });
+        tileWords(sentence).forEach(text => {
+          tiles.push({ id: tid++, text });
+        });
+      });
+      poolOrder = shuffle(tiles.map(t => t.id));
+      activeLine = 0;
+      answersShown = false;
+      $('game-title').textContent = 'Sentence Scramble · ' + selLevel;
+    }
+
+    function tileById(id) { return tiles.find(t => t.id === id); }
+    function lineOfTile(id) { return lines.find(l => l.order.includes(id)); }
+    function isPlaced(id) { return lines.some(l => l.order.includes(id)); }
+
+    /* ── ACTIONS ────────────────────────────────────────── */
+    function placeTile(id) {
+      if (isPlaced(id)) return;
+      const line = lines[activeLine];
+      line.order.push(id);
+      line.status = null;          // editing invalidates a previous mark
+      render();
+    }
+
+    function removeTile(id) {
+      const line = lineOfTile(id);
+      if (!line) return;
+      line.order = line.order.filter(x => x !== id);
+      line.status = null;
+      render();
+    }
+
+    function setActive(idx) { activeLine = idx; render(); }
+
+    function mark(idx, status) {
+      lines[idx].status = lines[idx].status === status ? null : status;
+      render();
+    }
+
+
+    /* ── RENDER ─────────────────────────────────────────── */
+    function render() {
+      // lines
+      const linesEl = $('lines');
+      linesEl.innerHTML = '';
+      lines.forEach((line, idx) => {
+        const row = document.createElement('div');
+        row.className = 'line'
+          + (idx === activeLine ? ' active' : '')
+          + (line.status === 'ok' ? ' correct' : '')
+          + (line.status === 'no' ? ' incorrect' : '');
+        row.addEventListener('click', () => setActive(idx));
+
+        const num = document.createElement('div');
+        num.className = 'line-num';
+        num.textContent = idx + 1;
+        row.appendChild(num);
+
+        const slot = document.createElement('div');
+        slot.className = 'line-slot';
+        if (line.order.length === 0) {
+          const ph = document.createElement('span');
+          ph.className = 'placeholder';
+          ph.textContent = idx === activeLine ? 'Click words below to build this sentence…' : 'Sentence ' + (idx + 1);
+          slot.appendChild(ph);
+        } else {
+          line.order.forEach(tid => {
+            const w = document.createElement('button');
+            w.className = 'word';
+            w.textContent = tileById(tid).text;
+            w.title = 'Remove';
+            w.addEventListener('click', e => { e.stopPropagation(); removeTile(tid); });
+            slot.appendChild(w);
+          });
+        }
+        row.appendChild(slot);
+
+        const tools = document.createElement('div');
+        tools.className = 'line-tools';
+
+        const ok = document.createElement('button');
+        ok.className = 'mark-btn ok' + (line.status === 'ok' ? ' on' : '');
+        ok.textContent = '✓';
+        ok.title = 'Mark correct';
+        ok.addEventListener('click', e => { e.stopPropagation(); mark(idx, 'ok'); });
+        tools.appendChild(ok);
+
+        const no = document.createElement('button');
+        no.className = 'mark-btn no' + (line.status === 'no' ? ' on' : '');
+        no.textContent = '✗';
+        no.title = 'Mark incorrect';
+        no.addEventListener('click', e => { e.stopPropagation(); mark(idx, 'no'); });
+        tools.appendChild(no);
+
+        row.appendChild(tools);
+        linesEl.appendChild(row);
+      });
+
+      // pool
+      const poolEl = $('pool');
+      poolEl.innerHTML = '';
+      const remaining = poolOrder.filter(id => !isPlaced(id));
+      if (remaining.length === 0) {
+        const note = document.createElement('div');
+        note.className = 'all-placed-note';
+        note.textContent = 'All words placed — mark each line ✓ or ✗';
+        poolEl.appendChild(note);
+      } else {
+        remaining.forEach(id => {
+          const w = document.createElement('button');
+          w.className = 'word';
+          w.textContent = tileById(id).text;
+          w.addEventListener('click', () => placeTile(id));
+          poolEl.appendChild(w);
+        });
+      }
+
+      // suggested answers
+      $('answers-btn').textContent = answersShown ? '💡 Hide answers' : '💡 Suggested answers';
+      const ansEl = $('answers');
+      ansEl.innerHTML = '';
+      if (answersShown) {
+        const wrap = document.createElement('div');
+        wrap.className = 'answers-wrap';
+        const h = document.createElement('h3');
+        h.textContent = lines.length > 1 ? 'Suggested answers (in any order)' : 'Suggested answer';
+        wrap.appendChild(h);
+        const ul = document.createElement('ul');
+        lines.forEach(l => {
+          const li = document.createElement('li');
+          li.textContent = l.canonical;
+          ul.appendChild(li);
+        });
+        wrap.appendChild(ul);
+        const note = document.createElement('div');
+        note.className = 'answers-note';
+        note.textContent = 'These are the original sentences — other correct word orders may be possible. You decide.';
+        wrap.appendChild(note);
+        ansEl.appendChild(wrap);
+      }
+    }
+
+    /* ── SETUP WIRING ───────────────────────────────────── */
+    $('level-row').addEventListener('click', e => {
+      const btn = e.target.closest('.pill');
+      if (!btn) return;
+      selLevel = btn.dataset.level;
+      [...$('level-row').children].forEach(b => b.classList.toggle('active', b === btn));
+    });
+
+    $('count-row').addEventListener('click', e => {
+      const btn = e.target.closest('.pill');
+      if (!btn) return;
+      selCount = parseInt(btn.dataset.count, 10);
+      [...$('count-row').children].forEach(b => b.classList.toggle('active', b === btn));
+    });
+
+    function showGame() {
+      buildRound();
+      render();
+      $('setup-screen').classList.add('hidden');
+      $('game-screen').classList.remove('hidden');
+    }
+
+    $('start-btn').addEventListener('click', showGame);
+    $('answers-btn').addEventListener('click', () => { answersShown = !answersShown; render(); });
+    $('new-round-btn').addEventListener('click', () => { buildRound(); render(); });
+    $('settings-btn').addEventListener('click', () => {
+      $('game-screen').classList.add('hidden');
+      $('setup-screen').classList.remove('hidden');
+    });
+  </script>
+</body>
+</html>
