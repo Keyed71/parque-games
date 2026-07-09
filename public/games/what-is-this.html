@@ -238,6 +238,9 @@
         hit.style.top = (bb.y * 100) + '%';
         hit.style.width = (bb.w * 100) + '%';
         hit.style.height = (bb.h * 100) + '%';
+        // smaller hotspots sit above larger ones, so an object inside an
+        // action region (e.g. an ice cream inside "buying an ice cream") stays clickable
+        hit.style.zIndex = Math.round((1 - bb.w * bb.h) * 1000);
         hit.addEventListener('click', () => toggle(i));
         hit.addEventListener('mouseenter', () => labels.children[i].classList.add('hover'));
         hit.addEventListener('mouseleave', () => labels.children[i].classList.remove('hover'));

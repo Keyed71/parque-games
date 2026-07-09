@@ -23,5 +23,28 @@
       { "answer": "a window",          "shape": "rect", "x": 0.8377, "y": 0.0126, "w": 0.1601, "h": 0.1525 },
       { "answer": "a napkin",          "shape": "rect", "x": 0.0979, "y": 0.6251, "w": 0.1181, "h": 0.1673 }
     ]
+  },
+  {
+    "id": "park",
+    "title": "In the Park",
+    "image": "what-is-this-park.jpg",
+    "width": 1536,
+    "height": 1024,
+    "items": [
+      { "answer": "the sky",                          "shape": "rect", "x": 0.5267, "y": 0.0179, "w": 0.1605, "h": 0.0351 },
+      { "answer": "a cloud",                          "shape": "rect", "x": 0.5613, "y": 0.0788, "w": 0.0565, "h": 0.0338 },
+      { "answer": "a tree",                           "shape": "rect", "x": 0.0688, "y": 0.2673, "w": 0.0625, "h": 0.0975 },
+      { "answer": "a bush",                           "shape": "rect", "x": 0.4862, "y": 0.3907, "w": 0.0472, "h": 0.0334 },
+      { "answer": "an ice cream",                     "shape": "rect", "x": 0.3744, "y": 0.4329, "w": 0.0201, "h": 0.0589 },
+      { "answer": "a frisbee",                        "shape": "rect", "x": 0.9476, "y": 0.5136, "w": 0.0361, "h": 0.0437 },
+      { "answer": "grass",                            "shape": "rect", "x": 0.6942, "y": 0.5656, "w": 0.0859, "h": 0.0679 },
+      { "answer": "a path",                           "shape": "rect", "x": 0.3514, "y": 0.8161, "w": 0.119,  "h": 0.1486 },
+      { "answer": "The boy is buying an ice cream",   "shape": "rect", "x": 0.2914, "y": 0.3644, "w": 0.171,  "h": 0.3278 },
+      { "answer": "They are holding hands",           "shape": "rect", "x": 0.4933, "y": 0.4819, "w": 0.1395, "h": 0.392  },
+      { "answer": "They are playing football",        "shape": "rect", "x": 0.6543, "y": 0.3765, "w": 0.1601, "h": 0.1533 },
+      { "answer": "She is reading a book",            "shape": "rect", "x": 0.1004, "y": 0.4971, "w": 0.132,  "h": 0.2863 },
+      { "answer": "He is sunbathing",                 "shape": "rect", "x": 0.7353, "y": 0.7509, "w": 0.1881, "h": 0.1006 },
+      { "answer": "The dog is chasing a frisbee",     "shape": "rect", "x": 0.8231, "y": 0.5497, "w": 0.1153, "h": 0.1236 }
+    ]
   }
 ]
