@@ -96,7 +96,7 @@ const games: GameDefinition[] = [
     id: 'what-is-this',
     title: 'What Is This?',
     description: 'Hover an object, ask “What is this?”, click to reveal and hear the word.',
-    icon: '🔍',
+    icon: '/what_is_this.png',
     component: WhatIsThis,
   },
 ]
