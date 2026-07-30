@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Alphabet Wheel</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;900&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Nunito', sans-serif; background: #fdf6ec; }
+  .hidden { display: none !important; }
+
+  /* ── LOADING ────────────────────────────────────────── */
+  #loading-screen {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    min-height: 100vh; background: #fdf6ec; color: #7a2e1a; gap: 0.75rem;
+  }
+  #loading-screen .icon { font-size: 3rem; }
+  #loading-screen .text { font-size: 1.3rem; font-weight: 700; }
+
+  /* ── SETUP SCREEN ───────────────────────────────────── */
+  #setup-screen { min-height: 100vh; background: #fdf6ec; }
+
+  .setup-header {
+    background: linear-gradient(150deg, #7a2e1a, #c4592a, #d4845a);
+    color: white; padding: 1.25rem 2rem 1.25rem 7rem;   /* left room for the Hub button */
+  }
+  .setup-header h1 { font-size: 1.9rem; font-weight: 900; }
+  .setup-header p  { font-size: 0.95rem; opacity: 0.85; margin-top: 0.1rem; }
+
+  .session-scores {
+    background: #fff5ed; border-bottom: 2px solid #e8d0b0;
+    padding: 0.6rem 2rem; display: flex; align-items: center; flex-wrap: wrap;
+    gap: 1.25rem; font-size: 0.9rem; font-weight: 800; color: #7a2e1a;
+  }
+
+  .setup-body { padding: 1.75rem 2rem 3rem; max-width: 680px; margin: 0 auto; }
+
+  .field-group { display: flex; flex-direction: column; gap: 0.45rem; margin-bottom: 1.5rem; }
+  .field-group > label {
+    font-size: 0.78rem; font-weight: 900; color: #7a2e1a;
+    text-transform: uppercase; letter-spacing: 0.06em;
+  }
+  .field-group select, .field-group input[type="text"] {
+    padding: 0.6rem 0.8rem; border: 2px solid #e8d0b0; border-radius: 10px;
+    font-family: 'Nunito', sans-serif; font-size: 1rem; font-weight: 700;
+    background: white; color: #1e293b; width: 100%;
+  }
+  .field-group select:focus, .field-group input[type="text"]:focus { outline: none; border-color: #c4592a; }
+
+  .pill-row { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+  .pill {
+    padding: 0.5rem 1.1rem; border: 2px solid #e8d0b0; border-radius: 999px;
+    background: white; font-family: 'Nunito', sans-serif; font-weight: 900;
+    font-size: 0.95rem; color: #7a2e1a; cursor: pointer; transition: all 0.12s;
+  }
+  .pill.active { background: linear-gradient(135deg, #c4592a, #d4845a); color: white; border-color: #c4592a; }
+
+  .hint { font-size: 0.85rem; color: #94734f; margin-top: 0.35rem; font-weight: 700; }
+  .row-2 { display: flex; gap: 0.6rem; align-items: stretch; }
+  .row-2 select { flex: 1; }
+
+  .btn-mini {
+    padding: 0.6rem 1rem; border: 2px solid #e8d0b0; border-radius: 10px; background: white;
+    font-family: 'Nunito', sans-serif; font-weight: 900; font-size: 0.9rem;
+    color: #7a2e1a; cursor: pointer; white-space: nowrap;
+  }
+  .btn-mini:hover { border-color: #c4592a; }
+
+  .team-inputs { display: flex; flex-direction: column; gap: 0.5rem; }
+  .team-input-row { display: flex; align-items: center; gap: 0.6rem; }
+  .team-dot { width: 1.15rem; height: 1.15rem; border-radius: 50%; flex-shrink: 0; }
+
+  .btn-start {
+    display: inline-block; padding: 0.9rem 2.5rem;
+    background: linear-gradient(135deg, #c4592a, #d4845a);
+    color: white; border: none; border-radius: 12px;
+    font-family: 'Nunito', sans-serif; font-size: 1.05rem; font-weight: 900;
+    cursor: pointer; margin-top: 0.5rem; transition: transform 0.12s, box-shadow 0.12s;
+  }
+  .btn-start:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(196,89,42,0.35); }
+
+  .source-note {
+    font-size: 0.8rem; font-weight: 800; color: #94734f; background: #fffaf2;
+    border: 1px dashed #d8b88a; border-radius: 10px; padding: 0.55rem 0.8rem; margin-bottom: 1.5rem;
+  }
+
+  /* ── GAME SCREEN ────────────────────────────────────── */
+  #game-screen {
+    height: 100vh; overflow: hidden;
+    background: linear-gradient(180deg, #fdf6ec, #f4e6d3);
+    display: flex; flex-direction: column;
+  }
+
+  .game-topbar {
+    background: linear-gradient(150deg, #7a2e1a, #c4592a);
+    color: white; padding: 0.55rem 1.25rem 0.55rem 7rem;   /* left room for the Hub button */
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-shrink: 0;
+  }
+  .topbar-left { display: flex; align-items: center; gap: 1rem; min-width: 0; }
+  .game-topbar-title { font-size: 1rem; font-weight: 900; white-space: nowrap; }
+  .progress-chip {
+    background: rgba(255,255,255,0.18); border-radius: 999px;
+    padding: 0.2rem 0.7rem; font-size: 0.82rem; font-weight: 900; white-space: nowrap;
+  }
+  .topbar-right { display: flex; align-items: center; gap: 0.5rem; }
+  .tb-btn {
+    background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.35);
+    color: white; border-radius: 8px; padding: 0.35rem 0.8rem; cursor: pointer;
+    font-family: 'Nunito', sans-serif; font-size: 0.8rem; font-weight: 800; white-space: nowrap;
+  }
+  .tb-btn:hover:not(:disabled) { background: rgba(255,255,255,0.3); }
+  .tb-btn:disabled { opacity: 0.35; cursor: default; }
+
+  .scorebar {
+    background: #fff5ed; border-bottom: 2px solid #e8d0b0; flex-shrink: 0;
+    padding: 0.5rem 1.25rem; display: flex; align-items: center; justify-content: center;
+    gap: 0.75rem; flex-wrap: wrap;
+  }
+  .score-chip {
+    display: flex; align-items: center; gap: 0.5rem;
+    background: white; border: 2px solid #e8d0b0; border-radius: 999px;
+    padding: 0.3rem 0.9rem; font-weight: 900; color: #7a2e1a; font-size: 0.95rem;
+  }
+  .score-chip .dot { width: 0.85rem; height: 0.85rem; border-radius: 50%; }
+  .score-chip .pts { color: #94734f; font-size: 0.85rem; }
+  .score-chip.turn { border-width: 3px; box-shadow: 0 3px 14px rgba(120,46,26,0.18); transform: translateY(-1px); }
+  .score-chip.turn .pts { color: inherit; }
+  .turn-flag { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 900; }
+
+  .stage-wrap { flex: 1; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+
+  #ring {
+    --stage: min(60vh, 50vw);
+    position: relative; width: var(--stage); height: var(--stage); overflow: visible;
+  }
+  .dashed-ring {
+    position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%);
+    width: 78%; height: 78%; border-radius: 50%; border: 2px dashed #dcbf99;
+  }
+  .letter {
+    position: absolute; transform: translate(-50%,-50%);
+    width: calc(var(--stage) * 0.086); height: calc(var(--stage) * 0.086);
+    border-radius: 50%; border: 3px solid #e0bf95; background: white; color: #7a2e1a;
+    font-family: 'Nunito', sans-serif; font-weight: 900; font-size: calc(var(--stage) * 0.042);
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
+    transition: transform 0.12s, box-shadow 0.12s, border-color 0.12s;
+    box-shadow: 0 2px 8px rgba(120,46,26,0.08); padding: 0; line-height: 1;
+  }
+  .letter:hover:not(.used) {
+    transform: translate(-50%,-50%) scale(1.14); border-color: #c4592a;
+    box-shadow: 0 6px 18px rgba(196,89,42,0.32);
+  }
+  .letter.used { cursor: default; color: white; border-color: transparent; box-shadow: none; }
+  .letter.pop { animation: pop 0.4s ease; }
+  @keyframes pop {
+    0%   { transform: translate(-50%,-50%) scale(1); }
+    45%  { transform: translate(-50%,-50%) scale(1.32); }
+    100% { transform: translate(-50%,-50%) scale(1); }
+  }
+
+  .wordlab {
+    position: absolute; transform: translate(-50%,-50%);
+    width: calc(var(--stage) * 0.2); text-align: center;
+    font-weight: 900; font-size: calc(var(--stage) * 0.026); line-height: 1.15;
+    word-break: break-word; pointer-events: none;
+  }
+
+  .centre {
+    position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%);
+    width: 44%; height: 44%; border-radius: 50%;
+    background: white; border: 4px solid #e8d0b0;
+    box-shadow: 0 8px 30px rgba(120,46,26,0.12);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 7%;
+  }
+  .centre .kicker {
+    font-size: calc(var(--stage) * 0.019); letter-spacing: 0.14em; text-transform: uppercase;
+    color: #b98a5e; font-weight: 900; margin-bottom: 0.4em;
+  }
+  .centre .theme { color: #7a2e1a; font-weight: 900; line-height: 1.1; }
+  .centre .theme.sz-l { font-size: calc(var(--stage) * 0.062); }
+  .centre .theme.sz-m { font-size: calc(var(--stage) * 0.046); }
+  .centre .theme.sz-s { font-size: calc(var(--stage) * 0.034); }
+  .centre .hint {
+    margin-top: 0.55em; font-size: calc(var(--stage) * 0.021);
+    color: #94734f; font-weight: 700; line-height: 1.2;
+  }
+
+  /* ── MODAL ──────────────────────────────────────────── */
+  .modal {
+    position: fixed; inset: 0; background: rgba(60,25,12,0.55);
+    display: flex; align-items: center; justify-content: center; z-index: 500; padding: 2rem;
+  }
+  .modal-card {
+    background: white; border-radius: 24px; padding: 1.75rem 2.25rem 2rem;
+    max-width: 620px; width: 100%; text-align: center;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.3);
+  }
+  .big-letter {
+    width: 5rem; height: 5rem; border-radius: 50%; display: flex;
+    align-items: center; justify-content: center; margin: 0 auto 0.9rem;
+    font-size: 2.9rem; font-weight: 900; color: white;
+  }
+  .modal-team { font-size: 0.95rem; font-weight: 900; margin-bottom: 1.1rem; }
+  .modal-theme {
+    font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em;
+    color: #b98a5e; font-weight: 900; margin-bottom: 0.35rem;
+  }
+  #word-input {
+    width: 100%; padding: 0.9rem 1.1rem; border: 3px solid #e8d0b0; border-radius: 16px;
+    font-family: 'Nunito', sans-serif; font-size: 1.9rem; font-weight: 900;
+    text-align: center; color: #1e293b;
+  }
+  #word-input:focus { outline: none; border-color: #c4592a; }
+  .warn { font-size: 0.88rem; font-weight: 800; color: #b45309; margin-top: 0.6rem; min-height: 1.3rem; }
+  .modal-btns { display: flex; gap: 0.6rem; justify-content: center; margin-top: 1.1rem; flex-wrap: wrap; }
+  .btn-ok, .btn-pass, .btn-cancel {
+    padding: 0.8rem 1.6rem; border-radius: 12px; border: none;
+    font-family: 'Nunito', sans-serif; font-weight: 900; font-size: 1rem; cursor: pointer;
+  }
+  .btn-ok { background: linear-gradient(135deg, #16a34a, #22c55e); color: white; }
+  .btn-pass { background: #fff7ed; color: #b45309; border: 2px solid #fed7aa; }
+  .btn-cancel { background: #f1f5f9; color: #475569; }
+
+  /* ── RESULTS ────────────────────────────────────────── */
+  #results-screen { min-height: 100vh; background: #fdf6ec; padding: 2rem; }
+  .results-card {
+    max-width: 900px; margin: 0 auto; background: white;
+    border: 2px solid #e8d0b0; border-radius: 24px; padding: 2rem;
+  }
+  .results-card h2 { color: #7a2e1a; font-size: 1.9rem; font-weight: 900; text-align: center; }
+  .results-sub { text-align: center; color: #94734f; font-weight: 800; margin-top: 0.25rem; }
+  .final-scores { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; margin: 1.5rem 0; }
+  .final-score {
+    border-radius: 16px; padding: 0.9rem 1.5rem; color: white; text-align: center; min-width: 140px;
+  }
+  .final-score .nm { font-weight: 900; font-size: 1rem; }
+  .final-score .sc { font-weight: 900; font-size: 2rem; line-height: 1.1; }
+  .word-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 0.5rem; margin-top: 1rem;
+  }
+  .word-cell {
+    display: flex; align-items: center; gap: 0.6rem;
+    border: 2px solid #f0e0c8; border-radius: 12px; padding: 0.45rem 0.7rem;
+  }
+  .word-cell .wl {
+    width: 1.75rem; height: 1.75rem; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 900; font-size: 0.95rem; background: #f4e6d3; color: #94734f;
+  }
+  .word-cell .ww { font-weight: 900; color: #1e293b; font-size: 1.05rem; }
+  .word-cell.empty .ww { color: #c9ad86; font-weight: 700; font-style: italic; font-size: 0.95rem; }
+  .results-btns { display: flex; gap: 0.6rem; justify-content: center; margin-top: 1.75rem; flex-wrap: wrap; }
+  .sect-label {
+    font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em;
+    font-weight: 900; color: #7a2e1a; margin-top: 1.5rem;
+  }
+</style>
+</head>
+<body>
+
+<!-- ── LOADING ─────────────────────────────────────────── -->
+<div id="loading-screen">
+  <div class="icon">🔤</div>
+  <div class="text">Loading themes…</div>
+</div>
+
+<!-- ── SETUP ───────────────────────────────────────────── -->
+<div id="setup-screen" class="hidden">
+  <div class="setup-header">
+    <h1>Alphabet Wheel</h1>
+    <p>One word per letter that fits the theme — teams take turns around the wheel.</p>
+  </div>
+
+  <div id="session-bar" class="session-scores hidden"></div>
+
+  <div class="setup-body">
+    <div id="source-note" class="source-note"></div>
+
+    <div class="field-group">
+      <label>Level</label>
+      <div class="pill-row" id="level-pills"></div>
+    </div>
+
+    <div class="field-group">
+      <label>Theme</label>
+      <div class="row-2">
+        <select id="theme-select"></select>
+        <button class="btn-mini" onclick="randomTheme()">🎲 Random</button>
+      </div>
+      <input type="text" id="custom-theme" placeholder="…or type your own theme here" style="margin-top:0.5rem">
+      <div class="hint">If you type your own theme, it is used instead of the one chosen above.</div>
+    </div>
+
+    <div class="field-group">
+      <label>Teams</label>
+      <div class="pill-row" id="team-pills"></div>
+      <div class="team-inputs" id="team-inputs" style="margin-top:0.6rem"></div>
+    </div>
+
+    <div class="field-group">
+      <label>Points per letter</label>
+      <div class="pill-row" id="points-pills"></div>
+    </div>
+
+    <button class="btn-start" onclick="startGame()">Start the wheel →</button>
+  </div>
+</div>
+
+<!-- ── GAME ────────────────────────────────────────────── -->
+<div id="game-screen" class="hidden">
+  <div class="game-topbar">
+    <div class="topbar-left">
+      <div class="game-topbar-title">Alphabet Wheel</div>
+      <div class="progress-chip" id="progress-chip">0 / 26 letters</div>
+    </div>
+    <div class="topbar-right">
+      <button class="tb-btn" id="undo-btn" onclick="undo()">↩ Undo</button>
+      <button class="tb-btn" onclick="finish()">🏁 Finish round</button>
+      <button class="tb-btn" onclick="goSetup(false)">⚙ Setup</button>
+    </div>
+  </div>
+
+  <div class="scorebar" id="scorebar"></div>
+
+  <div class="stage-wrap">
+    <div id="ring">
+      <div class="dashed-ring"></div>
+      <div class="centre">
+        <div class="kicker">Theme</div>
+        <div class="theme" id="centre-theme"></div>
+        <div class="hint" id="centre-hint"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── WORD MODAL ──────────────────────────────────────── -->
+<div id="word-modal" class="modal hidden">
+  <div class="modal-card">
+    <div class="big-letter" id="modal-letter">A</div>
+    <div class="modal-team" id="modal-team"></div>
+    <div class="modal-theme" id="modal-theme"></div>
+    <input type="text" id="word-input" autocomplete="off" spellcheck="false" placeholder="Type the word…">
+    <div class="warn" id="word-warn"></div>
+    <div class="modal-btns">
+      <button class="btn-ok" onclick="addWord()">✓ Add word</button>
+      <button class="btn-pass" onclick="passTurn()">↷ No word — pass</button>
+      <button class="btn-cancel" onclick="closeWord()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── RESULTS ─────────────────────────────────────────── -->
+<div id="results-screen" class="hidden">
+  <div class="results-card">
+    <h2 id="res-title">Round finished!</h2>
+    <div class="results-sub" id="res-sub"></div>
+    <div class="final-scores" id="res-scores"></div>
+    <div class="sect-label">Words collected</div>
+    <div class="word-grid" id="res-words"></div>
+    <div class="results-btns">
+      <button class="btn-start" onclick="goSetup(true)">🔄 New theme — keep scores</button>
+      <button class="btn-mini" onclick="goSetup(false)">⟲ Reset scores</button>
+      <button class="btn-mini" onclick="copyWords()">📋 Copy word list</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════════════════════════════
+   THEMES FROM YOUR GOOGLE SHEET
+   ──────────────────────────────────────────────────────────────────────────
+   Paste the published CSV link for the "Themes" tab between the quotes below.
+   Leave it empty ('') and the game happily uses the built-in theme list.
+
+   The tab needs these column headings in row 1 (order doesn't matter):
+       theme_id | level | theme | hint | active
+   • level  — A1 A2 B1 B2 C1 C2  (or "Any")
+   • theme  — the words shown in the middle of the wheel, e.g. Things in a kitchen
+   • hint   — optional small text under the theme, e.g. not just food!
+   • active — 1 to use it, 0 to hide it (blank counts as 1)
+   ══════════════════════════════════════════════════════════════════════════ */
+const THEME_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQQOA7JYpQHJPodeWxaoJzUqT1L6vftHr-jjo7Y7Y06lHAecXsk6aw5jFPeQhJgKMro7Wu1vzW5E7PS/pub?gid=1779773159&single=true&output=csv';
+
+const TEAM_COLOURS = ['#c4592a', '#1f7a6c', '#6b4ba0', '#b07d16'];
+const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+const LEVELS  = ['Any', 'A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
+
+/* Built-in themes — used until the sheet is wired up (and as a safety net). */
+const BUILTIN = [
+  { level: 'A1', theme: 'Animals',                     hint: '' },
+  { level: 'A1', theme: 'Food and drink',              hint: '' },
+  { level: 'A1', theme: 'Colours and clothes',         hint: '' },
+  { level: 'A1', theme: 'Jobs',                        hint: '' },
+  { level: 'A1', theme: 'Things in a house',           hint: '' },
+  { level: 'A1', theme: 'Family words',                hint: '' },
+  { level: 'A1', theme: 'Things in a classroom',       hint: '' },
+  { level: 'A1', theme: 'Fruit and vegetables',        hint: '' },
+  { level: 'A1', theme: 'Countries',                   hint: '' },
+  { level: 'A1', theme: 'Parts of the body',           hint: '' },
+  { level: 'A1', theme: 'Sports and games',            hint: '' },
+  { level: 'A2', theme: 'Things in a kitchen',         hint: 'not just food!' },
+  { level: 'A2', theme: 'Free-time activities',        hint: '' },
+  { level: 'A2', theme: 'Places in a town',            hint: '' },
+  { level: 'A2', theme: 'Ways to travel',              hint: '' },
+  { level: 'A2', theme: 'Adjectives to describe a person', hint: '' },
+  { level: 'A2', theme: 'Feelings',                    hint: '' },
+  { level: 'A2', theme: 'Weather words',               hint: '' },
+  { level: 'A2', theme: 'Things you take on holiday',  hint: '' },
+  { level: 'A2', theme: 'Verbs you do every morning',  hint: '' },
+  { level: 'A2', theme: 'Things you find in a bag',    hint: '' },
+  { level: 'B1', theme: 'Things at an airport',        hint: '' },
+  { level: 'B1', theme: 'The environment',             hint: '' },
+  { level: 'B1', theme: 'Personality adjectives',      hint: '' },
+  { level: 'B1', theme: 'Money words',                 hint: '' },
+  { level: 'B1', theme: 'Health and illness',          hint: '' },
+  { level: 'B1', theme: 'Technology',                  hint: '' },
+  { level: 'B1', theme: 'Words in the news',           hint: '' },
+  { level: 'B1', theme: 'Music words',                 hint: '' },
+  { level: 'B1', theme: 'Things you can recycle',      hint: '' },
+  { level: 'B1', theme: 'Jobs people do outdoors',     hint: '' },
+  { level: 'B2', theme: 'Words about work and business', hint: '' },
+  { level: 'B2', theme: 'Words about education',       hint: '' },
+  { level: 'B2', theme: 'Strong adjectives',           hint: 'no "very" allowed' },
+  { level: 'B2', theme: 'Words to describe a film',    hint: '' },
+  { level: 'B2', theme: 'Words about relationships',   hint: '' },
+  { level: 'B2', theme: 'Words about crime and justice', hint: '' },
+  { level: 'B2', theme: 'Words about science',         hint: '' },
+  { level: 'B2', theme: 'Abstract nouns',              hint: 'things you cannot touch' },
+  { level: 'B2', theme: 'Words about the media',       hint: '' },
+  { level: 'C1', theme: 'Words about the economy',     hint: '' },
+  { level: 'C1', theme: 'Words about art and culture', hint: '' },
+  { level: 'C1', theme: 'Academic verbs',              hint: 'the kind you meet in essays' },
+  { level: 'C1', theme: 'Adjectives to describe an argument', hint: '' },
+  { level: 'C1', theme: 'Words about power and influence', hint: '' },
+  { level: 'C1', theme: 'Words about identity and belonging', hint: '' },
+  { level: 'C2', theme: 'Nuanced words for emotion',   hint: 'sad, angry and happy are banned' },
+  { level: 'C2', theme: 'Words about persuasion',      hint: '' },
+  { level: 'C2', theme: 'Words that describe a writer\u2019s tone', hint: '' },
+  { level: 'C2', theme: 'Words about change over time', hint: '' }
+];
+
+let themes      = [];
+let themeSource = 'builtin';
+let filterLevel = 'Any';
+let teamCount   = 2;
+let pointsPer   = 10;
+let modalLetter = null;
+let keepScores  = false;
+
+const gs = {
+  theme: '', hint: '',
+  names: [], scores: [],
+  turn: 0,
+  words: {},   // { A: 'apple' }
+  owner: {},   // { A: 0 }
+  history: []  // [{ letter, team }] or [{ pass: true, team }]
+};
+
+/* ── Boot ─────────────────────────────────────────────── */
+async function init() {
+  await loadThemes();
+  buildLevelPills();
+  buildTeamPills();
+  buildPointsPills();
+  buildTeamInputs();
+  renderThemeSelect();
+  renderSourceNote();
+  hide('loading-screen');
+  show('setup-screen');
+  document.addEventListener('keydown', onKey);
+}
+
+/* ── Themes: sheet, then fall back to built-in ────────── */
+async function loadThemes() {
+  if (THEME_CSV_URL) {
+    try {
+      const res = await fetch(THEME_CSV_URL);
+      if (res.ok) {
+        const list = rowsToThemes(parseCSV(await res.text()));
+        if (list.length) { themes = list; themeSource = 'sheet'; return; }
+      }
+    } catch (e) { /* fall through to the built-in list */ }
+  }
+  themes = BUILTIN.slice();
+  themeSource = THEME_CSV_URL ? 'failed' : 'builtin';
+}
+
+function rowsToThemes(rows) {
+  if (!rows.length) return [];
+  const head = rows[0].map(h => h.trim().toLowerCase());
+  const col = (...names) => head.findIndex(h => names.indexOf(h) !== -1);
+  const iT = col('theme', 'title', 'topic');
+  const iL = col('level', 'cefr level', 'cefr');
+  const iH = col('hint', 'note', 'notes', 'examples');
+  const iA = col('active');
+  if (iT === -1) return [];
+
+  const out = [];
+  for (let r = 1; r < rows.length; r++) {
+    const row = rows[r];
+    const theme = (row[iT] || '').trim();
+    if (!theme) continue;
+    if (iA !== -1 && (row[iA] || '').trim() === '0') continue;
+    out.push({
+      theme: theme,
+      level: (iL !== -1 ? (row[iL] || '').trim() : '') || 'Any',
+      hint:  iH !== -1 ? (row[iH] || '').trim() : ''
+    });
+  }
+  return out;
+}
+
+function parseCSV(text) {
+  const rows = []; let row = []; let cell = ''; let q = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) {
+      if (c === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; }
+      else cell += c;
+    } else if (c === '"') { q = true; }
+    else if (c === ',')  { row.push(cell); cell = ''; }
+    else if (c === '\n') { row.push(cell); rows.push(row); row = []; cell = ''; }
+    else if (c !== '\r') { cell += c; }
+  }
+  row.push(cell); rows.push(row);
+  return rows.filter(r => r.some(v => v.trim() !== ''));
+}
+
+function renderSourceNote() {
+  const el = document.getElementById('source-note');
+  if (themeSource === 'sheet') {
+    el.textContent = '✅ Themes loaded from your Google Sheet — ' + themes.length + ' available.';
+  } else if (themeSource === 'failed') {
+    el.textContent = '⚠️ Could not reach the Google Sheet, so the built-in themes are being used (' + themes.length + '). The game still works normally.';
+  } else {
+    el.textContent = 'ℹ️ Using the built-in theme list (' + themes.length + '). Add your sheet link at the top of alphabet-wheel.html to use your own.';
+  }
+}
+
+/* ── Setup screen ─────────────────────────────────────── */
+function buildLevelPills() {
+  const wrap = document.getElementById('level-pills');
+  wrap.innerHTML = '';
+  LEVELS.forEach(lv => {
+    const b = document.createElement('button');
+    b.className = 'pill' + (lv === filterLevel ? ' active' : '');
+    b.textContent = lv;
+    b.onclick = () => { filterLevel = lv; buildLevelPills(); renderThemeSelect(); };
+    wrap.appendChild(b);
+  });
+}
+
+function buildTeamPills() {
+  const wrap = document.getElementById('team-pills');
+  wrap.innerHTML = '';
+  [2, 3, 4].forEach(n => {
+    const b = document.createElement('button');
+    b.className = 'pill' + (n === teamCount ? ' active' : '');
+    b.textContent = n + ' teams';
+    b.onclick = () => { teamCount = n; buildTeamPills(); buildTeamInputs(); };
+    wrap.appendChild(b);
+  });
+}
+
+function buildPointsPills() {
+  const wrap = document.getElementById('points-pills');
+  wrap.innerHTML = '';
+  [1, 5, 10].forEach(n => {
+    const b = document.createElement('button');
+    b.className = 'pill' + (n === pointsPer ? ' active' : '');
+    b.textContent = n + (n === 1 ? ' point' : ' points');
+    b.onclick = () => { pointsPer = n; buildPointsPills(); };
+    wrap.appendChild(b);
+  });
+}
+
+function buildTeamInputs() {
+  const wrap = document.getElementById('team-inputs');
+  const existing = [];
+  for (let i = 0; i < 4; i++) {
+    const el = document.getElementById('team-name-' + i);
+    existing[i] = el ? el.value : '';
+  }
+  wrap.innerHTML = '';
+  for (let i = 0; i < teamCount; i++) {
+    const row = document.createElement('div');
+    row.className = 'team-input-row';
+    const dot = document.createElement('div');
+    dot.className = 'team-dot';
+    dot.style.background = TEAM_COLOURS[i];
+    const inp = document.createElement('input');
+    inp.type = 'text';
+    inp.id = 'team-name-' + i;
+    inp.value = existing[i] || 'Team ' + (i + 1);
+    inp.style.border = '2px solid #e8d0b0';
+    inp.style.borderRadius = '10px';
+    inp.style.padding = '0.5rem 0.75rem';
+    inp.style.fontFamily = "'Nunito', sans-serif";
+    inp.style.fontWeight = '800';
+    inp.style.fontSize = '0.95rem';
+    inp.style.flex = '1';
+    row.appendChild(dot); row.appendChild(inp);
+    wrap.appendChild(row);
+  }
+}
+
+function visibleThemes() {
+  return filterLevel === 'Any'
+    ? themes
+    : themes.filter(t => (t.level || '').toUpperCase() === filterLevel);
+}
+
+function renderThemeSelect() {
+  const sel = document.getElementById('theme-select');
+  const list = visibleThemes();
+  sel.innerHTML = '';
+  if (!list.length) {
+    const o = document.createElement('option');
+    o.textContent = 'No themes at this level — type your own below';
+    o.value = '';
+    sel.appendChild(o);
+    return;
+  }
+  list.forEach((t, i) => {
+    const o = document.createElement('option');
+    o.value = String(i);
+    o.textContent = t.theme + (t.level && t.level !== 'Any' ? '  (' + t.level + ')' : '');
+    sel.appendChild(o);
+  });
+}
+
+function randomTheme() {
+  const sel = document.getElementById('theme-select');
+  const n = visibleThemes().length;
+  if (!n) return;
+  sel.value = String(Math.floor(Math.random() * n));
+  document.getElementById('custom-theme').value = '';
+}
+
+/* ── Start / reset ────────────────────────────────────── */
+function startGame() {
+  const custom = document.getElementById('custom-theme').value.trim();
+  let theme = custom, hint = '';
+  if (!theme) {
+    const list = visibleThemes();
+    const idx = parseInt(document.getElementById('theme-select').value, 10);
+    if (isNaN(idx) || !list[idx]) {
+      alert('Pick a theme from the list, or type one of your own.');
+      return;
+    }
+    theme = list[idx].theme;
+    hint  = list[idx].hint || '';
+  }
+
+  const names = [];
+  for (let i = 0; i < teamCount; i++) {
+    const el = document.getElementById('team-name-' + i);
+    names.push((el && el.value.trim()) || 'Team ' + (i + 1));
+  }
+
+  gs.theme = theme;
+  gs.hint  = hint;
+  if (!keepScores || gs.names.length !== teamCount) {
+    gs.scores = names.map(() => 0);
+  }
+  gs.names   = names;
+  gs.turn    = 0;
+  gs.words   = {};
+  gs.owner   = {};
+  gs.history = [];
+  keepScores = false;
+
+  buildWheel();
+  hide('setup-screen'); hide('results-screen');
+  show('game-screen');
+  render();
+}
+
+function goSetup(keep) {
+  keepScores = !!keep;
+  if (!keep) gs.scores = gs.names.map(() => 0);
+  hide('game-screen'); hide('results-screen'); hide('word-modal');
+  const bar = document.getElementById('session-bar');
+  if (keep && gs.names.length) {
+    bar.innerHTML = gs.names.map((n, i) =>
+      '<span style="color:' + TEAM_COLOURS[i] + '">● ' + esc(n) + ' — ' + gs.scores[i] + ' pts</span>'
+    ).join('');
+    bar.classList.remove('hidden');
+  } else {
+    bar.classList.add('hidden');
+  }
+  document.getElementById('custom-theme').value = '';
+  show('setup-screen');
+}
+
+/* ── The wheel ────────────────────────────────────────── */
+function buildWheel() {
+  const ring = document.getElementById('ring');
+  // remove old letters and labels, keep the dashed ring + centre
+  Array.prototype.slice.call(ring.querySelectorAll('.letter, .wordlab'))
+    .forEach(el => el.parentNode.removeChild(el));
+
+  const n = LETTERS.length;
+  LETTERS.forEach((L, i) => {
+    const a = (-90 + i * 360 / n) * Math.PI / 180;
+    const R = 39;
+    const btn = document.createElement('button');
+    btn.className = 'letter';
+    btn.id = 'let-' + L;
+    btn.textContent = L;
+    btn.style.left = (50 + R * Math.cos(a)) + '%';
+    btn.style.top  = (50 + R * Math.sin(a)) + '%';
+    btn.onclick = () => openWord(L);
+    ring.appendChild(btn);
+
+    const LR = (i % 2 === 0) ? 47.5 : 55.5;
+    const lab = document.createElement('div');
+    lab.className = 'wordlab';
+    lab.id = 'lab-' + L;
+    lab.style.left = (50 + LR * Math.cos(a)) + '%';
+    lab.style.top  = (50 + LR * Math.sin(a)) + '%';
+    ring.appendChild(lab);
+  });
+
+  const t = document.getElementById('centre-theme');
+  t.textContent = gs.theme;
+  t.className = 'theme ' + (gs.theme.length <= 12 ? 'sz-l' : gs.theme.length <= 22 ? 'sz-m' : 'sz-s');
+  const h = document.getElementById('centre-hint');
+  h.textContent = gs.hint || '';
+  h.style.display = gs.hint ? 'block' : 'none';
+}
+
+function render() {
+  LETTERS.forEach(L => {
+    const btn = document.getElementById('let-' + L);
+    const lab = document.getElementById('lab-' + L);
+    if (!btn) return;
+    const used = Object.prototype.hasOwnProperty.call(gs.words, L);
+    btn.classList.toggle('used', used);
+    btn.style.background = used ? TEAM_COLOURS[gs.owner[L]] : 'white';
+    lab.textContent = used ? gs.words[L] : '';
+    lab.style.color = used ? TEAM_COLOURS[gs.owner[L]] : 'transparent';
+  });
+
+  const bar = document.getElementById('scorebar');
+  bar.innerHTML = '';
+  gs.names.forEach((nm, i) => {
+    const chip = document.createElement('div');
+    chip.className = 'score-chip' + (i === gs.turn ? ' turn' : '');
+    if (i === gs.turn) { chip.style.borderColor = TEAM_COLOURS[i]; chip.style.color = TEAM_COLOURS[i]; }
+    chip.innerHTML =
+      '<span class="dot" style="background:' + TEAM_COLOURS[i] + '"></span>' +
+      '<span>' + esc(nm) + '</span>' +
+      '<span class="pts">' + gs.scores[i] + ' pts</span>' +
+      (i === gs.turn ? '<span class="turn-flag">your turn</span>' : '');
+    bar.appendChild(chip);
+  });
+
+  const done = Object.keys(gs.words).length;
+  document.getElementById('progress-chip').textContent = done + ' / 26 letters';
+  document.getElementById('undo-btn').disabled = gs.history.length === 0;
+}
+
+/* ── Word entry ───────────────────────────────────────── */
+function openWord(L) {
+  if (Object.prototype.hasOwnProperty.call(gs.words, L)) return;
+  modalLetter = L;
+  const colour = TEAM_COLOURS[gs.turn];
+  const big = document.getElementById('modal-letter');
+  big.textContent = L;
+  big.style.background = colour;
+  const tm = document.getElementById('modal-team');
+  tm.textContent = gs.names[gs.turn] + '\u2019s turn';
+  tm.style.color = colour;
+  document.getElementById('modal-theme').textContent = gs.theme;
+  const inp = document.getElementById('word-input');
+  inp.value = '';
+  inp.placeholder = 'A word starting with ' + L + '…';
+  document.getElementById('word-warn').textContent = '';
+  show('word-modal');
+  setTimeout(() => inp.focus(), 30);
+}
+
+function closeWord() { hide('word-modal'); modalLetter = null; }
+
+function addWord() {
+  if (!modalLetter) return;
+  const word = document.getElementById('word-input').value.trim();
+  if (!word) {
+    document.getElementById('word-warn').textContent = 'Type a word first, or choose “No word — pass”.';
+    return;
+  }
+  const L = modalLetter;
+  gs.words[L] = word;
+  gs.owner[L] = gs.turn;
+  gs.scores[gs.turn] += pointsPer;
+  gs.history.push({ letter: L, team: gs.turn });
+  closeWord();
+  nextTurn();
+  render();
+
+  const btn = document.getElementById('let-' + L);
+  if (btn) { btn.classList.add('pop'); setTimeout(() => btn.classList.remove('pop'), 420); }
+
+  if (Object.keys(gs.words).length === LETTERS.length) setTimeout(finish, 700);
+}
+
+function passTurn() {
+  gs.history.push({ pass: true, team: gs.turn });
+  closeWord();
+  nextTurn();
+  render();
+}
+
+function undo() {
+  const last = gs.history.pop();
+  if (!last) return;
+  if (last.letter) {
+    delete gs.words[last.letter];
+    delete gs.owner[last.letter];
+    gs.scores[last.team] -= pointsPer;
+  }
+  gs.turn = last.team;
+  render();
+}
+
+function nextTurn() { gs.turn = (gs.turn + 1) % gs.names.length; }
+
+function onKey(e) {
+  const modalOpen = !document.getElementById('word-modal').classList.contains('hidden');
+  const gameOpen  = !document.getElementById('game-screen').classList.contains('hidden');
+  if (modalOpen) {
+    if (e.key === 'Enter')  { e.preventDefault(); addWord(); }
+    if (e.key === 'Escape') { e.preventDefault(); closeWord(); }
+    return;
+  }
+  if (!gameOpen) return;
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  if (/^[a-zA-Z]$/.test(e.key)) { e.preventDefault(); openWord(e.key.toUpperCase()); }
+}
+
+/* ── Results ──────────────────────────────────────────── */
+function finish() {
+  hide('game-screen'); hide('word-modal');
+
+  const best = Math.max.apply(null, gs.scores);
+  const winners = gs.names.filter((n, i) => gs.scores[i] === best);
+  document.getElementById('res-title').textContent =
+    best === 0 ? 'Round finished!'
+      : winners.length > 1 ? 'It\u2019s a tie!'
+      : winners[0] + ' wins the round! 🏆';
+  document.getElementById('res-sub').textContent =
+    'Theme: ' + gs.theme + '  •  ' + Object.keys(gs.words).length + ' of 26 letters filled';
+
+  const sc = document.getElementById('res-scores');
+  sc.innerHTML = '';
+  gs.names.forEach((nm, i) => {
+    const d = document.createElement('div');
+    d.className = 'final-score';
+    d.style.background = TEAM_COLOURS[i];
+    d.innerHTML = '<div class="nm">' + esc(nm) + '</div><div class="sc">' + gs.scores[i] + '</div>';
+    sc.appendChild(d);
+  });
+
+  const wg = document.getElementById('res-words');
+  wg.innerHTML = '';
+  LETTERS.forEach(L => {
+    const has = Object.prototype.hasOwnProperty.call(gs.words, L);
+    const cell = document.createElement('div');
+    cell.className = 'word-cell' + (has ? '' : ' empty');
+    const wl = '<div class="wl"' + (has ? ' style="background:' + TEAM_COLOURS[gs.owner[L]] + ';color:white"' : '') + '>' + L + '</div>';
+    cell.innerHTML = wl + '<div class="ww">' + (has ? esc(gs.words[L]) : '—') + '</div>';
+    wg.appendChild(cell);
+  });
+
+  show('results-screen');
+}
+
+function copyWords() {
+  const lines = ['Theme: ' + gs.theme].concat(
+    LETTERS.filter(L => gs.words[L]).map(L => L + ' — ' + gs.words[L])
+  );
+  const text = lines.join('\n');
+  const done = () => alert('Word list copied.');
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(done, () => fallbackCopy(text, done));
+  } else {
+    fallbackCopy(text, done);
+  }
+}
+
+function fallbackCopy(text, done) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); done(); }
+  catch (e) { alert('Could not copy automatically. Here is the list:\n\n' + text); }
+  document.body.removeChild(ta);
+}
+
+/* ── Helpers ──────────────────────────────────────────── */
+function show(id) { document.getElementById(id).classList.remove('hidden'); }
+function hide(id) { document.getElementById(id).classList.add('hidden'); }
+function esc(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+init();
+</script>
+</body>
+</html>

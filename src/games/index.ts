@@ -10,6 +10,7 @@ import Countdown from './countdown/Countdown'
 import Battleships from './battleships/Battleships'
 import SentenceScramble from './sentence-scramble/SentenceScramble'
 import WhatIsThis from './what-is-this/WhatIsThis'
+import AlphabetWheel from './alphabet-wheel/AlphabetWheel'
 
 const games: GameDefinition[] = [
   {
@@ -98,6 +99,13 @@ const games: GameDefinition[] = [
     description: 'Hover an object, ask “What is this?”, click to reveal and hear the word.',
     icon: '/what_is_this.png',
     component: WhatIsThis,
+  },
+  {
+    id: 'alphabet-wheel',
+    title: 'Alphabet Wheel',
+    description: 'One word per letter that fits the theme — teams take turns around the wheel.',
+    icon: '🔤',
+    component: AlphabetWheel,
   },
 ]
 
