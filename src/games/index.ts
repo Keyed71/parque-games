@@ -11,6 +11,7 @@ import Battleships from './battleships/Battleships'
 import SentenceScramble from './sentence-scramble/SentenceScramble'
 import WhatIsThis from './what-is-this/WhatIsThis'
 import AlphabetWheel from './alphabet-wheel/AlphabetWheel'
+import Flashcards from './flashcards/Flashcards'
 
 const games: GameDefinition[] = [
   {
@@ -106,6 +107,13 @@ const games: GameDefinition[] = [
     description: 'One word per letter that fits the theme — teams take turns around the wheel.',
     icon: '🔤',
     component: AlphabetWheel,
+  },
+  {
+    id: 'flashcards',
+    title: 'Flashcards',
+    description: 'Show a picture, ask the question, reveal the answer — quick vocab sets.',
+    icon: '🃏',
+    component: Flashcards,
   },
 ]
 

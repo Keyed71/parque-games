@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flashcards</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body { font-family: 'Nunito', sans-serif; background: #fdf6ec; color: #3b2a1f; }
+    .hidden { display: none !important; }
+    button { font-family: inherit; }
+
+    /* ── SET PICKER ─────────────────────────────────────── */
+    .header {
+      background: linear-gradient(150deg, #7a2e1a, #c4592a, #d4845a);
+      color: white; padding: 1.25rem 2rem 1.25rem 7rem;   /* room for the Hub button */
+    }
+    .header h1 { font-size: 1.9rem; font-weight: 900; }
+    .header p  { font-size: 0.95rem; opacity: 0.85; margin-top: 0.1rem; }
+    .body { padding: 1.75rem 2rem; max-width: 1000px; margin: 0 auto; }
+    .label { font-size: 0.78rem; font-weight: 900; color: #7a2e1a; text-transform: uppercase; letter-spacing: 0.06em; margin: 0 0 0.9rem; }
+
+    .set-grid { display: flex; gap: 1.25rem; flex-wrap: wrap; }
+    .set-card {
+      width: 300px; background: white; border: 2px solid #e8d0b0; border-radius: 18px; overflow: hidden;
+      cursor: pointer; transition: transform 0.12s, box-shadow 0.12s, border-color 0.12s; text-align: left;
+    }
+    .set-card:hover { transform: translateY(-3px); box-shadow: 0 10px 26px rgba(120,46,26,0.18); border-color: #c4592a; }
+    .set-card img { width: 100%; aspect-ratio: 3 / 2; object-fit: cover; display: block; background: #f4e6d3; }
+    .set-card .cap { padding: 0.8rem 1rem 1rem; }
+    .set-card .t { font-weight: 900; font-size: 1.15rem; color: #7a2e1a; }
+    .set-card .lv { display: inline-block; margin-top: 0.3rem; font-size: 0.72rem; font-weight: 900; color: white; background: #c4592a; border-radius: 999px; padding: 0.1rem 0.6rem; }
+    .set-card .d { font-size: 0.85rem; color: #94734f; font-weight: 700; margin-top: 0.4rem; }
+
+    /* ── MODE PICKER ────────────────────────────────────── */
+    .mode-row { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 2rem; }
+    .mode-btn {
+      flex: 1 1 220px; background: white; border: 2px solid #e8d0b0; border-radius: 18px;
+      padding: 1.1rem 1.2rem; cursor: pointer; text-align: left; transition: border-color 0.12s, transform 0.12s;
+    }
+    .mode-btn:hover { border-color: #c4592a; transform: translateY(-2px); }
+    .mode-btn .mt { font-size: 1.2rem; font-weight: 900; color: #7a2e1a; }
+    .mode-btn .md { font-size: 0.9rem; color: #94734f; font-weight: 700; margin-top: 0.25rem; }
+    .link-btn { background: none; border: none; color: #c4592a; font-weight: 800; cursor: pointer; font-size: 0.95rem; }
+
+    /* ── GAME ───────────────────────────────────────────── */
+    #game { height: 100vh; display: flex; flex-direction: column; background: #26201c; }
+    .topbar {
+      background: linear-gradient(150deg, #7a2e1a, #c4592a);
+      color: white; padding: 0.55rem 1rem 0.55rem 7rem;
+      display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
+    }
+    .topbar .tt { font-weight: 900; font-size: 1.05rem; }
+    .topbar .right { display: flex; align-items: center; gap: 0.6rem; }
+    .tb-btn {
+      background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.35);
+      color: white; border-radius: 8px; padding: 0.35rem 0.8rem; cursor: pointer; font-size: 0.82rem; font-weight: 800;
+    }
+    .tb-btn:hover { background: rgba(255,255,255,0.28); }
+    .progress { font-weight: 900; font-size: 0.95rem; min-width: 4rem; text-align: right; }
+
+    .stage { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; padding: 1rem; }
+    .stage img {
+      max-width: 100%; max-height: 100%; border-radius: 14px; display: block;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.5); animation: pop 0.25s ease;
+    }
+    @keyframes pop { from { transform: scale(0.97); opacity: 0.4; } to { transform: scale(1); opacity: 1; } }
+
+    .panel { background: #fdf6ec; padding: 1rem 1.5rem 1.2rem; display: flex; align-items: center; gap: 1rem; }
+    .qa { flex: 1; text-align: center; }
+    .question { font-size: clamp(1.6rem, 3.6vw, 2.8rem); font-weight: 900; color: #7a2e1a; line-height: 1.15; }
+    .answer {
+      margin-top: 0.5rem; font-size: clamp(1.4rem, 3.2vw, 2.5rem); font-weight: 800; color: #14532d;
+      background: #dcfce7; border-radius: 14px; display: inline-block; padding: 0.2rem 1.2rem;
+      animation: pop 0.2s ease;
+    }
+    .answer b { font-weight: 900; color: #15803d; }
+    .answer-space { margin-top: 0.5rem; height: clamp(2.1rem, 4.6vw, 3.6rem); }
+    .nav-btn {
+      border: none; border-radius: 16px; cursor: pointer; font-weight: 900;
+      font-size: 1.15rem; padding: 0.9rem 1.4rem; white-space: nowrap;
+    }
+    .nav-back { background: white; color: #7a2e1a; border: 2px solid #e8d0b0; }
+    .nav-back:disabled { opacity: 0.35; cursor: default; }
+    .nav-main { background: #c4592a; color: white; min-width: 11rem; box-shadow: 0 4px 0 #7a2e1a; }
+    .nav-main:active { transform: translateY(2px); box-shadow: 0 2px 0 #7a2e1a; }
+    .nav-main.reveal { background: #16a34a; box-shadow: 0 4px 0 #14532d; }
+
+    /* ── END ───────────────────────────────────────────── */
+    #end { min-height: 100vh; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 1.2rem; text-align: center; padding: 2rem; }
+    #end h1 { font-size: 3rem; font-weight: 900; color: #7a2e1a; }
+    #end p { font-size: 1.2rem; color: #94734f; font-weight: 700; }
+    .end-row { display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; }
+  </style>
+</head>
+<body>
+
+  <!-- 1. Choose a set -->
+  <section id="sets">
+    <div class="header">
+      <h1>Flashcards</h1>
+      <p>Show the picture, ask the question, reveal the answer.</p>
+    </div>
+    <div class="body">
+      <div class="label">Choose a set</div>
+      <div class="set-grid" id="set-grid"></div>
+    </div>
+  </section>
+
+  <!-- 2. Choose which questions -->
+  <section id="modes" class="hidden">
+    <div class="header">
+      <h1 id="mode-title"></h1>
+      <p id="mode-sub"></p>
+    </div>
+    <div class="body">
+      <div class="label">Which questions?</div>
+      <div class="mode-row" id="mode-row"></div>
+      <button class="link-btn" onclick="show('sets')">← Choose a different set</button>
+    </div>
+  </section>
+
+  <!-- 3. Play -->
+  <section id="game" class="hidden">
+    <div class="topbar">
+      <div class="tt" id="game-title"></div>
+      <div class="right">
+        <button class="tb-btn" onclick="startGame(currentMode)">Shuffle &amp; restart</button>
+        <button class="tb-btn" onclick="show('modes')">Change questions</button>
+        <div class="progress" id="progress"></div>
+      </div>
+    </div>
+    <div class="stage"><img id="card-img" alt=""></div>
+    <div class="panel">
+      <button class="nav-btn nav-back" id="back-btn" onclick="back()">← Back</button>
+      <div class="qa">
+        <div class="question" id="question"></div>
+        <div id="answer-slot"><div class="answer-space"></div></div>
+      </div>
+      <button class="nav-btn nav-main reveal" id="main-btn" onclick="advance()">Show answer</button>
+    </div>
+  </section>
+
+  <!-- 4. Finished -->
+  <section id="end" class="hidden">
+    <h1>Well done! 🎉</h1>
+    <p id="end-msg"></p>
+    <div class="end-row">
+      <button class="nav-btn nav-main" onclick="startGame(currentMode)">Play again</button>
+      <button class="nav-btn nav-back" onclick="show('modes')">Change questions</button>
+      <button class="nav-btn nav-back" onclick="show('sets')">Choose another set</button>
+    </div>
+  </section>
+
+  <script src="/games/flashcards-sets.js"></script>
+  <script>
+    const SETS = window.FLASHCARD_SETS || [];
+    let currentSet = null, currentMode = 'mixed';
+    let deck = [], pos = 0, revealed = false;
+
+    function show(id) {
+      ['sets', 'modes', 'game', 'end'].forEach(s => document.getElementById(s).classList.toggle('hidden', s !== id));
+    }
+
+    function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+
+    function fill(template, card, answer) {
+      const who = card.who || 'it';
+      const be = (who === 'they' || who === 'you' || who === 'we') ? 'are' : 'is';
+      const whos = { she: "She's", he: "He's", they: "They're", it: "It's", you: "You're", we: "We're" }[who] || (who + ' ' + be);
+      return esc(template)
+        .replace(/\{who\}/g, esc(who))
+        .replace(/\{be\}/g, be)
+        .replace(/\{Who's\}/g, whos)
+        .replace(/\{a\}/g, answer === undefined ? '' : '<b>' + esc(answer) + '</b>');
+    }
+
+    function shuffle(a) {
+      for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+      return a;
+    }
+
+    // ── Set picker ──
+    const grid = document.getElementById('set-grid');
+    SETS.forEach((set, i) => {
+      const b = document.createElement('button');
+      b.className = 'set-card';
+      b.innerHTML =
+        `<img src="${esc(set.cover || set.cards[0].image)}" alt="">` +
+        `<div class="cap"><div class="t">${esc(set.title)}</div>` +
+        (set.level ? `<span class="lv">${esc(set.level)}</span>` : '') +
+        `<div class="d">${esc(set.description || '')} · ${set.cards.length} cards</div></div>`;
+      b.onclick = () => chooseSet(i);
+      grid.appendChild(b);
+    });
+
+    function chooseSet(i) {
+      currentSet = SETS[i];
+      document.getElementById('mode-title').textContent = currentSet.title;
+      document.getElementById('mode-sub').textContent = (currentSet.level ? currentSet.level + ' · ' : '') + currentSet.cards.length + ' cards';
+      const row = document.getElementById('mode-row');
+      row.innerHTML = '';
+      const sample = currentSet.cards[0];
+      const opts = [];
+      if (currentSet.types.length > 1) {
+        opts.push({ mode: 'mixed', t: 'Mixed', d: 'A random question type for each card' });
+      }
+      currentSet.types.forEach(t => opts.push({ mode: t.key, t: t.label, d: '“' + fill(t.question, sample) + '”' }));
+      opts.forEach(o => {
+        const b = document.createElement('button');
+        b.className = 'mode-btn';
+        b.innerHTML = `<div class="mt">${o.t}</div><div class="md">${o.d}</div>`;
+        b.onclick = () => startGame(o.mode);
+        row.appendChild(b);
+      });
+      show('modes');
+    }
+
+    // ── Game ──
+    function startGame(mode) {
+      currentMode = mode;
+      const types = currentSet.types;
+      deck = shuffle(currentSet.cards.slice()).map(card => {
+        const type = mode === 'mixed' ? types[Math.floor(Math.random() * types.length)] : types.find(t => t.key === mode);
+        return { card, type };
+      });
+      // preload all images so cards appear instantly
+      deck.forEach(d => { const im = new Image(); im.src = d.card.image; });
+      const label = mode === 'mixed' ? 'Mixed' : types.find(t => t.key === mode).label;
+      document.getElementById('game-title').textContent = currentSet.title + ' — ' + label;
+      pos = 0;
+      render();
+      show('game');
+    }
+
+    function render() {
+      const { card, type } = deck[pos];
+      revealed = false;
+      const img = document.getElementById('card-img');
+      img.style.animation = 'none'; void img.offsetWidth; img.style.animation = '';
+      img.src = card.image;
+      document.getElementById('question').innerHTML = fill(type.question, card);
+      document.getElementById('answer-slot').innerHTML = '<div class="answer-space"></div>';
+      document.getElementById('progress').textContent = (pos + 1) + ' / ' + deck.length;
+      document.getElementById('back-btn').disabled = pos === 0;
+      const btn = document.getElementById('main-btn');
+      btn.textContent = 'Show answer';
+      btn.classList.add('reveal');
+    }
+
+    function advance() {
+      if (!revealed) {
+        const { card, type } = deck[pos];
+        document.getElementById('answer-slot').innerHTML = '<div class="answer">' + fill(type.answer, card, card.answers[type.key]) + '</div>';
+        revealed = true;
+        const btn = document.getElementById('main-btn');
+        btn.textContent = pos === deck.length - 1 ? 'Finish ✓' : 'Next card →';
+        btn.classList.remove('reveal');
+        return;
+      }
+      if (pos < deck.length - 1) { pos++; render(); }
+      else {
+        document.getElementById('end-msg').textContent = 'You finished all ' + deck.length + ' cards.';
+        show('end');
+      }
+    }
+
+    function back() { if (pos > 0) { pos--; render(); } }
+
+    // Keyboard: Space / Enter / → = show answer, then next card.  ← = back.
+    document.addEventListener('keydown', e => {
+      if (document.getElementById('game').classList.contains('hidden')) return;
+      if (e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowRight') { e.preventDefault(); advance(); }
+      else if (e.key === 'ArrowLeft') { e.preventDefault(); back(); }
+    });
+  </script>
+</body>
+</html>
