@@ -234,6 +234,7 @@
     .m-type-label { font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.75rem; }
     .m-type-label.gap { color: #0891b2; } .m-type-label.error { color: #dc2626; }
     .m-question { font-size: 1.4rem; font-weight: 700; color: #0f172a; line-height: 1.45; margin-bottom: 1.4rem; }
+    .gap-line { display: inline-block; width: 9em; max-width: 60%; border-bottom: 3px solid #0f172a; vertical-align: baseline; margin: 0 0.15em; }
     .answer-reveal { margin-bottom: 1.25rem; }
     .answer-box { background: #f8fafc; border-radius: 12px; padding: 0.9rem 1.1rem; font-size: 1.1rem; font-weight: 700; color: #1e293b; transition: filter 0.25s; }
     .answer-box.blurred { filter: blur(7px); user-select: none; }
@@ -785,6 +786,26 @@ function boardFull() {
 }
 
 // ── Question modal ─────────────────────────────────────────────────────────
+// Gap sentences in the sheet mark each missing word with its own blank
+// (e.g. "___ ___ ___"), which tells students how many words they need.
+// Collapse any run of blanks into ONE continuous line so it gives no clue.
+const BLANK_TOKEN = '(?:_+|\\.{3,}|…+)';
+const BLANK_RUN = new RegExp(`(^|\\s)${BLANK_TOKEN}(?:\\s+${BLANK_TOKEN})*(?=\\s|[,.!?;:)]|$)`, 'g');
+function renderQuestionText(el, text, isGap) {
+  el.textContent = '';
+  if (!isGap || !text) { el.textContent = text || ''; return; }
+  let last = 0, m;
+  BLANK_RUN.lastIndex = 0;
+  while ((m = BLANK_RUN.exec(text))) {
+    el.appendChild(document.createTextNode(text.slice(last, m.index) + m[1]));
+    const line = document.createElement('span');
+    line.className = 'gap-line';
+    el.appendChild(line);
+    last = m.index + m[0].length;
+  }
+  el.appendChild(document.createTextNode(text.slice(last)));
+}
+
 function openQuestion(idx) {
   if (!gs.playing || gs.ended || gs.grid[idx].owner) return;
   pendingCell = idx;
@@ -806,7 +827,7 @@ function openQuestion(idx) {
   const structTag = document.getElementById('m-struct');
   structTag.textContent = gs.showHints ? structure : '';
   structTag.style.display = gs.showHints ? '' : 'none';
-  document.getElementById('m-question').textContent = text;
+  renderQuestionText(document.getElementById('m-question'), text, type === 'gap');
   document.getElementById('m-answer').textContent   = q['full correct sentence'];
   document.getElementById('m-answer').classList.add('blurred');
 
